@@ -1,0 +1,22 @@
+name: Upload Pixel Engine release
+description: Upload the Pixel Engine release.
+inputs:
+  name:
+    description: The release name.
+    default: "${{ github.job }}"
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Upload Pixel Engine release
+      uses: actions/create-release@v1
+      with:
+        name: ${{ inputs.name }}
+        tag_name: ${{ inputs.name }}
+        files: bin/*
+        generate_release_notes: true
+        prerelease: true
+        draft: true
+      env:
+        GITHUB_TOKEN: ${{ github.token }}

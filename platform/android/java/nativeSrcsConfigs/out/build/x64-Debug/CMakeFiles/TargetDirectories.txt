@@ -1,0 +1,3 @@
+E:/projects/godot-4.1-stable/platform/android/java/nativeSrcsConfigs/out/build/x64-Debug/CMakeFiles/godot.dir
+E:/projects/godot-4.1-stable/platform/android/java/nativeSrcsConfigs/out/build/x64-Debug/CMakeFiles/edit_cache.dir
+E:/projects/godot-4.1-stable/platform/android/java/nativeSrcsConfigs/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir

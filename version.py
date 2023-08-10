@@ -1,0 +1,10 @@
+short_name = "pixel"
+name = "Pixel Engine"
+major = 4
+minor = 2
+patch = 0
+status = "dev"
+module_config = ""
+year = 2023
+website = ""
+docs = "latest"

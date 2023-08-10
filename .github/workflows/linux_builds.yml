@@ -1,0 +1,87 @@
+name: 🐧 Linux Builds
+on:
+  workflow_call:
+
+# Global Settings
+env:
+  # Used for the cache key, and godot-cpp checkout. Add version suffix to force clean build.
+  GODOT_BASE_BRANCH: '4.2'
+  SCONSFLAGS: verbose=yes debug_symbols=no use_static_cpp=yes lto=auto
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
+  cancel-in-progress: true
+
+jobs:
+  build-linux:
+    runs-on: "ubuntu-20.04"
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Editor
+            cache-name: linux-editor
+            target: editor
+            tests: false # Disabled due freeze caused by mix Mono build and CI
+            sconsflags: optimize=speed_trace
+            # bin: "./bin/godot.linuxbsd.editor.x86_64"
+
+          - name: Release Template
+            cache-name: linux-release-template
+            target: template_release
+            tests: false
+            sconsflags: optimize=speed_trace
+
+          - name: Debug Template
+            cache-name: linux-debug-template
+            target: template_debug
+            tests: false
+            sconsflags: optimize=speed_trace
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Pixel Engine build cache
+        uses: ./.github/actions/godot-cache
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
+
+      - name: Setup python and scons
+        uses: ./.github/actions/godot-deps
+
+      - name: Setup GCC problem matcher
+        uses: ammaraskar/gcc-problem-matcher@master
+
+      - name: Compilation
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: linuxbsd
+          target: ${{ matrix.target }}
+          tests: ${{ matrix.tests }}
+
+      # # Execute unit tests for the editor
+      # - name: Unit tests
+      #   run: |
+      #     ${{ matrix.bin }} --version
+      #     ${{ matrix.bin }} --help
+      #     ${{ matrix.bin }} --test --headless
+
+      - name: Prepare artifact
+        run: |
+          strip bin/godot.*
+          chmod +x bin/godot.*
+
+      - name: Upload artifact
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: ${{ matrix.cache-name }}
+
+      # - name: Upload release
+      #   uses: ./.github/actions/upload-release
+      #   with:
+      #     name: ${{ matrix.cache-name }}
