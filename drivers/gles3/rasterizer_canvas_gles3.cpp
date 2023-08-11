@@ -1267,7 +1267,7 @@ void RasterizerCanvasGLES3::_render_batch(Light *p_lights, uint32_t p_index) {
 			uint32_t range_start = state.canvas_instance_batches[p_index].start * sizeof(InstanceData);
 			_enable_attributes(range_start, false);
 
-			if (pb->color_disabled && pb->color != Color(1.0, 1.0, 1.0, 1.0)) {
+			if (pb->color_disabled) {
 				glVertexAttrib4f(RS::ARRAY_COLOR, pb->color.r, pb->color.g, pb->color.b, pb->color.a);
 			}
 
@@ -1278,7 +1278,7 @@ void RasterizerCanvasGLES3::_render_batch(Light *p_lights, uint32_t p_index) {
 			}
 			glBindVertexArray(0);
 
-			if (pb->color_disabled && pb->color != Color(1.0, 1.0, 1.0, 1.0)) {
+			if (pb->color_disabled) {
 				// Reset so this doesn't pollute other draw calls.
 				glVertexAttrib4f(RS::ARRAY_COLOR, 1.0, 1.0, 1.0, 1.0);
 			}
@@ -2452,6 +2452,7 @@ RendererCanvasRender::PolygonID RasterizerCanvasGLES3::request_polygon(const Vec
 
 	return id;
 }
+
 void RasterizerCanvasGLES3::free_polygon(PolygonID p_polygon) {
 	PolygonBuffers *pb_ptr = polygon_buffers.polygons.getptr(p_polygon);
 	ERR_FAIL_COND(!pb_ptr);

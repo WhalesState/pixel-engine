@@ -246,7 +246,7 @@ EditorSelectionHistory::EditorSelectionHistory() {
 
 EditorPlugin *EditorData::get_editor(Object *p_object) {
 	// We need to iterate backwards so that we can check user-created plugins first.
-	// Otherwise, it would not be possible for plugins to handle CanvasItem and Spatial nodes.
+	// Otherwise, it would not be possible for plugins to handle CanvasItem nodes.
 	for (int i = editor_plugins.size() - 1; i > -1; i--) {
 		if (editor_plugins[i]->has_main_screen() && editor_plugins[i]->handles(p_object)) {
 			return editor_plugins[i];
