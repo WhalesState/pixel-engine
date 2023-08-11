@@ -4032,11 +4032,10 @@ TileMapEditor::TileMapEditor() {
 		}
 	}
 
-	// Wide empty separation control. (like BoxContainer::add_spacer())
-	Control *c = memnew(Control);
-	c->set_mouse_filter(MOUSE_FILTER_PASS);
-	c->set_h_size_flags(SIZE_EXPAND_FILL);
-	tile_map_toolbar->add_child(c);
+	HBoxContainer *tile_map_toolbar_hb = memnew(HBoxContainer);
+	tile_map_toolbar_hb->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
+
+	tile_map_toolbar->add_child(tile_map_toolbar_hb);
 
 	// Layer selector.
 	layers_selection_button = memnew(OptionButton);
@@ -4044,7 +4043,7 @@ TileMapEditor::TileMapEditor() {
 	layers_selection_button->set_text_overrun_behavior(TextServer::OVERRUN_TRIM_ELLIPSIS);
 	layers_selection_button->set_tooltip_text(TTR("TileMap Layers"));
 	layers_selection_button->connect("item_selected", callable_mp(this, &TileMapEditor::_layers_selection_item_selected));
-	tile_map_toolbar->add_child(layers_selection_button);
+	tile_map_toolbar_hb->add_child(layers_selection_button);
 
 	toggle_highlight_selected_layer_button = memnew(Button);
 	toggle_highlight_selected_layer_button->set_flat(true);
@@ -4052,9 +4051,9 @@ TileMapEditor::TileMapEditor() {
 	toggle_highlight_selected_layer_button->set_pressed(true);
 	toggle_highlight_selected_layer_button->connect("pressed", callable_mp(this, &TileMapEditor::_update_layers_selection));
 	toggle_highlight_selected_layer_button->set_tooltip_text(TTR("Highlight Selected TileMap Layer"));
-	tile_map_toolbar->add_child(toggle_highlight_selected_layer_button);
+	tile_map_toolbar_hb->add_child(toggle_highlight_selected_layer_button);
 
-	tile_map_toolbar->add_child(memnew(VSeparator));
+	tile_map_toolbar_hb->add_child(memnew(VSeparator));
 
 	// Grid toggle.
 	toggle_grid_button = memnew(Button);
@@ -4062,14 +4061,14 @@ TileMapEditor::TileMapEditor() {
 	toggle_grid_button->set_toggle_mode(true);
 	toggle_grid_button->set_tooltip_text(TTR("Toggle grid visibility."));
 	toggle_grid_button->connect("toggled", callable_mp(this, &TileMapEditor::_on_grid_toggled));
-	tile_map_toolbar->add_child(toggle_grid_button);
+	tile_map_toolbar_hb->add_child(toggle_grid_button);
 
 	// Advanced settings menu button.
 	advanced_menu_button = memnew(MenuButton);
 	advanced_menu_button->set_flat(true);
 	advanced_menu_button->get_popup()->add_item(TTR("Automatically Replace Tiles with Proxies"));
 	advanced_menu_button->get_popup()->connect("id_pressed", callable_mp(this, &TileMapEditor::_advanced_menu_button_id_pressed));
-	tile_map_toolbar->add_child(advanced_menu_button);
+	tile_map_toolbar_hb->add_child(advanced_menu_button);
 
 	missing_tileset_label = memnew(Label);
 	missing_tileset_label->set_text(TTR("The edited TileMap node has no TileSet resource.\nCreate or load a TileSet resource in the Tile Set property in the inspector."));

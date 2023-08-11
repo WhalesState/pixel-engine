@@ -41,12 +41,6 @@
 #include "servers/audio_server.h"
 #include "servers/rendering/renderer_compositor.h"
 
-#if defined(VULKAN_ENABLED)
-#import "vulkan_context_ios.h"
-
-#include "drivers/vulkan/rendering_device_vulkan.h"
-#endif
-
 class OS_IOS : public OS_Unix {
 private:
 	static HashMap<String, void *> dynamic_symbol_lookup_table;

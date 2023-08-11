@@ -149,56 +149,56 @@ CPUParticles2D::DrawOrder CPUParticles2D::get_draw_order() const {
 	return draw_order;
 }
 
-// void CPUParticles2D::_update_mesh_texture() {
-// 	Size2 tex_size;
-// 	if (texture.is_valid()) {
-// 		tex_size = texture->get_size();
-// 	} else {
-// 		tex_size = Size2(1, 1);
-// 	}
+void CPUParticles2D::_update_mesh_texture() {
+	Size2 tex_size;
+	if (texture.is_valid()) {
+		tex_size = texture->get_size();
+	} else {
+		tex_size = Size2(1, 1);
+	}
 
-// 	Vector<Vector2> vertices = {
-// 		-tex_size * 0.5,
-// 		-tex_size * 0.5 + Vector2(tex_size.x, 0),
-// 		-tex_size * 0.5 + tex_size,
-// 		-tex_size * 0.5 + Vector2(0, tex_size.y)
-// 	};
+	Vector<Vector2> vertices = {
+		-tex_size * 0.5,
+		-tex_size * 0.5 + Vector2(tex_size.x, 0),
+		-tex_size * 0.5 + tex_size,
+		-tex_size * 0.5 + Vector2(0, tex_size.y)
+	};
 
-// 	Vector<Vector2> uvs;
-// 	AtlasTexture *atlas_texure = Object::cast_to<AtlasTexture>(*texture);
-// 	if (atlas_texure && atlas_texure->get_atlas().is_valid()) {
-// 		Rect2 region_rect = atlas_texure->get_region();
-// 		Size2 atlas_size = atlas_texure->get_atlas()->get_size();
-// 		uvs.push_back(Vector2(region_rect.position.x / atlas_size.x, region_rect.position.y / atlas_size.y));
-// 		uvs.push_back(Vector2((region_rect.position.x + region_rect.size.x) / atlas_size.x, region_rect.position.y / atlas_size.y));
-// 		uvs.push_back(Vector2((region_rect.position.x + region_rect.size.x) / atlas_size.x, (region_rect.position.y + region_rect.size.y) / atlas_size.y));
-// 		uvs.push_back(Vector2(region_rect.position.x / atlas_size.x, (region_rect.position.y + region_rect.size.y) / atlas_size.y));
-// 	} else {
-// 		uvs.push_back(Vector2(0, 0));
-// 		uvs.push_back(Vector2(1, 0));
-// 		uvs.push_back(Vector2(1, 1));
-// 		uvs.push_back(Vector2(0, 1));
-// 	}
+	Vector<Vector2> uvs;
+	AtlasTexture *atlas_texure = Object::cast_to<AtlasTexture>(*texture);
+	if (atlas_texure && atlas_texure->get_atlas().is_valid()) {
+		Rect2 region_rect = atlas_texure->get_region();
+		Size2 atlas_size = atlas_texure->get_atlas()->get_size();
+		uvs.push_back(Vector2(region_rect.position.x / atlas_size.x, region_rect.position.y / atlas_size.y));
+		uvs.push_back(Vector2((region_rect.position.x + region_rect.size.x) / atlas_size.x, region_rect.position.y / atlas_size.y));
+		uvs.push_back(Vector2((region_rect.position.x + region_rect.size.x) / atlas_size.x, (region_rect.position.y + region_rect.size.y) / atlas_size.y));
+		uvs.push_back(Vector2(region_rect.position.x / atlas_size.x, (region_rect.position.y + region_rect.size.y) / atlas_size.y));
+	} else {
+		uvs.push_back(Vector2(0, 0));
+		uvs.push_back(Vector2(1, 0));
+		uvs.push_back(Vector2(1, 1));
+		uvs.push_back(Vector2(0, 1));
+	}
 
-// 	Vector<Color> colors = {
-// 		Color(1, 1, 1, 1),
-// 		Color(1, 1, 1, 1),
-// 		Color(1, 1, 1, 1),
-// 		Color(1, 1, 1, 1)
-// 	};
+	Vector<Color> colors = {
+		Color(1, 1, 1, 1),
+		Color(1, 1, 1, 1),
+		Color(1, 1, 1, 1),
+		Color(1, 1, 1, 1)
+	};
 
-// 	Vector<int> indices = { 0, 1, 2, 2, 3, 0 };
+	Vector<int> indices = { 0, 1, 2, 2, 3, 0 };
 
-// 	Array arr;
-// 	arr.resize(RS::ARRAY_MAX);
-// 	arr[RS::ARRAY_VERTEX] = vertices;
-// 	arr[RS::ARRAY_TEX_UV] = uvs;
-// 	arr[RS::ARRAY_COLOR] = colors;
-// 	arr[RS::ARRAY_INDEX] = indices;
+	Array arr;
+	arr.resize(RS::ARRAY_MAX);
+	arr[RS::ARRAY_VERTEX] = vertices;
+	arr[RS::ARRAY_TEX_UV] = uvs;
+	arr[RS::ARRAY_COLOR] = colors;
+	arr[RS::ARRAY_INDEX] = indices;
 
-// 	RS::get_singleton()->mesh_clear(mesh);
-// 	RS::get_singleton()->mesh_add_surface_from_arrays(mesh, RS::PRIMITIVE_TRIANGLES, arr);
-// }
+	RS::get_singleton()->mesh_clear(mesh);
+	RS::get_singleton()->mesh_add_surface_from_arrays(mesh, RS::PRIMITIVE_TRIANGLES, arr);
+}
 
 void CPUParticles2D::set_texture(const Ref<Texture2D> &p_texture) {
 	if (p_texture == texture) {
@@ -216,13 +216,13 @@ void CPUParticles2D::set_texture(const Ref<Texture2D> &p_texture) {
 	}
 
 	queue_redraw();
-	// _update_mesh_texture();
+	_update_mesh_texture();
 }
 
 void CPUParticles2D::_texture_changed() {
 	if (texture.is_valid()) {
 		queue_redraw();
-		// _update_mesh_texture();
+		_update_mesh_texture();
 	}
 }
 
@@ -1509,7 +1509,7 @@ CPUParticles2D::CPUParticles2D() {
 
 	set_color(Color(1, 1, 1, 1));
 
-	// _update_mesh_texture();
+	_update_mesh_texture();
 }
 
 CPUParticles2D::~CPUParticles2D() {

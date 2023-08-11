@@ -52,10 +52,6 @@ private:
 	const char *gl_extensions;
 #endif
 
-#if defined(VULKAN_ENABLED)
-	ANativeWindow *native_window = nullptr;
-#endif
-
 	mutable String data_dir_cache;
 	mutable String cache_dir_cache;
 	mutable String remote_fs_dir;

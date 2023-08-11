@@ -653,17 +653,10 @@ void OS_Android::set_opengl_extensions(const char *p_gl_extensions) {
 }
 
 void OS_Android::set_native_window(ANativeWindow *p_native_window) {
-#if defined(VULKAN_ENABLED)
-	native_window = p_native_window;
-#endif
 }
 
 ANativeWindow *OS_Android::get_native_window() const {
-#if defined(VULKAN_ENABLED)
-	return native_window;
-#else
 	return nullptr;
-#endif
 }
 
 void OS_Android::vibrate_handheld(int p_duration_ms) {
@@ -728,10 +721,6 @@ OS_Android::OS_Android(GodotJavaWrapper *p_godot_java, GodotIOJavaWrapper *p_god
 
 #if defined(GLES3_ENABLED)
 	gl_extensions = nullptr;
-#endif
-
-#if defined(VULKAN_ENABLED)
-	native_window = nullptr;
 #endif
 
 	godot_java = p_godot_java;

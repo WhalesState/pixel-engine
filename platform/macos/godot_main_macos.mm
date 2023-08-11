@@ -40,10 +40,6 @@
 #endif
 
 int main(int argc, char **argv) {
-#if defined(VULKAN_ENABLED)
-	// MoltenVK - enable full component swizzling support.
-	setenv("MVK_CONFIG_FULL_IMAGE_VIEW_SWIZZLE", "1", 1);
-#endif
 
 #if defined(SANITIZERS_ENABLED)
 	// Note: Set stack size to be at least 30 MB (vs 8 MB default) to avoid overflow, address sanitizer can increase stack usage up to 3 times.

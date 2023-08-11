@@ -3297,10 +3297,9 @@ void Image::set_pixel_v(const Point2i &p_point, const Color &p_color) {
 }
 
 void Image::set_pixel(int p_x, int p_y, const Color &p_color) {
-#ifdef DEBUG_ENABLED
-	ERR_FAIL_INDEX(p_x, width);
-	ERR_FAIL_INDEX(p_y, height);
-#endif
+	if (!point_inside_rect(p_x, p_y)){
+		return;
+	}
 
 	uint32_t ofs = p_y * width + p_x;
 	_set_color_at_ofs(data.ptrw(), ofs, p_color);

@@ -56,11 +56,6 @@ static const int APP_CATEGORY_PRODUCTIVITY = 6;
 static const int APP_CATEGORY_SOCIAL = 7;
 static const int APP_CATEGORY_VIDEO = 8;
 
-// Supported XR modes.
-// This should match the entries in 'platform/android/java/lib/src/org/godotengine/godot/xr/XRMode.java'
-static const int XR_MODE_REGULAR = 0;
-static const int XR_MODE_OPENXR = 1;
-
 struct CustomExportData {
 	String assets_directory;
 	bool debug;

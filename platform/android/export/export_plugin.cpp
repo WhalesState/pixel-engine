@@ -1732,12 +1732,6 @@ String EditorExportPlatformAndroid::get_export_option_warning(const EditorExport
 			if (!enabled_plugins_names.is_empty() && !gradle_build_enabled) {
 				return TTR("\"Use Gradle Build\" must be enabled to use the plugins.");
 			}
-		} else if (p_name == "xr_features/xr_mode") {
-			bool gradle_build_enabled = p_preset->get("gradle_build/use_gradle_build");
-			int xr_mode_index = p_preset->get("xr_features/xr_mode");
-			if (xr_mode_index == XR_MODE_OPENXR && !gradle_build_enabled) {
-				return TTR("OpenXR requires \"Use Gradle Build\" to be enabled");
-			}
 		} else if (p_name == "gradle_build/export_format") {
 			bool gradle_build_enabled = p_preset->get("gradle_build/use_gradle_build");
 			if (int(p_preset->get("gradle_build/export_format")) == EXPORT_FORMAT_AAB && !gradle_build_enabled) {
@@ -1843,8 +1837,6 @@ void EditorExportPlatformAndroid::get_export_options(List<ExportOption> *r_optio
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, launcher_adaptive_icon_background_option, PROPERTY_HINT_FILE, "*.png"), ""));
 
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "graphics/opengl_debug"), false));
-
-	r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "xr_features/xr_mode", PROPERTY_HINT_ENUM, "Regular,OpenXR"), XR_MODE_REGULAR, false, true));
 
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/immersive_mode"), true));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/support_small"), true));
@@ -2471,13 +2463,6 @@ void EditorExportPlatformAndroid::get_command_line_flags(const Ref<EditorExportP
 		command_line_strings.push_back(FileAccess::get_md5(fullpath));
 		command_line_strings.push_back("--apk_expansion_key");
 		command_line_strings.push_back(apk_expansion_public_key.strip_edges());
-	}
-
-	int xr_mode_index = p_preset->get("xr_features/xr_mode");
-	if (xr_mode_index == XR_MODE_OPENXR) {
-		command_line_strings.push_back("--xr_mode_openxr");
-	} else { // XRMode.REGULAR is the default.
-		command_line_strings.push_back("--xr_mode_regular");
 	}
 
 	bool immersive = p_preset->get("screen/immersive_mode");

@@ -171,7 +171,7 @@ String ResourceImporterTexture::get_resource_type() const {
 }
 
 bool ResourceImporterTexture::get_option_visibility(const String &p_path, const String &p_option, const HashMap<StringName, Variant> &p_options) const {
-	if (p_option == "compress/high_quality" || p_option == "compress/hdr_compression") {
+	if (p_option == "compress/high_quality") {
 		int compress_mode = int(p_options["compress/mode"]);
 		if (compress_mode != COMPRESS_VRAM_COMPRESSED) {
 			return false;
@@ -216,7 +216,6 @@ void ResourceImporterTexture::get_import_options(const String &p_path, List<Impo
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/mode", PROPERTY_HINT_ENUM, "Lossless,Lossy,VRAM Compressed,VRAM Uncompressed,Basis Universal", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), p_preset == PRESET_3D ? 2 : 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/high_quality"), false));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::FLOAT, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/hdr_compression", PROPERTY_HINT_ENUM, "Disabled,Opaque Only,Always"), 1));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/normal_map", PROPERTY_HINT_ENUM, "Detect,Enable,Disabled"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/channel_pack", PROPERTY_HINT_ENUM, "sRGB Friendly,Optimized"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "mipmaps/generate"), (p_preset == PRESET_3D ? true : false)));
@@ -432,7 +431,6 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 	const float lossy = p_options["compress/lossy_quality"];
 	const int pack_channels = p_options["compress/channel_pack"];
 	const int normal = p_options["compress/normal_map"];
-	const int hdr_compression = p_options["compress/hdr_compression"];
 	const int high_quality = p_options["compress/high_quality"];
 
 	// Mipmaps.
@@ -454,7 +452,6 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 	if (hdr_as_srgb) {
 		loader_flags |= ImageFormatLoader::FLAG_FORCE_LINEAR;
 	}
-	const bool hdr_clamp_exposure = p_options["process/hdr_clamp_exposure"];
 
 	float scale = 1.0;
 	// SVG-specific options.
@@ -588,8 +585,6 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 			formats_imported.push_back("etc2_astc");
 		}
 
-		bool can_compress_hdr = hdr_compression > 0;
-		bool has_alpha = image->detect_alpha() != Image::ALPHA_NONE;
 		bool use_uncompressed = false;
 
 		if (use_uncompressed) {

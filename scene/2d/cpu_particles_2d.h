@@ -184,7 +184,7 @@ private:
 
 	void _update_render_thread();
 
-	// void _update_mesh_texture();
+	void _update_mesh_texture();
 
 	void _set_do_redraw(bool p_do_redraw);
 

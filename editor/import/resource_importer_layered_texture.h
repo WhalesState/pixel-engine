@@ -50,7 +50,6 @@ public:
 	Vector<Ref<Image>> *slices = nullptr;
 	int compress_mode = 0;
 	float lossy = 1.0;
-	int hdr_compression = 0;
 	bool mipmaps = true;
 	bool high_quality = false;
 	Image::UsedChannels used_channels = Image::USED_CHANNELS_RGBA;

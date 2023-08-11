@@ -584,7 +584,5 @@
 		<member name="version/name" type="String" setter="" getter="">
 			Application version visible to the user. Falls back to [member ProjectSettings.application/config/version] if left empty.
 		</member>
-		<member name="xr_features/xr_mode" type="int" setter="" getter="">
-		</member>
 	</members>
 </class>

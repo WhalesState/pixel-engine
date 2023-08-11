@@ -816,8 +816,7 @@ TileSetEditor::TileSetEditor() {
 	// Split container.
 	split_container = memnew(HSplitContainer);
 	split_container->set_name(TTR("Tiles"));
-	split_container->set_h_size_flags(SIZE_EXPAND_FILL);
-	split_container->set_v_size_flags(SIZE_EXPAND_FILL);
+	split_container->set_anchors_preset(PRESET_FULL_RECT);
 	add_child(split_container);
 
 	// Sources list.
@@ -842,7 +841,6 @@ TileSetEditor::TileSetEditor() {
 
 	sources_list = memnew(ItemList);
 	sources_list->set_fixed_icon_size(Size2(60, 60) * EDSCALE);
-	sources_list->set_h_size_flags(SIZE_EXPAND_FILL);
 	sources_list->set_v_size_flags(SIZE_EXPAND_FILL);
 	sources_list->connect("item_selected", callable_mp(this, &TileSetEditor::_source_selected));
 	sources_list->connect("item_selected", callable_mp(TilesEditorUtils::get_singleton(), &TilesEditorUtils::set_sources_lists_current));

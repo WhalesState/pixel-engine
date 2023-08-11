@@ -40,7 +40,6 @@
 /* SCENARIO API */
 
 void RendererSceneCull::_instance_pair(Instance *p_A, Instance *p_B) {
-	RendererSceneCull *self = (RendererSceneCull *)singleton;
 	Instance *A = p_A;
 	Instance *B = p_B;
 
@@ -56,7 +55,6 @@ void RendererSceneCull::_instance_pair(Instance *p_A, Instance *p_B) {
 }
 
 void RendererSceneCull::_instance_unpair(Instance *p_A, Instance *p_B) {
-	RendererSceneCull *self = (RendererSceneCull *)singleton;
 	Instance *A = p_A;
 	Instance *B = p_B;
 

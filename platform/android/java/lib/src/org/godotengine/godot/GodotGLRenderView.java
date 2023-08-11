@@ -33,13 +33,6 @@ package org.godotengine.godot;
 import org.godotengine.godot.gl.GLSurfaceView;
 import org.godotengine.godot.gl.GodotRenderer;
 import org.godotengine.godot.input.GodotInputHandler;
-import org.godotengine.godot.xr.XRMode;
-import org.godotengine.godot.xr.ovr.OvrConfigChooser;
-import org.godotengine.godot.xr.ovr.OvrContextFactory;
-import org.godotengine.godot.xr.ovr.OvrWindowSurfaceFactory;
-import org.godotengine.godot.xr.regular.RegularConfigChooser;
-import org.godotengine.godot.xr.regular.RegularContextFactory;
-import org.godotengine.godot.xr.regular.RegularFallbackConfigChooser;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

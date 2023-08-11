@@ -436,7 +436,7 @@ TileSetEditorPlugin::TileSetEditorPlugin() {
 	editor = memnew(TileSetEditor);
 	editor->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	editor->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-	editor->set_custom_minimum_size(Size2(0, 200) * EDSCALE);
+	editor->set_custom_minimum_size(Size2(560, 200) * EDSCALE);
 	editor->hide();
 
 	button = EditorNode::get_singleton()->add_bottom_panel_item(TTR("TileSet"), editor);

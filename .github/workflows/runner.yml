@@ -10,15 +10,15 @@ jobs:
     name: 📊 Static checks
     uses: ./.github/workflows/static_checks.yml
 
-  # android-build:
-  #   name: 🤖 Android
-  #   needs: static-checks
-  #   uses: ./.github/workflows/android_builds.yml
+  android-build:
+    name: 🤖 Android
+    needs: static-checks
+    uses: ./.github/workflows/android_builds.yml
 
-  # ios-build:
-  #   name: 🍏 iOS
-  #   needs: static-checks
-  #   uses: ./.github/workflows/ios_builds.yml
+  ios-build:
+    name: 🍏 iOS
+    needs: static-checks
+    uses: ./.github/workflows/ios_builds.yml
 
   linux-build:
     name: 🐧 Linux
@@ -35,7 +35,7 @@ jobs:
     needs: static-checks
     uses: ./.github/workflows/windows_builds.yml
 
-  # web-build:
-  #   name: 🌐 Web
-  #   needs: static-checks
-  #   uses: ./.github/workflows/web_builds.yml
+  web-build:
+    name: 🌐 Web
+    needs: static-checks
+    uses: ./.github/workflows/web_builds.yml

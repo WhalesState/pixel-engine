@@ -21,7 +21,6 @@ android_files = [
     "android_keys_utils.cpp",
     "display_server_android.cpp",
     "plugin/godot_plugin_jni.cpp",
-    "vulkan_context_android.cpp",
 ]
 
 env_android = env.Clone()

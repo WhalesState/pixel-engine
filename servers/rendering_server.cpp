@@ -72,15 +72,6 @@ Array RenderingServer::_texture_debug_usage_bind() {
 	return arr;
 }
 
-static PackedInt64Array to_int_array(const Vector<ObjectID> &ids) {
-	PackedInt64Array a;
-	a.resize(ids.size());
-	for (int i = 0; i < ids.size(); ++i) {
-		a.write[i] = ids[i];
-	}
-	return a;
-}
-
 RID RenderingServer::get_test_texture() {
 	if (test_texture.is_valid()) {
 		return test_texture;
