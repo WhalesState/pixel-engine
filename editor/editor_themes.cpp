@@ -251,7 +251,7 @@ static Ref<ImageTexture> editor_generate_icon(int p_index, float p_scale, float 
 	const bool upsample = !Math::is_equal_approx(Math::round(p_scale), p_scale);
 	Error err = ImageLoaderSVG::create_image_from_string(img, editor_icons_sources[p_index], p_scale, upsample, p_convert_colors);
 	ERR_FAIL_COND_V_MSG(err != OK, Ref<ImageTexture>(), "Failed generating icon, unsupported or invalid SVG data in editor theme.");
-	if (p_saturation != 1.0) {
+	if (p_saturation != 0.5) {
 		img->adjust_bcs(1.0, 1.0, p_saturation);
 	}
 #else
@@ -351,7 +351,7 @@ void editor_register_and_generate_icons(Ref<Theme> p_theme, bool p_dark_theme, f
 			} else {
 				float saturation = p_icon_saturation;
 				if (saturation_exceptions.has(editor_icon_name)) {
-					saturation = 1.0;
+					saturation = 0.5;
 				}
 
 				if (conversion_exceptions.has(editor_icon_name)) {
@@ -378,7 +378,7 @@ void editor_register_and_generate_icons(Ref<Theme> p_theme, bool p_dark_theme, f
 			} else {
 				float saturation = p_icon_saturation;
 				if (saturation_exceptions.has(editor_icons_names[index])) {
-					saturation = 1.0;
+					saturation = 0.5;
 				}
 
 				if (conversion_exceptions.has(editor_icons_names[index])) {
@@ -401,7 +401,7 @@ void editor_register_and_generate_icons(Ref<Theme> p_theme, bool p_dark_theme, f
 			} else {
 				float saturation = p_icon_saturation;
 				if (saturation_exceptions.has(editor_icons_names[index])) {
-					saturation = 1.0;
+					saturation = 0.5;
 				}
 
 				if (conversion_exceptions.has(editor_icons_names[index])) {
@@ -444,7 +444,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	float preset_contrast = 0;
 	bool preset_draw_extra_borders = false;
 
-	const float default_contrast = 0.3;
+	const float default_contrast = 0.24;
 
 	// Please use alphabetical order if you're adding a new theme here
 	// (after "Custom")

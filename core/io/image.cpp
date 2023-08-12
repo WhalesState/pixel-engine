@@ -3529,6 +3529,15 @@ PackedVector2Array Image::get_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_
 			err += d.x;
 		}
 	}
+	while (p_y0 - p_y1 < dy) {
+		arr.push_back(Point2i(p_x0 - 1, p_y0));
+		arr.push_back(Point2i(p_x1 + 1, p_y0));
+		arr.push_back(Point2i(p_x0 - 1, p_y1));
+		arr.push_back(Point2i(p_x1 + 1, p_y1));
+
+		p_y0 += 1;
+		p_y1 -= 1;
+	}
 	return arr;
 }
 
