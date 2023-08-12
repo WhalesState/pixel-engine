@@ -3297,7 +3297,7 @@ void Image::set_pixel_v(const Point2i &p_point, const Color &p_color) {
 }
 
 void Image::set_pixel(int p_x, int p_y, const Color &p_color) {
-	if (!point_inside_rect(p_x, p_y)){
+	if (!point_inside_rect(p_x, p_y)) {
 		return;
 	}
 
@@ -3411,19 +3411,57 @@ void Image::set_pixel_cubic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_
 }
 
 PackedVector2Array Image::get_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled, bool p_square) const {
-	PackedVector2Array arr;
-	return arr;
+	return get_pixel_rect(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_filled, p_square);
 }
 
 PackedVector2Array Image::get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled, bool p_square) const {
 	PackedVector2Array arr;
+
+	int dx = p_x1 - p_x0;
+	int dy = p_y1 - p_y0;
+
+	if (p_square && abs(dx) != abs(dy)) {
+		if (abs(dx) > abs(dy)) {
+			p_y1 =  dy >= 0 ? p_y1 + abs(abs(dy) - abs(dx)) : p_y1 - abs(abs(dy) - abs(dx));
+			dy = p_y1 - p_y0;
+		} else {
+			p_x1 = dx >= 0 ? p_x1 + abs(abs(dy) - abs(dx)) : p_x1 - abs(abs(dy) - abs(dx));
+			dx = p_x1 - p_x0;
+		}
+	}
+	int xx = dx > 0 ? 1 : -1;
+	int yy = dy > 0 ? 1 : -1;
+
+	Point2i st = Point2i(p_x0, p_y0);
+
+	for (int x = 0; x <= abs(dx); x++) {
+		if (!p_filled) {
+			arr.push_back(st);
+			arr.push_back(st + Point2i(0, dy));
+		} else {
+			arr.append_array(get_pixel_line_v(st, st + Point2i(0, dy)));
+		}
+		st.x += xx;
+	}
+	st = Point2i(p_x0, p_y0);
+
+	for (int y = 0; y <= abs(dy); y++) {
+		arr.append(st);
+		arr.append(st + Point2i(dx, 0));
+		st.y += yy;
+	}
 	return arr;
 }
 
 void Image::set_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled, bool p_square) {
+	set_pixel_rect(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_color, p_filled, p_square);
 }
 
 void Image::set_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled, bool p_square) {
+	PackedVector2Array arr = get_pixel_rect(p_x0, p_y0, p_x1, p_y1, p_filled, p_square);
+	for (int i = 0; i < arr.size(); i++) {
+		set_pixel(arr[i].x, arr[i].y, p_color);
+	}
 }
 
 PackedVector2Array Image::get_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled, bool p_circle) const {

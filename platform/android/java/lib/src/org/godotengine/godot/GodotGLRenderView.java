@@ -77,7 +77,7 @@ public class GodotGLRenderView extends GLSurfaceView implements GodotRenderView 
 	private final GodotRenderer godotRenderer;
 	private final SparseArray<PointerIcon> customPointerIcons = new SparseArray<>();
 
-	public GodotGLRenderView(GodotHost host, Godot godot, XRMode xrMode, boolean useDebugOpengl) {
+	public GodotGLRenderView(GodotHost host, Godot godot, boolean useDebugOpengl) {
 		super(host.getActivity());
 
 		this.host = host;
@@ -87,7 +87,7 @@ public class GodotGLRenderView extends GLSurfaceView implements GodotRenderView 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 			setPointerIcon(PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_DEFAULT));
 		}
-		init(xrMode, false, useDebugOpengl);
+		init();
 	}
 
 	@Override
@@ -227,48 +227,9 @@ public class GodotGLRenderView extends GLSurfaceView implements GodotRenderView 
 		return super.onResolvePointerIcon(me, pointerIndex);
 	}
 
-	private void init(XRMode xrMode, boolean translucent, boolean useDebugOpengl) {
+	private void init() {
 		setPreserveEGLContextOnPause(true);
 		setFocusableInTouchMode(true);
-		switch (xrMode) {
-			case OPENXR:
-				// Replace the default egl config chooser.
-				setEGLConfigChooser(new OvrConfigChooser());
-
-				// Replace the default context factory.
-				setEGLContextFactory(new OvrContextFactory());
-
-				// Replace the default window surface factory.
-				setEGLWindowSurfaceFactory(new OvrWindowSurfaceFactory());
-				break;
-
-			case REGULAR:
-			default:
-				/* By default, GLSurfaceView() creates a RGB_565 opaque surface.
-				 * If we want a translucent one, we should change the surface's
-				 * format here, using PixelFormat.TRANSLUCENT for GL Surfaces
-				 * is interpreted as any 32-bit surface with alpha by SurfaceFlinger.
-				 */
-				if (translucent) {
-					this.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-				}
-
-				/* Setup the context factory for 2.0 rendering.
-				 * See ContextFactory class definition below
-				 */
-				setEGLContextFactory(new RegularContextFactory(useDebugOpengl));
-
-				/* We need to choose an EGLConfig that matches the format of
-				 * our surface exactly. This is going to be done in our
-				 * custom config chooser. See ConfigChooser class definition
-				 * below.
-				 */
-
-				setEGLConfigChooser(
-						new RegularFallbackConfigChooser(8, 8, 8, 8, 24, 0,
-								new RegularConfigChooser(8, 8, 8, 8, 16, 0)));
-				break;
-		}
 	}
 
 	@Override
