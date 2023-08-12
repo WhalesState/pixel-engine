@@ -52,7 +52,7 @@
 		<method name="get_donor_info" qualifiers="const">
 			<return type="Dictionary" />
 			<description>
-				Returns a Dictionary of Arrays of donor names.
+				Returns a Dictionary of Arrays of Godot Engine donor names.
 				{[code]platinum_sponsors[/code], [code]gold_sponsors[/code], [code]silver_sponsors[/code], [code]bronze_sponsors[/code], [code]mini_sponsors[/code], [code]gold_donors[/code], [code]silver_donors[/code], [code]bronze_donors[/code]}
 			</description>
 		</method>

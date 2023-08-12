@@ -193,6 +193,12 @@ env.CommandNoCache(
     "#core/authors.gen.h", "../AUTHORS.md", env.Run(core_builders.make_authors_header, "Generating authors header.")
 )
 
+# Donors
+env.Depends("#core/donors.gen.h", "../DONORS.md")
+env.CommandNoCache(
+    "#core/donors.gen.h", "../DONORS.md", env.Run(core_builders.make_donors_header, "Generating donors header.")
+)
+
 # License
 env.Depends("#core/license.gen.h", ["../COPYRIGHT.txt", "../LICENSE.txt"])
 env.CommandNoCache(

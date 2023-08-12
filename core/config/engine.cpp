@@ -32,6 +32,7 @@
 
 #include "core/authors.gen.h"
 #include "core/config/project_settings.h"
+#include "core/donors.gen.h"
 #include "core/license.gen.h"
 #include "core/variant/typed_array.h"
 #include "core/version.h"
@@ -166,6 +167,19 @@ TypedArray<Dictionary> Engine::get_copyright_info() const {
 		components.push_back(component_dict);
 	}
 	return components;
+}
+
+Dictionary Engine::get_donor_info() const {
+	Dictionary donors;
+	donors["godot_platinum_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_PLATINUM);
+	donors["godot_gold_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_GOLD);
+	donors["godot_silver_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_SILVER);
+	donors["godot_bronze_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_BRONZE);
+	donors["godot_mini_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_MINI);
+	donors["godot_gold_donors"] = array_from_info(GODOT_DONORS_GOLD);
+	donors["godot_silver_donors"] = array_from_info(GODOT_DONORS_SILVER);
+	donors["godot_bronze_donors"] = array_from_info(GODOT_DONORS_BRONZE);
+	return donors;
 }
 
 Dictionary Engine::get_license_info() const {

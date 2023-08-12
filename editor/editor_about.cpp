@@ -31,6 +31,7 @@
 #include "editor_about.h"
 
 #include "core/authors.gen.h"
+#include "core/donors.gen.h"
 #include "core/license.gen.h"
 #include "core/version.h"
 
@@ -178,6 +179,22 @@ EditorAbout::EditorAbout() {
 		PIXEL_ENGINE_AUTHORS_LEAD_DEVELOPERS, GODOT_AUTHORS_PROJECT_MANAGERS,
 		PIXEL_ENGINE_AUTHORS_PROJECT_MANAGERS, GODOT_AUTHORS_DEVELOPERS, PIXEL_ENGINE_AUTHORS_DEVELOPERS };
 	tc->add_child(_populate_list(TTR("Authors"), dev_sections, dev_src, 1));
+
+	// Donors
+
+	List<String> donor_sections;
+	donor_sections.push_back(TTR("Godot Engine Platinum Sponsors"));
+	donor_sections.push_back(TTR("Godot Engine Gold Sponsors"));
+	donor_sections.push_back(TTR("Godot Engine Silver Sponsors"));
+	donor_sections.push_back(TTR("Godot Engine Bronze Sponsors"));
+	donor_sections.push_back(TTR("Godot Engine Mini Sponsors"));
+	donor_sections.push_back(TTR("Godot Engine Gold Donors"));
+	donor_sections.push_back(TTR("Godot Engine Silver Donors"));
+	donor_sections.push_back(TTR("Godot Engine Bronze Donors"));
+	const char *const *donor_src[] = { GODOT_DONORS_SPONSOR_PLATINUM, GODOT_DONORS_SPONSOR_GOLD,
+		GODOT_DONORS_SPONSOR_SILVER, GODOT_DONORS_SPONSOR_BRONZE, GODOT_DONORS_SPONSOR_MINI,
+		GODOT_DONORS_GOLD, GODOT_DONORS_SILVER, GODOT_DONORS_BRONZE };
+	tc->add_child(_populate_list(TTR("Donors"), donor_sections, donor_src, 3));
 
 	// License
 

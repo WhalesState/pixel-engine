@@ -10,24 +10,24 @@ used, are described on [Godot's website](https://godotengine.org/donate).
 The following is a list of the current monthly donors, who will have their
 generous deed immortalized in the next stable release of Godot Engine.
 
-## Platinum sponsors
+## Godot Engine Platinum sponsors
 
     Gamblify <https://www.gamblify.com>
     Heroic Labs <https://heroiclabs.com>
     Spiffcode <http://spiffcode.com>
 
-## Gold sponsors
+## Godot Engine Gold sponsors
 
     None currently, become one! <https://godotengine.org/donate>
 
-## Silver sponsors
+## Godot Engine Silver sponsors
 
     Affray Interactive <https://scp.games/pandemic>
     Delton Ding
     Playful Studios <https://playfulstudios.com>
     Robot Gentleman <http://robotgentleman.com>
 
-## Bronze sponsors
+## Godot Engine Bronze sponsors
 
     Basically Games
     Bippinbits <https://bippinbits.com>
@@ -45,7 +45,7 @@ generous deed immortalized in the next stable release of Godot Engine.
     Nik Rudenko
     TrampolineTales <https://trampolinetales.com>
 
-## Mini sponsors
+## Godot Engine Mini sponsors
 
     AD Ford
     Albin Lundahl
@@ -85,7 +85,7 @@ generous deed immortalized in the next stable release of Godot Engine.
     Violin Iliev
     Vladimír Chvátil
 
-## Gold donors
+## Godot Engine Gold donors
 
     Adam Brown
     albinaask
@@ -271,7 +271,7 @@ generous deed immortalized in the next stable release of Godot Engine.
     Yuancheng Zhang
     zkip lan
 
-## Silver donors
+## Godot Engine Silver donors
 
     Aaron Adriano
     Aaron Mayfield
@@ -710,7 +710,7 @@ generous deed immortalized in the next stable release of Godot Engine.
     貴宏 小松
     郝晨煜
 
-## Bronze donors
+## Godot Engine Bronze donors
 
 There are even more donors that support the project with a small monthly donation.
 Every bit counts and we thank every one of them for their amazing support!

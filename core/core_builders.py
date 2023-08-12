@@ -121,6 +121,68 @@ def make_authors_header(target, source, env):
     f.close()
 
 
+def make_donors_header(target, source, env):
+    sections = [
+        "Godot Engine Platinum sponsors",
+        "Godot Engine Gold sponsors",
+        "Godot Engine Silver sponsors",
+        "Godot Engine Bronze sponsors",
+        "Godot Engine Mini sponsors",
+        "Godot Engine Gold donors",
+        "Godot Engine Silver donors",
+        "Godot Engine Bronze donors",
+    ]
+    sections_id = [
+        "GODOT_DONORS_SPONSOR_PLATINUM",
+        "GODOT_DONORS_SPONSOR_GOLD",
+        "GODOT_DONORS_SPONSOR_SILVER",
+        "GODOT_DONORS_SPONSOR_BRONZE",
+        "GODOT_DONORS_SPONSOR_MINI",
+        "GODOT_DONORS_GOLD",
+        "GODOT_DONORS_SILVER",
+        "GODOT_DONORS_BRONZE",
+    ]
+
+    src = source[0]
+    dst = target[0]
+    f = open(src, "r", encoding="utf-8")
+    g = open(dst, "w", encoding="utf-8")
+
+    g.write("/* THIS FILE IS GENERATED DO NOT EDIT */\n")
+    g.write("#ifndef DONORS_GEN_H\n")
+    g.write("#define DONORS_GEN_H\n")
+
+    reading = False
+
+    def close_section():
+        g.write("\t0\n")
+        g.write("};\n")
+
+    for line in f:
+        if reading >= 0:
+            if line.startswith("    "):
+                g.write('\t"' + escape_string(line.strip()) + '",\n')
+                continue
+        if line.startswith("## "):
+            if reading:
+                close_section()
+                reading = False
+            for section, section_id in zip(sections, sections_id):
+                if line.strip().endswith(section):
+                    current_section = escape_string(section_id)
+                    reading = True
+                    g.write("const char *const " + current_section + "[] = {\n")
+                    break
+
+    if reading:
+        close_section()
+
+    g.write("#endif // DONORS_GEN_H\n")
+
+    g.close()
+    f.close()
+
+
 def make_license_header(target, source, env):
     src_copyright = source[0]
     src_license = source[1]
