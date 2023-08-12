@@ -549,7 +549,6 @@ void RendererViewport::viewport_initialize(RID p_rid) {
 	Viewport *viewport = viewport_owner.get_or_null(p_rid);
 	viewport->self = p_rid;
 	viewport->render_target = RSG::texture_storage->render_target_create();
-	viewport->shadow_atlas = RSG::light_storage->shadow_atlas_create();
 	viewport->viewport_render_direct_to_screen = false;
 }
 
@@ -743,23 +742,6 @@ void RendererViewport::viewport_set_canvas_stacking(RID p_viewport, RID p_canvas
 	viewport->canvas_map[p_canvas].sublayer = p_sublayer;
 }
 
-void RendererViewport::viewport_set_positional_shadow_atlas_size(RID p_viewport, int p_size, bool p_16_bits) {
-	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
-	ERR_FAIL_COND(!viewport);
-
-	viewport->shadow_atlas_size = p_size;
-	viewport->shadow_atlas_16_bits = p_16_bits;
-
-	RSG::light_storage->shadow_atlas_set_size(viewport->shadow_atlas, viewport->shadow_atlas_size, viewport->shadow_atlas_16_bits);
-}
-
-void RendererViewport::viewport_set_positional_shadow_atlas_quadrant_subdivision(RID p_viewport, int p_quadrant, int p_subdiv) {
-	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
-	ERR_FAIL_COND(!viewport);
-
-	RSG::light_storage->shadow_atlas_set_quadrant_subdivision(viewport->shadow_atlas, p_quadrant, p_subdiv);
-}
-
 void RendererViewport::viewport_set_msaa_2d(RID p_viewport, RS::ViewportMSAA p_msaa) {
 	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
 	ERR_FAIL_COND(!viewport);
@@ -864,7 +846,6 @@ bool RendererViewport::free(RID p_rid) {
 		Viewport *viewport = viewport_owner.get_or_null(p_rid);
 
 		RSG::texture_storage->render_target_free(viewport->render_target);
-		RSG::light_storage->shadow_atlas_free(viewport->shadow_atlas);
 		if (viewport->render_buffers.is_valid()) {
 			viewport->render_buffers.unref();
 		}

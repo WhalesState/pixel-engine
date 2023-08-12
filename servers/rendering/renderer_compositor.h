@@ -33,7 +33,6 @@
 
 #include "servers/rendering/renderer_canvas_render.h"
 #include "servers/rendering/rendering_method.h"
-#include "servers/rendering/storage/light_storage.h"
 #include "servers/rendering/storage/material_storage.h"
 #include "servers/rendering/storage/mesh_storage.h"
 #include "servers/rendering/storage/particles_storage.h"
@@ -77,7 +76,6 @@ public:
 	static RendererCompositor *create();
 
 	virtual RendererUtilities *get_utilities() = 0;
-	virtual RendererLightStorage *get_light_storage() = 0;
 	virtual RendererMaterialStorage *get_material_storage() = 0;
 	virtual RendererMeshStorage *get_mesh_storage() = 0;
 	virtual RendererParticlesStorage *get_particles_storage() = 0;

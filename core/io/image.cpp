@@ -3422,7 +3422,7 @@ PackedVector2Array Image::get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1,
 
 	if (p_square && abs(dx) != abs(dy)) {
 		if (abs(dx) > abs(dy)) {
-			p_y1 =  dy >= 0 ? p_y1 + abs(abs(dy) - abs(dx)) : p_y1 - abs(abs(dy) - abs(dx));
+			p_y1 = dy >= 0 ? p_y1 + abs(abs(dy) - abs(dx)) : p_y1 - abs(abs(dy) - abs(dx));
 			dy = p_y1 - p_y0;
 		} else {
 			p_x1 = dx >= 0 ? p_x1 + abs(abs(dy) - abs(dx)) : p_x1 - abs(abs(dy) - abs(dx));

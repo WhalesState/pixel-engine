@@ -80,10 +80,6 @@ public:
 		uint64_t time_gpu_begin;
 		uint64_t time_gpu_end;
 
-		RID shadow_atlas;
-		int shadow_atlas_size = 2048;
-		bool shadow_atlas_16_bits = true;
-
 		bool sdf_active = false;
 
 		uint64_t last_pass = 0;
@@ -139,7 +135,6 @@ public:
 			transparent_bg = false;
 
 			viewport_to_screen = DisplayServer::INVALID_WINDOW_ID;
-			shadow_atlas_size = 0;
 			measure_render_time = false;
 
 			debug_draw = RS::VIEWPORT_DEBUG_DRAW_DISABLED;
@@ -211,9 +206,6 @@ public:
 	void viewport_set_canvas_stacking(RID p_viewport, RID p_canvas, int p_layer, int p_sublayer);
 
 	void viewport_set_canvas_cull_mask(RID p_viewport, uint32_t p_canvas_cull_mask);
-
-	void viewport_set_positional_shadow_atlas_size(RID p_viewport, int p_size, bool p_16_bits = true);
-	void viewport_set_positional_shadow_atlas_quadrant_subdivision(RID p_viewport, int p_quadrant, int p_subdiv);
 
 	void viewport_set_msaa_2d(RID p_viewport, RS::ViewportMSAA p_msaa);
 

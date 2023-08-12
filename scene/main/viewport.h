@@ -86,16 +86,6 @@ class Viewport : public Node {
 	GDCLASS(Viewport, Node);
 
 public:
-	enum PositionalShadowAtlasQuadrantSubdiv {
-		SHADOW_ATLAS_QUADRANT_SUBDIV_DISABLED,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_1,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_4,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_16,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_64,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_256,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_1024,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_MAX,
-	};
 
 	enum MSAA {
 		MSAA_DISABLED,
@@ -132,8 +122,6 @@ public:
 		DEBUG_DRAW_OVERDRAW,
 		DEBUG_DRAW_WIREFRAME,
 		DEBUG_DRAW_NORMAL_BUFFER,
-		DEBUG_DRAW_SHADOW_ATLAS,
-		DEBUG_DRAW_DIRECTIONAL_SHADOW_ATLAS,
 		DEBUG_DRAW_SCENE_LUMINANCE,
 		DEBUG_DRAW_SSAO,
 		DEBUG_DRAW_SSIL,
@@ -253,10 +241,6 @@ private:
 	RID texture_rid;
 
 	DebugDraw debug_draw = DEBUG_DRAW_DISABLED;
-
-	int positional_shadow_atlas_size = 2048;
-	bool positional_shadow_atlas_16_bits = true;
-	PositionalShadowAtlasQuadrantSubdiv positional_shadow_atlas_quadrant_subdiv[4];
 
 	MSAA msaa_2d = MSAA_DISABLED;
 
@@ -479,15 +463,6 @@ public:
 
 	Ref<ViewportTexture> get_texture() const;
 
-	void set_positional_shadow_atlas_size(int p_size);
-	int get_positional_shadow_atlas_size() const;
-
-	void set_positional_shadow_atlas_16_bits(bool p_16_bits);
-	bool get_positional_shadow_atlas_16_bits() const;
-
-	void set_positional_shadow_atlas_quadrant_subdiv(int p_quadrant, PositionalShadowAtlasQuadrantSubdiv p_subdiv);
-	PositionalShadowAtlasQuadrantSubdiv get_positional_shadow_atlas_quadrant_subdiv(int p_quadrant) const;
-
 	void set_msaa_2d(MSAA p_msaa);
 	MSAA get_msaa_2d() const;
 
@@ -652,7 +627,6 @@ public:
 	~SubViewport();
 };
 VARIANT_ENUM_CAST(SubViewport::UpdateMode);
-VARIANT_ENUM_CAST(Viewport::PositionalShadowAtlasQuadrantSubdiv);
 VARIANT_ENUM_CAST(Viewport::MSAA);
 VARIANT_ENUM_CAST(Viewport::ScreenSpaceAA);
 VARIANT_ENUM_CAST(Viewport::DebugDraw);

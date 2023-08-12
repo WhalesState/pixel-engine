@@ -353,38 +353,6 @@ public:
 	FUNC2RC(Transform2D, skeleton_bone_get_transform_2d, RID, int)
 	FUNC2(skeleton_set_base_transform_2d, RID, const Transform2D &)
 
-	/* Light API */
-#undef ServerName
-#undef server_name
-
-#define ServerName RendererLightStorage
-#define server_name RSG::light_storage
-
-	FUNCRIDSPLIT(directional_light)
-	FUNCRIDSPLIT(omni_light)
-	FUNCRIDSPLIT(spot_light)
-
-	FUNC2(light_set_color, RID, const Color &)
-	FUNC3(light_set_param, RID, LightParam, float)
-	FUNC2(light_set_shadow, RID, bool)
-	FUNC2(light_set_projector, RID, RID)
-	FUNC2(light_set_negative, RID, bool)
-	FUNC2(light_set_cull_mask, RID, uint32_t)
-	FUNC5(light_set_distance_fade, RID, bool, float, float, float)
-	FUNC2(light_set_reverse_cull_face_mode, RID, bool)
-
-	FUNC2(light_omni_set_shadow_mode, RID, LightOmniShadowMode)
-
-	FUNC2(light_directional_set_shadow_mode, RID, LightDirectionalShadowMode)
-	FUNC2(light_directional_set_blend_splits, RID, bool)
-
-	/* Shadow Atlas */
-	FUNC0R(RID, shadow_atlas_create)
-	FUNC3(shadow_atlas_set_size, RID, int, bool)
-	FUNC3(shadow_atlas_set_quadrant_subdivision, RID, int, int)
-
-	FUNC2(directional_shadow_atlas_set_size, int, bool)
-
 	/* PARTICLES */
 
 #undef ServerName
@@ -489,9 +457,7 @@ public:
 
 	FUNC2(viewport_set_global_canvas_transform, RID, const Transform2D &)
 	FUNC4(viewport_set_canvas_stacking, RID, RID, int, int)
-	FUNC3(viewport_set_positional_shadow_atlas_size, RID, int, bool)
 	FUNC3(viewport_set_sdf_oversize_and_scale, RID, ViewportSDFOversize, ViewportSDFScale)
-	FUNC3(viewport_set_positional_shadow_atlas_quadrant_subdivision, RID, int, int)
 	FUNC2(viewport_set_msaa_2d, RID, ViewportMSAA)
 
 	FUNC3R(int, viewport_get_render_info, RID, ViewportRenderInfoType, ViewportRenderInfo)
@@ -503,17 +469,6 @@ public:
 	FUNC1RC(RID, viewport_find_from_screen_attachment, DisplayServer::WindowID)
 
 	FUNC2(call_set_vsync_mode, DisplayServer::VSyncMode, DisplayServer::WindowID)
-
-	/* ENVIRONMENT API */
-
-#undef server_name
-#undef ServerName
-//from now on, calls forwarded to this singleton
-#define ServerName RenderingMethod
-#define server_name RSG::scene
-
-	FUNC1(decals_set_filter, RS::DecalFilter);
-	FUNC1(light_projectors_set_filter, RS::LightProjectorFilter);
 
 	/* SCENARIO API */
 

@@ -81,9 +81,6 @@ public:
 	}
 	void update() override {}
 
-	virtual void decals_set_filter(RS::DecalFilter p_filter) override {}
-	virtual void light_projectors_set_filter(RS::LightProjectorFilter p_filter) override {}
-
 	RasterizerSceneDummy() {}
 	~RasterizerSceneDummy() {}
 };

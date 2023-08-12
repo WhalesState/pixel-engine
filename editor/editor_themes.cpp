@@ -185,7 +185,7 @@ void EditorColorMap::create() {
 	add_conversion_exception("StatusWarning");
 	add_conversion_exception("OverbrightIndicator");
 
-		// GUI
+	// GUI
 	add_conversion_exception("GuiChecked");
 	add_conversion_exception("GuiRadioChecked");
 	add_conversion_exception("GuiIndeterminate");
