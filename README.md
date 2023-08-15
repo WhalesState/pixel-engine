@@ -143,3 +143,11 @@ Here are some key points about the `RenderingServer` class and its usage:
 - The `RenderingServer` class is typically used in conjunction with other classes, such as the `VisualServer` and `SceneManager`, to create and manage scenes, nodes, and resources.
 
 Overall, the `RenderingServer` class plays a critical role in managing the rendering pipeline and provides a high-level API for performing various rendering operations in the Godot game engine.
+
+## lib size comparison
+
+![image](https://github.com/WhalesState/pixel-engine/assets/53877170/ba640ab7-820d-484d-8db6-652ae5dbb66e)
+
+## obj file comparison
+
+![image](https://github.com/WhalesState/pixel-engine/assets/53877170/004f847d-bd30-4b33-b871-d929a8cbc715)

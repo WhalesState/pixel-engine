@@ -973,7 +973,7 @@ void ProjectListItemControl::set_is_missing(bool p_missing) {
 		project_icon->set_modulate(Color(1, 1, 1, 1.0));
 
 		explore_button->set_icon(get_theme_icon(SNAME("Load"), SNAME("EditorIcons")));
-#if !defined(WEB_ENABLED)
+#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 		explore_button->set_tooltip_text(TTR("Show in File Manager"));
 #else
 		// Opening the system file manager is not supported on the Android and web editors.
@@ -1352,7 +1352,7 @@ void ProjectList::_create_project_item_control(int p_index) {
 	hb->connect("gui_input", callable_mp(this, &ProjectList::_panel_input).bind(hb));
 	hb->connect("favorite_pressed", callable_mp(this, &ProjectList::_favorite_pressed).bind(hb));
 
-#if !defined(WEB_ENABLED)
+#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 	hb->connect("explore_pressed", callable_mp(this, &ProjectList::_show_project).bind(item.path));
 #endif
 
@@ -1868,11 +1868,13 @@ void ProjectManager::_notification(int p_what) {
 			filter_option->select(default_sorting);
 			_project_list->set_order_option(default_sorting);
 
+#ifndef ANDROID_ENABLED
 			if (_project_list->get_project_count() >= 1) {
 				// Focus on the search box immediately to allow the user
 				// to search without having to reach for their mouse
 				search_box->grab_focus();
 			}
+#endif
 
 			// Suggest browsing asset library to get templates/demos.
 			if (asset_library && open_templates && _project_list->get_project_count() == 0) {
@@ -2568,6 +2570,7 @@ void ProjectManager::_on_order_option_changed(int p_idx) {
 }
 
 void ProjectManager::_on_tab_changed(int p_tab) {
+#ifndef ANDROID_ENABLED
 	if (p_tab == 0) { // Projects
 		// Automatically grab focus when the user moves from the Templates tab
 		// back to the Projects tab.
@@ -2576,6 +2579,7 @@ void ProjectManager::_on_tab_changed(int p_tab) {
 
 	// The Templates tab's search field is focused on display in the asset
 	// library editor plugin code.
+#endif
 }
 
 void ProjectManager::_on_search_term_changed(const String &p_term) {
@@ -2871,6 +2875,12 @@ ProjectManager::ProjectManager() {
 		language_btn->set_fit_to_longest_item(false);
 		language_btn->set_flat(true);
 		language_btn->connect("item_selected", callable_mp(this, &ProjectManager::_language_selected));
+#ifdef ANDROID_ENABLED
+		// The language selection dropdown doesn't work on Android (as the setting isn't saved), see GH-60353.
+		// Also, the dropdown it spawns is very tall and can't be scrolled without a hardware mouse.
+		// Hiding the language selection dropdown also leaves more space for the version label to display.
+		language_btn->hide();
+#endif
 
 		Vector<String> editor_languages;
 		List<PropertyInfo> editor_settings_properties;
