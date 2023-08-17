@@ -251,10 +251,8 @@ void Camera2D::_notification(int p_what) {
 			add_to_group(group_name);
 			add_to_group(canvas_group_name);
 
-			if (!_is_editing_in_editor()) {
-				if (enabled && !viewport->get_camera_2d()) {
-					make_current();
-				}
+			if (!_is_editing_in_editor() && enabled && !viewport->get_camera_2d()) {
+				make_current();
 			}
 
 			_update_process_callback();
@@ -478,7 +476,6 @@ bool Camera2D::is_current() const {
 	if (!custom_viewport || ObjectDB::get_instance(custom_viewport_id)) {
 		return viewport->get_camera_2d() == this;
 	}
-
 	return false;
 }
 
