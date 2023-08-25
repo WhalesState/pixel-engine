@@ -901,6 +901,10 @@ void ScriptEditorDebugger::_notification(int p_what) {
 					msg.push_back(transform);
 					_put_msg("scene:override_camera_2D:transform", msg);
 				}
+				if (is_breaked() && can_request_idle_draw) {
+					_put_msg("servers:draw", Array());
+					can_request_idle_draw = false;
+				}
 			}
 
 			const uint64_t until = OS::get_singleton()->get_ticks_msec() + 20;

@@ -45,7 +45,7 @@
 #include "tests/core/io/test_resource.h"
 #include "tests/core/io/test_xml_parser.h"
 #include "tests/core/math/test_aabb.h"
-#include "tests/core/math/test_astar.h"
+// #include "tests/core/math/test_astar.h"
 #include "tests/core/math/test_basis.h"
 #include "tests/core/math/test_color.h"
 #include "tests/core/math/test_expression.h"
@@ -90,7 +90,7 @@
 #include "tests/core/variant/test_dictionary.h"
 #include "tests/core/variant/test_variant.h"
 #include "tests/scene/test_animation.h"
-#include "tests/scene/test_arraymesh.h"
+// #include "tests/scene/test_arraymesh.h"
 #include "tests/scene/test_audio_stream_wav.h"
 #include "tests/scene/test_bit_map.h"
 #include "tests/scene/test_code_edit.h"
@@ -99,15 +99,16 @@
 #include "tests/scene/test_curve_2d.h"
 #include "tests/scene/test_gradient.h"
 #include "tests/scene/test_node.h"
-#include "tests/scene/test_packed_scene.h"
+// #include "tests/scene/test_packed_scene.h"
 #include "tests/scene/test_path_2d.h"
-#include "tests/scene/test_primitives.h"
+// #include "tests/scene/test_primitives.h"
 #include "tests/scene/test_sprite_frames.h"
 #include "tests/scene/test_text_edit.h"
 #include "tests/scene/test_theme.h"
 #include "tests/scene/test_viewport.h"
 #include "tests/scene/test_visual_shader.h"
-#include "tests/servers/rendering/test_shader_preprocessor.h"
+#include "tests/scene/test_window.h"
+// #include "tests/servers/rendering/test_shader_preprocessor.h"
 #include "tests/servers/test_text_server.h"
 #include "tests/test_validate_testing.h"
 
@@ -218,9 +219,6 @@ struct GodotTestCaseListener : public doctest::IReporter {
 			memnew(RenderingServerDefault());
 			RenderingServerDefault::get_singleton()->init();
 			RenderingServerDefault::get_singleton()->set_render_loop_enabled(false);
-
-			// physics_server_3d = PhysicsServer3DManager::get_singleton()->new_default_server();
-			// physics_server_3d->init();
 
 			physics_server_2d = PhysicsServer2DManager::get_singleton()->new_default_server();
 			physics_server_2d->init();

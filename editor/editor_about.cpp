@@ -133,7 +133,6 @@ EditorAbout::EditorAbout() {
 	hbc->add_child(_logo);
 
 	VBoxContainer *version_info_vbc = memnew(VBoxContainer);
-	version_info_vbc->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 
 	version_btn = memnew(LinkButton);
 	String hash = String(VERSION_HASH);

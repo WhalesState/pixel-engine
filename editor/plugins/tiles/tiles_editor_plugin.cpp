@@ -38,7 +38,6 @@
 #include "editor/editor_node.h"
 #include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
-#include "editor/inspector_dock.h"
 #include "editor/plugins/canvas_item_editor_plugin.h"
 
 #include "scene/2d/tile_map.h"
@@ -326,8 +325,18 @@ void TileMapEditorPlugin::_tile_map_changed() {
 }
 
 void TileMapEditorPlugin::_update_tile_map() {
-	if (tile_map && tile_map->get_tileset().is_valid()) {
-		EditorNode::get_singleton()->edit_item(tile_map->get_tileset().ptr(), InspectorDock::get_inspector_singleton());
+	TileMap *tile_map = Object::cast_to<TileMap>(ObjectDB::get_instance(tile_map_id));
+	if (tile_map) {
+		Ref<TileSet> tile_set = tile_map->get_tileset();
+		if (tile_set.is_valid() && edited_tileset != tile_set->get_instance_id()) {
+			tile_set_plugin_singleton->edit(tile_map->get_tileset().ptr());
+			tile_set_plugin_singleton->make_visible(true);
+			edited_tileset = tile_set->get_instance_id();
+		} else if (tile_set.is_null()) {
+			tile_set_plugin_singleton->edit(nullptr);
+			tile_set_plugin_singleton->make_visible(false);
+			edited_tileset = ObjectID();
+		}
 	}
 	tile_map_changed_needs_update = false;
 }
@@ -339,18 +348,26 @@ void TileMapEditorPlugin::_notification(int p_notification) {
 }
 
 void TileMapEditorPlugin::edit(Object *p_object) {
+	TileMap *tile_map = Object::cast_to<TileMap>(ObjectDB::get_instance(tile_map_id));
 	if (tile_map) {
 		tile_map->disconnect("changed", callable_mp(this, &TileMapEditorPlugin::_tile_map_changed));
 	}
 
 	tile_map = Object::cast_to<TileMap>(p_object);
+	if (tile_map) {
+		tile_map_id = tile_map->get_instance_id();
+	} else {
+		tile_map_id = ObjectID();
+	}
 
 	editor->edit(tile_map);
 	if (tile_map) {
 		tile_map->connect("changed", callable_mp(this, &TileMapEditorPlugin::_tile_map_changed));
 
 		if (tile_map->get_tileset().is_valid()) {
-			EditorNode::get_singleton()->edit_item(tile_map->get_tileset().ptr(), InspectorDock::get_inspector_singleton());
+			tile_set_plugin_singleton->edit(tile_map->get_tileset().ptr());
+			tile_set_plugin_singleton->make_visible(true);
+			edited_tileset = tile_map->get_tileset()->get_instance_id();
 		}
 	}
 }

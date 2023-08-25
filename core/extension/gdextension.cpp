@@ -485,6 +485,13 @@ void GDExtension::close_library() {
 	ERR_FAIL_COND(library == nullptr);
 	OS::get_singleton()->close_dynamic_library(library);
 
+#if defined(TOOLS_ENABLED) && defined(WINDOWS_ENABLED)
+	// Delete temporary copy of library if it exists.
+	if (!temp_lib_path.is_empty() && Engine::get_singleton()->is_editor_hint()) {
+		DirAccess::remove_absolute(temp_lib_path);
+	}
+#endif
+
 	library = nullptr;
 }
 
@@ -607,12 +614,13 @@ Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String
 	}
 
 	bool compatible = true;
-	if (VERSION_MAJOR < compatibility_minimum[0]) {
-		compatible = false;
-	} else if (VERSION_MINOR < compatibility_minimum[1]) {
-		compatible = false;
-	} else if (VERSION_PATCH < compatibility_minimum[2]) {
-		compatible = false;
+	// Check version lexicographically.
+	if (VERSION_MAJOR != compatibility_minimum[0]) {
+		compatible = VERSION_MAJOR > compatibility_minimum[0];
+	} else if (VERSION_MINOR != compatibility_minimum[1]) {
+		compatible = VERSION_MINOR > compatibility_minimum[1];
+	} else {
+		compatible = VERSION_PATCH >= compatibility_minimum[2];
 	}
 	if (!compatible) {
 		if (r_error) {
@@ -640,6 +648,40 @@ Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String
 	Ref<GDExtension> lib;
 	lib.instantiate();
 	String abs_path = ProjectSettings::get_singleton()->globalize_path(library_path);
+
+#if defined(WINDOWS_ENABLED) && defined(TOOLS_ENABLED)
+	// If running on the editor on Windows, we copy the library and open the copy.
+	// This is so the original file isn't locked and can be updated by a compiler.
+	if (Engine::get_singleton()->is_editor_hint()) {
+		if (!FileAccess::exists(abs_path)) {
+			if (r_error) {
+				*r_error = ERR_FILE_NOT_FOUND;
+			}
+			ERR_PRINT("GDExtension library not found: " + library_path);
+			return Ref<Resource>();
+		}
+
+		// Copy the file to the same directory as the original with a prefix in the name.
+		// This is so relative path to dependencies are satisfied.
+		String copy_path = abs_path.get_base_dir().path_join("~" + abs_path.get_file());
+
+		Error copy_err = DirAccess::copy_absolute(abs_path, copy_path);
+		if (copy_err) {
+			if (r_error) {
+				*r_error = ERR_CANT_CREATE;
+			}
+			ERR_PRINT("Error copying GDExtension library: " + library_path);
+			return Ref<Resource>();
+		}
+		FileAccess::set_hidden_attribute(copy_path, true);
+
+		// Save the copied path so it can be deleted later.
+		lib->set_temp_library_path(copy_path);
+
+		// Use the copy to open the library.
+		abs_path = copy_path;
+	}
+#endif
 	err = lib->open_library(abs_path, entry_symbol);
 
 	if (r_error) {
@@ -647,6 +689,12 @@ Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String
 	}
 
 	if (err != OK) {
+#if defined(WINDOWS_ENABLED) && defined(TOOLS_ENABLED)
+		// If the DLL fails to load, make sure that temporary DLL copies are cleaned up.
+		if (Engine::get_singleton()->is_editor_hint()) {
+			DirAccess::remove_absolute(lib->get_temp_library_path());
+		}
+#endif
 		// Errors already logged in open_library()
 		return Ref<Resource>();
 	}

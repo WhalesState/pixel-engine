@@ -1845,7 +1845,18 @@ GDScriptParser::ForNode *GDScriptParser::parse_for() {
 		n_for->variable = parse_identifier();
 	}
 
-	consume(GDScriptTokenizer::Token::IN, R"(Expected "in" after "for" variable name.)");
+	if (match(GDScriptTokenizer::Token::COLON)) {
+		n_for->datatype_specifier = parse_type();
+		if (n_for->datatype_specifier == nullptr) {
+			push_error(R"(Expected type specifier after ":".)");
+		}
+	}
+
+	if (n_for->datatype_specifier == nullptr) {
+		consume(GDScriptTokenizer::Token::IN, R"(Expected "in" or ":" after "for" variable name.)");
+	} else {
+		consume(GDScriptTokenizer::Token::IN, R"(Expected "in" after "for" variable type specifier.)");
+	}
 
 	n_for->list = parse_expression(false);
 
@@ -2441,7 +2452,7 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_binary_operator(Expression
 	complete_extents(operation);
 
 	if (operation->right_operand == nullptr) {
-		push_error(vformat(R"(Expected expression after "%s" operator.")", op.get_name()));
+		push_error(vformat(R"(Expected expression after "%s" operator.)", op.get_name()));
 	}
 
 	// TODO: Also for unary, ternary, and assignment.
@@ -3030,10 +3041,8 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_get_node(ExpressionNode *p
 	if (previous.type == GDScriptTokenizer::Token::DOLLAR) {
 		// Detect initial slash, which will be handled in the loop if it matches.
 		match(GDScriptTokenizer::Token::SLASH);
-#ifdef DEBUG_ENABLED
 	} else {
 		get_node->use_dollar = false;
-#endif
 	}
 
 	int context_argument = 0;

@@ -81,12 +81,7 @@ void ViewportTexture::setup_local_to_scene() {
 	}
 }
 
-void ViewportTexture::set_viewport_path_in_scene(const NodePath &p_path) {
-	if (path == p_path) {
-		return;
-	}
-
-	path = p_path;
+void ViewportTexture::reset_local_to_scene() {
 	vp_changed = true;
 
 	if (vp) {
@@ -98,6 +93,16 @@ void ViewportTexture::set_viewport_path_in_scene(const NodePath &p_path) {
 		proxy_ph = RS::get_singleton()->texture_2d_placeholder_create();
 		RS::get_singleton()->texture_proxy_update(proxy, proxy_ph);
 	}
+}
+
+void ViewportTexture::set_viewport_path_in_scene(const NodePath &p_path) {
+	if (path == p_path) {
+		return;
+	}
+
+	path = p_path;
+
+	reset_local_to_scene();
 
 	if (get_local_scene() && !path.is_empty()) {
 		setup_local_to_scene();
@@ -357,6 +362,7 @@ void Viewport::_sub_window_grab_focus(Window *p_window) {
 		return;
 	}
 
+	// The index needs to be update before every usage in case an event callback changed the window list.
 	int index = _sub_window_find(p_window);
 	ERR_FAIL_COND(index == -1);
 
@@ -368,6 +374,8 @@ void Viewport::_sub_window_grab_focus(Window *p_window) {
 			gui.subwindow_drag = SUB_WINDOW_DRAG_DISABLED;
 		}
 		// Can only move to foreground, but no focus granted.
+		index = _sub_window_find(p_window);
+		ERR_FAIL_COND(index == -1);
 		SubWindow sw = gui.sub_windows[index];
 		gui.sub_windows.remove_at(index);
 		gui.sub_windows.push_back(sw);
@@ -395,6 +403,8 @@ void Viewport::_sub_window_grab_focus(Window *p_window) {
 	gui.subwindow_focused->_event_callback(DisplayServer::WINDOW_EVENT_FOCUS_IN);
 
 	{ // Move to foreground.
+		index = _sub_window_find(p_window);
+		ERR_FAIL_COND(index == -1);
 		SubWindow sw = gui.sub_windows[index];
 		gui.sub_windows.remove_at(index);
 		gui.sub_windows.push_back(sw);
@@ -2206,6 +2216,7 @@ Window *Viewport::get_base_window() const {
 
 	return w;
 }
+
 void Viewport::_gui_remove_focus_for_window(Node *p_window) {
 	if (get_base_window() == p_window) {
 		gui_release_focus();
@@ -2706,7 +2717,7 @@ bool Viewport::_sub_windows_forward_input(const Ref<InputEvent> &p_event) {
 
 void Viewport::_update_mouse_over() {
 	// Update gui.mouse_over and gui.subwindow_over in all Viewports.
-	// Send necessary mouse_enter/mouse_exit signals and the NOTIFICATION_VP_MOUSE_ENTER/NOTIFICATION_VP_MOUSE_EXIT notifications for every Viewport in the SceneTree.
+	// Send necessary mouse_enter/mouse_exit signals and the MOUSE_ENTER/MOUSE_EXIT notifications for every Viewport in the SceneTree.
 
 	if (is_attached_in_viewport()) {
 		// Execute this function only, when it is processed by a native Window or a SubViewport, that has no SubViewportContainer as parent.
@@ -2760,7 +2771,7 @@ void Viewport::_update_mouse_over(Vector2 p_pos) {
 						}
 						gui.subwindow_over = sw;
 						if (!sw->is_input_disabled()) {
-							sw->notification(NOTIFICATION_VP_MOUSE_ENTER);
+							sw->_propagate_window_notification(sw, NOTIFICATION_WM_MOUSE_ENTER);
 						}
 					}
 					if (!sw->is_input_disabled()) {
@@ -3282,6 +3293,15 @@ bool Viewport::is_embedding_subwindows() const {
 	return gui.embed_subwindows_hint;
 }
 
+TypedArray<Window> Viewport::get_embedded_subwindows() const {
+	TypedArray<Window> windows;
+	for (int i = 0; i < gui.sub_windows.size(); i++) {
+		windows.append(gui.sub_windows[i].window);
+	}
+
+	return windows;
+}
+
 void Viewport::subwindow_set_popup_safe_rect(Window *p_window, const Rect2i &p_rect) {
 	int index = _sub_window_find(p_window);
 	ERR_FAIL_COND(index == -1);
@@ -3486,6 +3506,7 @@ void Viewport::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_embedding_subwindows", "enable"), &Viewport::set_embedding_subwindows);
 	ClassDB::bind_method(D_METHOD("is_embedding_subwindows"), &Viewport::is_embedding_subwindows);
+	ClassDB::bind_method(D_METHOD("get_embedded_subwindows"), &Viewport::get_embedded_subwindows);
 
 	ClassDB::bind_method(D_METHOD("set_canvas_cull_mask", "mask"), &Viewport::set_canvas_cull_mask);
 	ClassDB::bind_method(D_METHOD("get_canvas_cull_mask"), &Viewport::get_canvas_cull_mask);

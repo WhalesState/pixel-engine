@@ -118,6 +118,9 @@ bool DisplayServerX11::has_feature(Feature p_feature) const {
 		case FEATURE_WINDOW_TRANSPARENCY:
 		//case FEATURE_HIDPI:
 		case FEATURE_ICON:
+#ifdef DBUS_ENABLED
+		case FEATURE_NATIVE_DIALOG:
+#endif
 		//case FEATURE_NATIVE_ICON:
 		case FEATURE_SWAP_BUFFERS:
 #ifdef DBUS_ENABLED
@@ -356,6 +359,17 @@ bool DisplayServerX11::is_dark_mode() const {
 	}
 }
 
+Error DisplayServerX11::file_dialog_show(const String &p_title, const String &p_current_directory, const String &p_filename, bool p_show_hidden, FileDialogMode p_mode, const Vector<String> &p_filters, const Callable &p_callback) {
+	WindowID window_id = _get_focused_window_or_popup();
+
+	if (!windows.has(window_id)) {
+		window_id = MAIN_WINDOW_ID;
+	}
+
+	String xid = vformat("x11:%x", (uint64_t)windows[window_id].x11_window);
+	return portal_desktop->file_dialog_show(xid, p_title, p_current_directory, p_filename, p_mode, p_filters, p_callback);
+}
+
 #endif
 
 void DisplayServerX11::mouse_set_mode(MouseMode p_mode) {
@@ -375,7 +389,11 @@ void DisplayServerX11::mouse_set_mode(MouseMode p_mode) {
 
 	if (show_cursor && !previously_shown) {
 		WindowID window_id = get_window_at_screen_position(mouse_get_position());
-		if (window_id != INVALID_WINDOW_ID) {
+		if (window_id != INVALID_WINDOW_ID && window_mouseover_id != window_id) {
+			if (window_mouseover_id != INVALID_WINDOW_ID) {
+				_send_window_event(windows[window_mouseover_id], WINDOW_EVENT_MOUSE_EXIT);
+			}
+			window_mouseover_id = window_id;
 			_send_window_event(windows[window_id], WINDOW_EVENT_MOUSE_ENTER);
 		}
 	}
@@ -1445,6 +1463,11 @@ void DisplayServerX11::delete_sub_window(WindowID p_id) {
 
 	DEBUG_LOG_X11("delete_sub_window: %lu (%u) \n", wd.x11_window, p_id);
 
+	if (window_mouseover_id == p_id) {
+		window_mouseover_id = INVALID_WINDOW_ID;
+		_send_window_event(windows[p_id], WINDOW_EVENT_MOUSE_EXIT);
+	}
+
 	window_set_rect_changed_callback(Callable(), p_id);
 	window_set_window_event_callback(Callable(), p_id);
 	window_set_input_event_callback(Callable(), p_id);
@@ -2089,9 +2112,10 @@ bool DisplayServerX11::_window_maximize_check(WindowID p_window, const char *p_a
 bool DisplayServerX11::_window_minimize_check(WindowID p_window) const {
 	const WindowData &wd = windows[p_window];
 
-	// Using ICCCM -- Inter-Client Communication Conventions Manual
-	Atom property = XInternAtom(x11_display, "WM_STATE", True);
-	if (property == None) {
+	// Using EWMH instead of ICCCM, might work better for Wayland users.
+	Atom property = XInternAtom(x11_display, "_NET_WM_STATE", True);
+	Atom hidden = XInternAtom(x11_display, "_NET_WM_STATE_HIDDEN", True);
+	if (property == None || hidden == None) {
 		return false;
 	}
 
@@ -2099,7 +2123,7 @@ bool DisplayServerX11::_window_minimize_check(WindowID p_window) const {
 	int format;
 	unsigned long len;
 	unsigned long remaining;
-	unsigned char *data = nullptr;
+	Atom *atoms = nullptr;
 
 	int result = XGetWindowProperty(
 			x11_display,
@@ -2108,20 +2132,21 @@ bool DisplayServerX11::_window_minimize_check(WindowID p_window) const {
 			0,
 			32,
 			False,
-			AnyPropertyType,
+			XA_ATOM,
 			&type,
 			&format,
 			&len,
 			&remaining,
-			&data);
+			(unsigned char **)&atoms);
 
-	if (result == Success && data) {
-		long *state = (long *)data;
-		if (state[0] == WM_IconicState) {
-			XFree(data);
-			return true;
+	if (result == Success && atoms) {
+		for (unsigned int i = 0; i < len; i++) {
+			if (atoms[i] == hidden) {
+				XFree(atoms);
+				return true;
+			}
 		}
-		XFree(data);
+		XFree(atoms);
 	}
 
 	return false;
@@ -4273,7 +4298,8 @@ void DisplayServerX11::process_events() {
 					break;
 				}
 
-				if (!mouse_mode_grab) {
+				if (!mouse_mode_grab && window_mouseover_id == window_id) {
+					window_mouseover_id = INVALID_WINDOW_ID;
 					_send_window_event(windows[window_id], WINDOW_EVENT_MOUSE_EXIT);
 				}
 
@@ -4285,7 +4311,11 @@ void DisplayServerX11::process_events() {
 					break;
 				}
 
-				if (!mouse_mode_grab) {
+				if (!mouse_mode_grab && window_mouseover_id != window_id) {
+					if (window_mouseover_id != INVALID_WINDOW_ID) {
+						_send_window_event(windows[window_mouseover_id], WINDOW_EVENT_MOUSE_EXIT);
+					}
+					window_mouseover_id = window_id;
 					_send_window_event(windows[window_id], WINDOW_EVENT_MOUSE_ENTER);
 				}
 			} break;

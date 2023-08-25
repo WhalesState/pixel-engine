@@ -263,6 +263,9 @@ void SceneTreeDock::_perform_instantiate_scenes(const Vector<String> &p_files, N
 }
 
 void SceneTreeDock::_replace_with_branch_scene(const String &p_file, Node *base) {
+	// `move_child` + `get_index` doesn't really work for internal nodes.
+	ERR_FAIL_COND_MSG(base->get_internal_mode() != INTERNAL_MODE_DISABLED, "Trying to replace internal node, this is not supported.");
+
 	Ref<PackedScene> sdata = ResourceLoader::load(p_file);
 	if (!sdata.is_valid()) {
 		accept->set_text(vformat(TTR("Error loading scene from %s"), p_file));
@@ -283,7 +286,7 @@ void SceneTreeDock::_replace_with_branch_scene(const String &p_file, Node *base)
 	undo_redo->create_action(TTR("Replace with Branch Scene"));
 
 	Node *parent = base->get_parent();
-	int pos = base->get_index();
+	int pos = base->get_index(false);
 	undo_redo->add_do_method(parent, "remove_child", base);
 	undo_redo->add_undo_method(parent, "remove_child", instantiated_scene);
 	undo_redo->add_do_method(parent, "add_child", instantiated_scene, true);
@@ -610,10 +613,12 @@ void SceneTreeDock::_tool_selected(int p_tool, bool p_confirm_override) {
 				selection.reverse();
 			}
 
-			int lowest_id = common_parent->get_child_count() - 1;
+			int lowest_id = common_parent->get_child_count(false) - 1;
 			int highest_id = 0;
 			for (Node *E : selection) {
-				int index = E->get_index();
+				// `move_child` + `get_index` doesn't really work for internal nodes.
+				ERR_FAIL_COND_MSG(E->get_internal_mode() != INTERNAL_MODE_DISABLED, "Trying to move internal node, this is not supported.");
+				int index = E->get_index(false);
 
 				if (index > highest_id) {
 					highest_id = index;
@@ -627,7 +632,7 @@ void SceneTreeDock::_tool_selected(int p_tool, bool p_confirm_override) {
 				}
 			}
 
-			if (!common_parent || (MOVING_DOWN && highest_id >= common_parent->get_child_count() - MOVING_DOWN) || (MOVING_UP && lowest_id == 0)) {
+			if (!common_parent || (MOVING_DOWN && highest_id >= common_parent->get_child_count(false) - MOVING_DOWN) || (MOVING_UP && lowest_id == 0)) {
 				break; // one or more nodes can not be moved
 			}
 
@@ -646,8 +651,8 @@ void SceneTreeDock::_tool_selected(int p_tool, bool p_confirm_override) {
 				ERR_FAIL_COND(!top_node->get_parent());
 				ERR_FAIL_COND(!bottom_node->get_parent());
 
-				int bottom_node_pos = bottom_node->get_index();
-				int top_node_pos_next = top_node->get_index() + (MOVING_DOWN ? 1 : -1);
+				int bottom_node_pos = bottom_node->get_index(false);
+				int top_node_pos_next = top_node->get_index(false) + (MOVING_DOWN ? 1 : -1);
 
 				undo_redo->add_do_method(top_node->get_parent(), "move_child", top_node, top_node_pos_next);
 				undo_redo->add_undo_method(bottom_node->get_parent(), "move_child", bottom_node, bottom_node_pos);
@@ -778,6 +783,9 @@ void SceneTreeDock::_tool_selected(int p_tool, bool p_confirm_override) {
 				return;
 			}
 
+			// `move_child` + `get_index` doesn't really work for internal nodes.
+			ERR_FAIL_COND_MSG(node->get_internal_mode() != INTERNAL_MODE_DISABLED, "Trying to set internal node as scene root, this is not supported.");
+
 			//check that from node to root, all owners are right
 
 			if (root->get_scene_inherited_state().is_valid()) {
@@ -814,7 +822,7 @@ void SceneTreeDock::_tool_selected(int p_tool, bool p_confirm_override) {
 			undo_redo->add_undo_method(node, "remove_child", root);
 			undo_redo->add_undo_method(EditorNode::get_singleton(), "set_edited_scene", root);
 			undo_redo->add_undo_method(node->get_parent(), "add_child", node, true);
-			undo_redo->add_undo_method(node->get_parent(), "move_child", node, node->get_index());
+			undo_redo->add_undo_method(node->get_parent(), "move_child", node, node->get_index(false));
 			undo_redo->add_undo_method(root, "set_owner", (Object *)nullptr);
 			undo_redo->add_undo_method(node, "set_owner", root);
 			_node_replace_owner(root, root, root, MODE_UNDO);
@@ -1889,8 +1897,10 @@ void SceneTreeDock::_do_reparent(Node *p_new_parent, int p_position_in_parent, V
 		if (p_nodes[ni] == p_new_parent) {
 			return; // Attempt to reparent to itself.
 		}
+		// `move_child` + `get_index` doesn't really work for internal nodes.
+		ERR_FAIL_COND_MSG(p_nodes[ni]->get_internal_mode() != INTERNAL_MODE_DISABLED, "Trying to move internal node, this is not supported.");
 
-		if (p_nodes[ni]->get_parent() != p_new_parent || p_position_in_parent + ni != p_nodes[ni]->get_index()) {
+		if (p_nodes[ni]->get_parent() != p_new_parent || p_position_in_parent + ni != p_nodes[ni]->get_index(false)) {
 			no_change = false;
 		}
 	}
@@ -1931,7 +1941,7 @@ void SceneTreeDock::_do_reparent(Node *p_new_parent, int p_position_in_parent, V
 		}
 
 		bool same_parent = new_parent == node->get_parent();
-		if (same_parent && node->get_index() < p_position_in_parent + ni) {
+		if (same_parent && node->get_index(false) < p_position_in_parent + ni) {
 			inc--; // If the child will generate a gap when moved, adjust.
 		}
 
@@ -1973,7 +1983,7 @@ void SceneTreeDock::_do_reparent(Node *p_new_parent, int p_position_in_parent, V
 		}
 
 		undo_redo->add_do_method(ed, "live_debug_reparent_node", edited_scene->get_path_to(node), edited_scene->get_path_to(new_parent), new_name, new_position_in_parent);
-		undo_redo->add_undo_method(ed, "live_debug_reparent_node", NodePath(String(edited_scene->get_path_to(new_parent)).path_join(new_name)), edited_scene->get_path_to(node->get_parent()), node->get_name(), node->get_index());
+		undo_redo->add_undo_method(ed, "live_debug_reparent_node", NodePath(String(edited_scene->get_path_to(new_parent)).path_join(new_name)), edited_scene->get_path_to(node->get_parent()), node->get_name(), node->get_index(false));
 
 		if (p_keep_global_xform) {
 			if (Object::cast_to<Node2D>(node)) {
@@ -2007,7 +2017,7 @@ void SceneTreeDock::_do_reparent(Node *p_new_parent, int p_position_in_parent, V
 			owners.push_back(E);
 		}
 
-		int child_pos = node->get_index();
+		int child_pos = node->get_index(false);
 
 		undo_redo->add_undo_method(node->get_parent(), "add_child", node, true);
 		undo_redo->add_undo_method(node->get_parent(), "move_child", node, child_pos);
@@ -2149,6 +2159,10 @@ void SceneTreeDock::_delete_confirm(bool p_cut) {
 		undo_redo->add_undo_method(scene_tree, "update_tree");
 		undo_redo->add_undo_reference(edited_scene);
 	} else {
+		for (const Node *E : remove_list) {
+			// `move_child` + `get_index` doesn't really work for internal nodes.
+			ERR_FAIL_COND_MSG(E->get_internal_mode() != INTERNAL_MODE_DISABLED, "Trying to remove internal node, this is not supported.");
+		}
 		if (delete_tracks_checkbox->is_pressed() || p_cut) {
 			remove_list.sort_custom<Node::Comparator>(); // Sort nodes to keep positions.
 			HashMap<Node *, NodePath> path_renames;
@@ -2180,7 +2194,7 @@ void SceneTreeDock::_delete_confirm(bool p_cut) {
 
 			undo_redo->add_do_method(n->get_parent(), "remove_child", n);
 			undo_redo->add_undo_method(n->get_parent(), "add_child", n, true);
-			undo_redo->add_undo_method(n->get_parent(), "move_child", n, n->get_index());
+			undo_redo->add_undo_method(n->get_parent(), "move_child", n, n->get_index(false));
 			if (AnimationPlayerEditor::get_singleton()->get_track_editor()->get_root() == n) {
 				undo_redo->add_undo_method(AnimationPlayerEditor::get_singleton()->get_track_editor(), "set_root", n);
 			}
@@ -2189,7 +2203,7 @@ void SceneTreeDock::_delete_confirm(bool p_cut) {
 
 			EditorDebuggerNode *ed = EditorDebuggerNode::get_singleton();
 			undo_redo->add_do_method(ed, "live_debug_remove_and_keep_node", edited_scene->get_path_to(n), n->get_instance_id());
-			undo_redo->add_undo_method(ed, "live_debug_restore_node", n->get_instance_id(), edited_scene->get_path_to(n->get_parent()), n->get_index());
+			undo_redo->add_undo_method(ed, "live_debug_restore_node", n->get_instance_id(), edited_scene->get_path_to(n->get_parent()), n->get_index(false));
 		}
 	}
 	undo_redo->commit_action();
@@ -2682,7 +2696,7 @@ void SceneTreeDock::_normalize_drop(Node *&to_node, int &to_pos, int p_type) {
 			ERR_FAIL_MSG("Cannot perform drop above the root node!");
 		}
 
-		to_pos = to_node->get_index();
+		to_pos = to_node->get_index(false);
 		to_node = to_node->get_parent();
 
 	} else if (p_type == 1) {
@@ -2698,15 +2712,15 @@ void SceneTreeDock::_normalize_drop(Node *&to_node, int &to_pos, int p_type) {
 		if (_has_visible_children(to_node)) {
 			to_pos = 0;
 		} else {
-			for (int i = to_node->get_index() + 1; i < to_node->get_parent()->get_child_count(); i++) {
-				Node *c = to_node->get_parent()->get_child(i);
+			for (int i = to_node->get_index(false) + 1; i < to_node->get_parent()->get_child_count(false); i++) {
+				Node *c = to_node->get_parent()->get_child(i, false);
 				if (_is_node_visible(c)) {
 					lower_sibling = c;
 					break;
 				}
 			}
 			if (lower_sibling) {
-				to_pos = lower_sibling->get_index();
+				to_pos = lower_sibling->get_index(false);
 			}
 
 			to_node = to_node->get_parent();
@@ -3736,16 +3750,16 @@ SceneTreeDock::SceneTreeDock(Node *p_scene_root, EditorSelection *p_editor_selec
 	ED_SHORTCUT("scene_tree/batch_rename", TTR("Batch Rename"), KeyModifierMask::SHIFT | Key::F2);
 	ED_SHORTCUT_OVERRIDE("scene_tree/batch_rename", "macos", KeyModifierMask::SHIFT | Key::ENTER);
 
-	ED_SHORTCUT("scene_tree/add_child_node", TTR("Add Child Node"), KeyModifierMask::CMD_OR_CTRL | Key::A);
-	ED_SHORTCUT("scene_tree/instantiate_scene", TTR("Instantiate Child Scene"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::A);
+	ED_SHORTCUT("scene_tree/add_child_node", TTR("Add Child Node..."), KeyModifierMask::CMD_OR_CTRL | Key::A);
+	ED_SHORTCUT("scene_tree/instantiate_scene", TTR("Instantiate Child Scene..."), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::A);
 	ED_SHORTCUT("scene_tree/expand_collapse_all", TTR("Expand/Collapse Branch"));
 	ED_SHORTCUT("scene_tree/cut_node", TTR("Cut"), KeyModifierMask::CMD_OR_CTRL | Key::X);
 	ED_SHORTCUT("scene_tree/copy_node", TTR("Copy"), KeyModifierMask::CMD_OR_CTRL | Key::C);
 	ED_SHORTCUT("scene_tree/paste_node", TTR("Paste"), KeyModifierMask::CMD_OR_CTRL | Key::V);
 	ED_SHORTCUT("scene_tree/paste_node_as_sibling", TTR("Paste as Sibling"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::V);
-	ED_SHORTCUT("scene_tree/change_node_type", TTR("Change Type"));
-	ED_SHORTCUT("scene_tree/attach_script", TTR("Attach Script"));
-	ED_SHORTCUT("scene_tree/extend_script", TTR("Extend Script"));
+	ED_SHORTCUT("scene_tree/change_node_type", TTR("Change Type..."));
+	ED_SHORTCUT("scene_tree/attach_script", TTR("Attach Script..."));
+	ED_SHORTCUT("scene_tree/extend_script", TTR("Extend Script..."));
 	ED_SHORTCUT("scene_tree/detach_script", TTR("Detach Script"));
 	ED_SHORTCUT("scene_tree/move_up", TTR("Move Up"), KeyModifierMask::CMD_OR_CTRL | Key::UP);
 	ED_SHORTCUT("scene_tree/move_down", TTR("Move Down"), KeyModifierMask::CMD_OR_CTRL | Key::DOWN);
