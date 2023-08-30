@@ -48,6 +48,12 @@
 				[b]Note:[/b] It also returns [code]false[/code], if the sprite's texture is [code]null[/code] or if the given position is invalid.
 			</description>
 		</method>
+		<method name="get_max_frames" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns maximum frame count.
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="centered" type="bool" setter="set_centered" getter="is_centered" default="true">
