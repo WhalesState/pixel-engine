@@ -3276,7 +3276,21 @@ bool Image::point_inside_rect_v(const Point2i &p_point) const {
 }
 
 bool Image::point_inside_rect(int p_x, int p_y) const {
-	return !(p_x < 0 || p_x >= width || p_y < 0 || p_y >= height);
+	Point2i s_pos = selection.position;
+	Point2i s_size = selection.size;
+	if (s_size.x == 0 || s_size.y == 0) {
+		s_size = Point2i(width, height) - s_pos;
+	}
+	return !(p_x < s_pos.x || p_x >= s_size.x + s_pos.x || p_y < s_pos.y || p_y >= s_size.y + s_pos.y);
+}
+
+void Image::set_selection_rect(Point2i p_pos, Point2i p_size) {
+	selection.position = p_pos.clamp(Point2i(0, 0), Point2i(width, height));
+	selection.size = p_size.clamp(Point2i(0, 0), Point2i(width, height) - selection.position);
+}
+
+Rect2i Image::get_selection_rect() const {
+	return selection;
 }
 
 Color Image::get_pixel_v(const Point2i &p_point) const {
@@ -3756,6 +3770,9 @@ void Image::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("point_inside_rect_v", "point"), &Image::point_inside_rect_v);
 	ClassDB::bind_method(D_METHOD("point_inside_rect", "x", "y"), &Image::point_inside_rect);
+
+	ClassDB::bind_method(D_METHOD("set_selection_rect", "position", "size"), &Image::set_selection_rect);
+	ClassDB::bind_method(D_METHOD("get_selection_rect"), &Image::get_selection_rect);
 
 	ClassDB::bind_method(D_METHOD("get_pixel_v", "point"), &Image::get_pixel_v);
 	ClassDB::bind_method(D_METHOD("get_pixel", "x", "y"), &Image::get_pixel);

@@ -185,6 +185,7 @@ private:
 	Vector<uint8_t> data;
 	int width = 0;
 	int height = 0;
+	Rect2i selection = Rect2i(Point2i(0, 0), Size2i(0, 0));
 	bool mipmaps = false;
 
 	void _copy_internals_from(const Image &p_image) {
@@ -424,6 +425,9 @@ public:
 
 	bool point_inside_rect(int p_x, int p_y) const;
 	bool point_inside_rect_v(const Point2i &p_point) const;
+
+	void set_selection_rect(Point2i p_pos, Point2i p_size);
+	Rect2i get_selection_rect() const;
 
 	Color get_pixel_v(const Point2i &p_point) const;
 	Color get_pixel(int p_x, int p_y) const;
