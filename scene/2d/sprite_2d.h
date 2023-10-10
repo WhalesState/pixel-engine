@@ -118,6 +118,8 @@ public:
 	void set_hframes(int p_amount);
 	int get_hframes() const;
 
+	int get_max_frames() const;
+
 	Rect2 get_rect() const;
 	virtual Rect2 get_anchorable_rect() const override;
 

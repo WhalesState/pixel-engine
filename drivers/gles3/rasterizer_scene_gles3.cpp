@@ -291,12 +291,6 @@ bool RasterizerSceneGLES3::free(RID p_rid) {
 void RasterizerSceneGLES3::update() {
 }
 
-void RasterizerSceneGLES3::decals_set_filter(RS::DecalFilter p_filter) {
-}
-
-void RasterizerSceneGLES3::light_projectors_set_filter(RS::LightProjectorFilter p_filter) {
-}
-
 RasterizerSceneGLES3::RasterizerSceneGLES3() {
 }
 

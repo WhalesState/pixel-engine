@@ -38,7 +38,6 @@
 #include "rasterizer_scene_gles3.h"
 #include "servers/rendering/renderer_compositor.h"
 #include "storage/config.h"
-#include "storage/light_storage.h"
 #include "storage/material_storage.h"
 #include "storage/mesh_storage.h"
 #include "storage/particles_storage.h"
@@ -59,7 +58,6 @@ protected:
 	GLES3::MaterialStorage *material_storage = nullptr;
 	GLES3::MeshStorage *mesh_storage = nullptr;
 	GLES3::ParticlesStorage *particles_storage = nullptr;
-	GLES3::LightStorage *light_storage = nullptr;
 	GLES3::CopyEffects *copy_effects = nullptr;
 	RasterizerCanvasGLES3 *canvas = nullptr;
 	RasterizerSceneGLES3 *scene = nullptr;
@@ -69,7 +67,6 @@ protected:
 
 public:
 	RendererUtilities *get_utilities() { return utilities; }
-	RendererLightStorage *get_light_storage() { return light_storage; }
 	RendererMaterialStorage *get_material_storage() { return material_storage; }
 	RendererMeshStorage *get_mesh_storage() { return mesh_storage; }
 	RendererParticlesStorage *get_particles_storage() { return particles_storage; }

@@ -814,6 +814,8 @@ public:
 
 	struct ForNode : public Node {
 		IdentifierNode *variable = nullptr;
+		TypeNode *datatype_specifier = nullptr;
+		bool use_conversion_assign = false;
 		ExpressionNode *list = nullptr;
 		SuiteNode *loop = nullptr;
 
@@ -848,9 +850,7 @@ public:
 
 	struct GetNodeNode : public ExpressionNode {
 		String full_path;
-#ifdef DEBUG_ENABLED
 		bool use_dollar = true;
-#endif
 
 		GetNodeNode() {
 			type = GET_NODE;

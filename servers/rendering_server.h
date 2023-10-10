@@ -406,123 +406,6 @@ public:
 	virtual Transform2D skeleton_bone_get_transform_2d(RID p_skeleton, int p_bone) const = 0;
 	virtual void skeleton_set_base_transform_2d(RID p_skeleton, const Transform2D &p_base_transform) = 0;
 
-	/* Light API */
-
-	enum LightType {
-		LIGHT_DIRECTIONAL,
-		LIGHT_OMNI,
-		LIGHT_SPOT
-	};
-
-	enum LightParam {
-		LIGHT_PARAM_ENERGY,
-		LIGHT_PARAM_INDIRECT_ENERGY,
-		LIGHT_PARAM_VOLUMETRIC_FOG_ENERGY,
-		LIGHT_PARAM_SPECULAR,
-		LIGHT_PARAM_RANGE,
-		LIGHT_PARAM_SIZE,
-		LIGHT_PARAM_ATTENUATION,
-		LIGHT_PARAM_SPOT_ANGLE,
-		LIGHT_PARAM_SPOT_ATTENUATION,
-		LIGHT_PARAM_SHADOW_MAX_DISTANCE,
-		LIGHT_PARAM_SHADOW_SPLIT_1_OFFSET,
-		LIGHT_PARAM_SHADOW_SPLIT_2_OFFSET,
-		LIGHT_PARAM_SHADOW_SPLIT_3_OFFSET,
-		LIGHT_PARAM_SHADOW_FADE_START,
-		LIGHT_PARAM_SHADOW_NORMAL_BIAS,
-		LIGHT_PARAM_SHADOW_BIAS,
-		LIGHT_PARAM_SHADOW_PANCAKE_SIZE,
-		LIGHT_PARAM_SHADOW_OPACITY,
-		LIGHT_PARAM_SHADOW_BLUR,
-		LIGHT_PARAM_TRANSMITTANCE_BIAS,
-		LIGHT_PARAM_INTENSITY,
-		LIGHT_PARAM_MAX
-	};
-
-	virtual RID directional_light_create() = 0;
-	virtual RID omni_light_create() = 0;
-	virtual RID spot_light_create() = 0;
-
-	virtual void light_set_color(RID p_light, const Color &p_color) = 0;
-	virtual void light_set_param(RID p_light, LightParam p_param, float p_value) = 0;
-	virtual void light_set_shadow(RID p_light, bool p_enabled) = 0;
-	virtual void light_set_projector(RID p_light, RID p_texture) = 0;
-	virtual void light_set_negative(RID p_light, bool p_enable) = 0;
-	virtual void light_set_cull_mask(RID p_light, uint32_t p_mask) = 0;
-	virtual void light_set_distance_fade(RID p_light, bool p_enabled, float p_begin, float p_shadow, float p_length) = 0;
-	virtual void light_set_reverse_cull_face_mode(RID p_light, bool p_enabled) = 0;
-
-	// Omni light
-	enum LightOmniShadowMode {
-		LIGHT_OMNI_SHADOW_DUAL_PARABOLOID,
-		LIGHT_OMNI_SHADOW_CUBE,
-	};
-
-	virtual void light_omni_set_shadow_mode(RID p_light, LightOmniShadowMode p_mode) = 0;
-
-	// Directional light
-	enum LightDirectionalShadowMode {
-		LIGHT_DIRECTIONAL_SHADOW_ORTHOGONAL,
-		LIGHT_DIRECTIONAL_SHADOW_PARALLEL_2_SPLITS,
-		LIGHT_DIRECTIONAL_SHADOW_PARALLEL_4_SPLITS,
-	};
-
-	virtual void light_directional_set_shadow_mode(RID p_light, LightDirectionalShadowMode p_mode) = 0;
-	virtual void light_directional_set_blend_splits(RID p_light, bool p_enable) = 0;
-
-	// Shadow atlas
-
-	virtual RID shadow_atlas_create() = 0;
-	virtual void shadow_atlas_set_size(RID p_atlas, int p_size, bool p_use_16_bits = true) = 0;
-	virtual void shadow_atlas_set_quadrant_subdivision(RID p_atlas, int p_quadrant, int p_subdivision) = 0;
-
-	virtual void directional_shadow_atlas_set_size(int p_size, bool p_16_bits = true) = 0;
-
-	enum ShadowQuality {
-		SHADOW_QUALITY_HARD,
-		SHADOW_QUALITY_SOFT_VERY_LOW,
-		SHADOW_QUALITY_SOFT_LOW,
-		SHADOW_QUALITY_SOFT_MEDIUM,
-		SHADOW_QUALITY_SOFT_HIGH,
-		SHADOW_QUALITY_SOFT_ULTRA,
-		SHADOW_QUALITY_MAX
-	};
-
-	enum LightProjectorFilter {
-		LIGHT_PROJECTOR_FILTER_NEAREST,
-		LIGHT_PROJECTOR_FILTER_LINEAR,
-		LIGHT_PROJECTOR_FILTER_NEAREST_MIPMAPS,
-		LIGHT_PROJECTOR_FILTER_LINEAR_MIPMAPS,
-		LIGHT_PROJECTOR_FILTER_NEAREST_MIPMAPS_ANISOTROPIC,
-		LIGHT_PROJECTOR_FILTER_LINEAR_MIPMAPS_ANISOTROPIC,
-	};
-
-	virtual void light_projectors_set_filter(LightProjectorFilter p_filter) = 0;
-
-	enum ReflectionProbeUpdateMode {
-		REFLECTION_PROBE_UPDATE_ONCE,
-		REFLECTION_PROBE_UPDATE_ALWAYS,
-	};
-
-	enum ReflectionProbeAmbientMode {
-		REFLECTION_PROBE_AMBIENT_DISABLED,
-		REFLECTION_PROBE_AMBIENT_ENVIRONMENT,
-		REFLECTION_PROBE_AMBIENT_COLOR,
-	};
-
-	/* DECAL API */
-
-	enum DecalFilter {
-		DECAL_FILTER_NEAREST,
-		DECAL_FILTER_LINEAR,
-		DECAL_FILTER_NEAREST_MIPMAPS,
-		DECAL_FILTER_LINEAR_MIPMAPS,
-		DECAL_FILTER_NEAREST_MIPMAPS_ANISOTROPIC,
-		DECAL_FILTER_LINEAR_MIPMAPS_ANISOTROPIC,
-	};
-
-	virtual void decals_set_filter(DecalFilter p_quality) = 0;
-
 	/* PARTICLES API */
 
 	virtual RID particles_create() = 0;
@@ -716,9 +599,6 @@ public:
 
 	virtual void viewport_set_sdf_oversize_and_scale(RID p_viewport, ViewportSDFOversize p_oversize, ViewportSDFScale p_scale) = 0;
 
-	virtual void viewport_set_positional_shadow_atlas_size(RID p_viewport, int p_size, bool p_16_bits = true) = 0;
-	virtual void viewport_set_positional_shadow_atlas_quadrant_subdivision(RID p_viewport, int p_quadrant, int p_subdiv) = 0;
-
 	enum ViewportMSAA {
 		VIEWPORT_MSAA_DISABLED,
 		VIEWPORT_MSAA_2X,
@@ -763,8 +643,6 @@ public:
 		VIEWPORT_DEBUG_DRAW_OVERDRAW,
 		VIEWPORT_DEBUG_DRAW_WIREFRAME,
 		VIEWPORT_DEBUG_DRAW_NORMAL_BUFFER,
-		VIEWPORT_DEBUG_DRAW_SHADOW_ATLAS,
-		VIEWPORT_DEBUG_DRAW_DIRECTIONAL_SHADOW_ATLAS,
 		VIEWPORT_DEBUG_DRAW_SCENE_LUMINANCE,
 		VIEWPORT_DEBUG_DRAW_SSAO,
 		VIEWPORT_DEBUG_DRAW_SSIL,
@@ -1198,12 +1076,6 @@ VARIANT_ENUM_CAST(RenderingServer::ArrayCustomFormat);
 VARIANT_ENUM_CAST(RenderingServer::PrimitiveType);
 VARIANT_ENUM_CAST(RenderingServer::BlendShapeMode);
 VARIANT_ENUM_CAST(RenderingServer::MultimeshTransformFormat);
-VARIANT_ENUM_CAST(RenderingServer::LightType);
-VARIANT_ENUM_CAST(RenderingServer::LightParam);
-VARIANT_ENUM_CAST(RenderingServer::LightOmniShadowMode);
-VARIANT_ENUM_CAST(RenderingServer::LightDirectionalShadowMode);
-VARIANT_ENUM_CAST(RenderingServer::LightProjectorFilter);
-VARIANT_ENUM_CAST(RenderingServer::DecalFilter);
 VARIANT_ENUM_CAST(RenderingServer::ParticlesMode);
 VARIANT_ENUM_CAST(RenderingServer::ParticlesTransformAlign);
 VARIANT_ENUM_CAST(RenderingServer::ParticlesDrawOrder);
@@ -1222,7 +1094,6 @@ VARIANT_ENUM_CAST(RenderingServer::ViewportSDFOversize);
 VARIANT_ENUM_CAST(RenderingServer::ViewportSDFScale);
 VARIANT_ENUM_CAST(RenderingServer::DOFBlurQuality);
 VARIANT_ENUM_CAST(RenderingServer::DOFBokehShape);
-VARIANT_ENUM_CAST(RenderingServer::ShadowQuality);
 VARIANT_ENUM_CAST(RenderingServer::InstanceType);
 VARIANT_ENUM_CAST(RenderingServer::InstanceFlags);
 VARIANT_ENUM_CAST(RenderingServer::ShadowCastingSetting);

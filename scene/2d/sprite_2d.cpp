@@ -282,6 +282,10 @@ int Sprite2D::get_hframes() const {
 	return hframes;
 }
 
+int Sprite2D::get_max_frames() const {
+	return hframes * vframes;
+}
+
 bool Sprite2D::is_pixel_opaque(const Point2 &p_point) const {
 	if (texture.is_null()) {
 		return false;
@@ -427,6 +431,8 @@ void Sprite2D::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_hframes", "hframes"), &Sprite2D::set_hframes);
 	ClassDB::bind_method(D_METHOD("get_hframes"), &Sprite2D::get_hframes);
+
+	ClassDB::bind_method(D_METHOD("get_max_frames"), &Sprite2D::get_max_frames);
 
 	ClassDB::bind_method(D_METHOD("get_rect"), &Sprite2D::get_rect);
 

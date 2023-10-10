@@ -151,6 +151,7 @@ public:
 	static ImageMemLoadFunc _bmp_mem_loader_func;
 	static ScalableImageMemLoadFunc _svg_scalable_mem_loader_func;
 	static ImageMemLoadFunc _dds_mem_loader_func;
+	static ImageMemLoadFunc _ktx_mem_loader_func;
 
 	static void (*_image_compress_bc_func)(Image *, UsedChannels p_channels);
 	static void (*_image_compress_bptc_func)(Image *, UsedChannels p_channels);
@@ -184,6 +185,7 @@ private:
 	Vector<uint8_t> data;
 	int width = 0;
 	int height = 0;
+	Rect2i selection = Rect2i(Point2i(0, 0), Size2i(0, 0));
 	bool mipmaps = false;
 
 	void _copy_internals_from(const Image &p_image) {
@@ -404,6 +406,7 @@ public:
 	Error load_tga_from_buffer(const Vector<uint8_t> &p_array);
 	Error load_bmp_from_buffer(const Vector<uint8_t> &p_array);
 	Error load_dds_from_buffer(const Vector<uint8_t> &p_array);
+	Error load_ktx_from_buffer(const Vector<uint8_t> &p_array);
 
 	Error load_svg_from_buffer(const Vector<uint8_t> &p_array, float scale = 1.0);
 	Error load_svg_from_string(const String &p_svg_str, float scale = 1.0);
@@ -422,6 +425,9 @@ public:
 
 	bool point_inside_rect(int p_x, int p_y) const;
 	bool point_inside_rect_v(const Point2i &p_point) const;
+
+	void set_selection_rect(Point2i p_pos, Point2i p_size);
+	Rect2i get_selection_rect() const;
 
 	Color get_pixel_v(const Point2i &p_point) const;
 	Color get_pixel(int p_x, int p_y) const;
@@ -443,15 +449,15 @@ public:
 	void set_pixel_cubic_curve_v(const Point2i &p_point0, const Point2i &p_point1, const Point2i &p_point2, const Point2i &p_point3, const Color &p_color);
 	void set_pixel_cubic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2, int p_x3, int p_y3, const Color &p_color);
 
-	PackedVector2Array get_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled = false, bool p_square = false) const;
-	PackedVector2Array get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled = false, bool p_square = false) const;
-	void set_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled = false, bool p_square = false);
-	void set_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled = false, bool p_square = false);
+	PackedVector2Array get_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled = false, bool p_square = false, bool p_centered = false) const;
+	PackedVector2Array get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled = false, bool p_square = false, bool p_centered = false) const;
+	void set_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled = false, bool p_square = false, bool p_centered = false);
+	void set_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled = false, bool p_square = false, bool p_centered = false);
 
-	PackedVector2Array get_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled = false, bool p_circle = false) const;
-	PackedVector2Array get_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled = false, bool p_circle = false) const;
-	void set_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled = false, bool p_circle = false);
-	void set_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled = false, bool p_circle = false);
+	PackedVector2Array get_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled = false, bool p_circle = false, bool p_centered = false) const;
+	PackedVector2Array get_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled = false, bool p_circle = false, bool p_centered = false) const;
+	void set_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled = false, bool p_circle = false, bool p_centered = false);
+	void set_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled = false, bool p_circle = false, bool p_centered = false);
 
 	PackedVector2Array get_pixel_contours(const PackedVector2Array &p_points, const Color &p_color) const;
 	void set_pixel_contours(const PackedVector2Array &p_points, const Color &p_color);

@@ -663,7 +663,6 @@ void ColorPicker::_text_type_toggled() {
 		text_type->set_icon(nullptr);
 
 		c_text->set_editable(true);
-		c_text->set_tooltip_text(RTR("Enter a hex code (\"#ff0000\") or named color (\"red\")."));
 	}
 	_update_color();
 }
@@ -1832,6 +1831,7 @@ ColorPicker::ColorPicker() {
 	vbr->add_child(hex_hbc);
 
 	hex_hbc->add_child(memnew(Label("Hex")));
+	hex_hbc->set_tooltip_text(RTR("Enter a hex code (\"#ff0000\") or named color (\"red\")."));
 
 	text_type = memnew(Button);
 	hex_hbc->add_child(text_type);
@@ -1848,7 +1848,6 @@ ColorPicker::ColorPicker() {
 	hex_hbc->add_child(c_text);
 	c_text->set_h_size_flags(SIZE_EXPAND_FILL);
 	c_text->set_select_all_on_focus(true);
-	c_text->set_tooltip_text(RTR("Enter a hex code (\"#ff0000\") or named color (\"red\")."));
 	c_text->set_placeholder(RTR("Hex code or named color"));
 	c_text->connect("text_submitted", callable_mp(this, &ColorPicker::_html_submitted));
 	c_text->connect("text_changed", callable_mp(this, &ColorPicker::_text_changed));

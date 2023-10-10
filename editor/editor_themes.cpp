@@ -185,7 +185,7 @@ void EditorColorMap::create() {
 	add_conversion_exception("StatusWarning");
 	add_conversion_exception("OverbrightIndicator");
 
-		// GUI
+	// GUI
 	add_conversion_exception("GuiChecked");
 	add_conversion_exception("GuiRadioChecked");
 	add_conversion_exception("GuiIndeterminate");
@@ -469,7 +469,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 		preset_accent_color = Color(0.18, 0.50, 1.00);
 		preset_base_color = Color(0.9, 0.9, 0.9);
 		// A negative contrast rate looks better for light themes, since it better follows the natural order of UI "elevation".
-		preset_contrast = -0.08;
+		preset_contrast = -0.06;
 	} else if (preset == "Solarized (Dark)") {
 		preset_accent_color = Color(0.15, 0.55, 0.82);
 		preset_base_color = Color(0.04, 0.23, 0.27);
@@ -478,7 +478,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 		preset_accent_color = Color(0.15, 0.55, 0.82);
 		preset_base_color = Color(0.89, 0.86, 0.79);
 		// A negative contrast rate looks better for light themes, since it better follows the natural order of UI "elevation".
-		preset_contrast = -0.08;
+		preset_contrast = -0.06;
 	} else if (preset == "Black (OLED)") {
 		preset_accent_color = Color(0.45, 0.75, 1.0);
 		preset_base_color = Color(0, 0, 0);
@@ -909,7 +909,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_color("icon_pressed_color", "Button", icon_pressed_color);
 	theme->set_color("icon_disabled_color", "Button", icon_disabled_color);
 
-	theme->set_constant("h_separation", "Button", 2 * EDSCALE);
+	theme->set_constant("h_separation", "Button", 4 * EDSCALE);
 	theme->set_constant("outline_size", "Button", 0);
 
 	const float ACTION_BUTTON_EXTRA_MARGIN = 32 * EDSCALE;
@@ -1455,9 +1455,6 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_stylebox("panel", "TabContainer", style_content_panel);
 
 	// Bottom panel.
-	theme->set_type_variation("BottomPanelButton", "Button");
-	// Add separation for the warning/error icon.
-	theme->set_constant("h_separation", "BottomPanelButton", 6 * EDSCALE);
 	Ref<StyleBoxFlat> style_bottom_panel = style_content_panel->duplicate();
 	style_bottom_panel->set_corner_radius_all(corner_radius * EDSCALE);
 	theme->set_stylebox("BottomPanel", "EditorStyles", style_bottom_panel);

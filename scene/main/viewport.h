@@ -63,6 +63,8 @@ class ViewportTexture : public Texture2D {
 protected:
 	static void _bind_methods();
 
+	virtual void reset_local_to_scene() override;
+
 public:
 	void set_viewport_path_in_scene(const NodePath &p_path);
 	NodePath get_viewport_path_in_scene() const;
@@ -86,16 +88,6 @@ class Viewport : public Node {
 	GDCLASS(Viewport, Node);
 
 public:
-	enum PositionalShadowAtlasQuadrantSubdiv {
-		SHADOW_ATLAS_QUADRANT_SUBDIV_DISABLED,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_1,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_4,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_16,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_64,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_256,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_1024,
-		SHADOW_ATLAS_QUADRANT_SUBDIV_MAX,
-	};
 
 	enum MSAA {
 		MSAA_DISABLED,
@@ -132,8 +124,6 @@ public:
 		DEBUG_DRAW_OVERDRAW,
 		DEBUG_DRAW_WIREFRAME,
 		DEBUG_DRAW_NORMAL_BUFFER,
-		DEBUG_DRAW_SHADOW_ATLAS,
-		DEBUG_DRAW_DIRECTIONAL_SHADOW_ATLAS,
 		DEBUG_DRAW_SCENE_LUMINANCE,
 		DEBUG_DRAW_SSAO,
 		DEBUG_DRAW_SSIL,
@@ -253,10 +243,6 @@ private:
 	RID texture_rid;
 
 	DebugDraw debug_draw = DEBUG_DRAW_DISABLED;
-
-	int positional_shadow_atlas_size = 2048;
-	bool positional_shadow_atlas_16_bits = true;
-	PositionalShadowAtlasQuadrantSubdiv positional_shadow_atlas_quadrant_subdiv[4];
 
 	MSAA msaa_2d = MSAA_DISABLED;
 
@@ -418,7 +404,8 @@ private:
 	SubWindowResize _sub_window_get_resize_margin(Window *p_subwindow, const Point2 &p_point);
 
 	void _update_mouse_over();
-	void _update_mouse_over(Vector2 p_pos);
+	virtual void _update_mouse_over(Vector2 p_pos);
+	virtual void _mouse_leave_viewport();
 
 	virtual bool _can_consume_input_events() const { return true; }
 	uint64_t event_count = 0;
@@ -431,8 +418,6 @@ protected:
 	Size2i _get_size() const;
 	Size2i _get_size_2d_override() const;
 	bool _is_size_allocated() const;
-
-	void _mouse_leave_viewport();
 
 	void _notification(int p_what);
 	void _process_picking();
@@ -478,15 +463,6 @@ public:
 	bool has_transparent_background() const;
 
 	Ref<ViewportTexture> get_texture() const;
-
-	void set_positional_shadow_atlas_size(int p_size);
-	int get_positional_shadow_atlas_size() const;
-
-	void set_positional_shadow_atlas_16_bits(bool p_16_bits);
-	bool get_positional_shadow_atlas_16_bits() const;
-
-	void set_positional_shadow_atlas_quadrant_subdiv(int p_quadrant, PositionalShadowAtlasQuadrantSubdiv p_subdiv);
-	PositionalShadowAtlasQuadrantSubdiv get_positional_shadow_atlas_quadrant_subdiv(int p_quadrant) const;
 
 	void set_msaa_2d(MSAA p_msaa);
 	MSAA get_msaa_2d() const;
@@ -563,6 +539,7 @@ public:
 
 	void set_embedding_subwindows(bool p_embed);
 	bool is_embedding_subwindows() const;
+	TypedArray<Window> get_embedded_subwindows() const;
 	void subwindow_set_popup_safe_rect(Window *p_window, const Rect2i &p_rect);
 	Rect2i subwindow_get_popup_safe_rect(Window *p_window) const;
 
@@ -585,7 +562,6 @@ public:
 	virtual bool is_directly_attached_to_screen() const { return false; };
 	virtual bool is_attached_in_viewport() const { return false; };
 	virtual bool is_sub_viewport() const { return false; };
-
 
 	void _propagate_world_2d_changed(Node *p_node);
 
@@ -652,7 +628,6 @@ public:
 	~SubViewport();
 };
 VARIANT_ENUM_CAST(SubViewport::UpdateMode);
-VARIANT_ENUM_CAST(Viewport::PositionalShadowAtlasQuadrantSubdiv);
 VARIANT_ENUM_CAST(Viewport::MSAA);
 VARIANT_ENUM_CAST(Viewport::ScreenSpaceAA);
 VARIANT_ENUM_CAST(Viewport::DebugDraw);

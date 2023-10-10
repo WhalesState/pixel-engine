@@ -2001,13 +2001,16 @@ void GDScriptAnalyzer::resolve_for(GDScriptParser::ForNode *p_for) {
 	}
 
 	GDScriptParser::DataType variable_type;
+	String list_visible_type = "<unresolved type>";
 	if (list_resolved) {
 		variable_type.type_source = GDScriptParser::DataType::ANNOTATED_INFERRED;
 		variable_type.kind = GDScriptParser::DataType::BUILTIN;
 		variable_type.builtin_type = Variant::INT;
+		list_visible_type = "Array[int]"; // NOTE: `range()` has `Array` return type.
 	} else if (p_for->list) {
 		resolve_node(p_for->list, false);
 		GDScriptParser::DataType list_type = p_for->list->get_datatype();
+		list_visible_type = list_type.to_string();
 		if (!list_type.is_hard_type()) {
 			mark_node_unsafe(p_for->list);
 		}
@@ -2051,8 +2054,37 @@ void GDScriptAnalyzer::resolve_for(GDScriptParser::ForNode *p_for) {
 			push_error(vformat(R"(Unable to iterate on value of type "%s".)", list_type.to_string()), p_for->list);
 		}
 	}
+
 	if (p_for->variable) {
-		p_for->variable->set_datatype(variable_type);
+		if (p_for->datatype_specifier) {
+			GDScriptParser::DataType specified_type = type_from_metatype(resolve_datatype(p_for->datatype_specifier));
+			if (!specified_type.is_variant()) {
+				if (variable_type.is_variant() || !variable_type.is_hard_type()) {
+					mark_node_unsafe(p_for->variable);
+					p_for->use_conversion_assign = true;
+				} else if (!is_type_compatible(specified_type, variable_type, true, p_for->variable)) {
+					if (is_type_compatible(variable_type, specified_type)) {
+						mark_node_unsafe(p_for->variable);
+						p_for->use_conversion_assign = true;
+					} else {
+						push_error(vformat(R"(Unable to iterate on value of type "%s" with variable of type "%s".)", list_visible_type, specified_type.to_string()), p_for->datatype_specifier);
+					}
+				} else if (!is_type_compatible(specified_type, variable_type)) {
+					p_for->use_conversion_assign = true;
+#ifdef DEBUG_ENABLED
+				} else {
+					parser->push_warning(p_for->datatype_specifier, GDScriptWarning::REDUNDANT_FOR_VARIABLE_TYPE, p_for->variable->name, variable_type.to_string(), specified_type.to_string());
+#endif
+				}
+#ifdef DEBUG_ENABLED
+			} else {
+				parser->push_warning(p_for->datatype_specifier, GDScriptWarning::REDUNDANT_FOR_VARIABLE_TYPE, p_for->variable->name, variable_type.to_string(), specified_type.to_string());
+#endif
+			}
+			p_for->variable->set_datatype(specified_type);
+		} else {
+			p_for->variable->set_datatype(variable_type);
+		}
 	}
 
 	resolve_suite(p_for->loop);
@@ -3301,17 +3333,26 @@ void GDScriptAnalyzer::reduce_dictionary(GDScriptParser::DictionaryNode *p_dicti
 
 void GDScriptAnalyzer::reduce_get_node(GDScriptParser::GetNodeNode *p_get_node) {
 	GDScriptParser::DataType result;
-	result.type_source = GDScriptParser::DataType::ANNOTATED_EXPLICIT;
-	result.kind = GDScriptParser::DataType::NATIVE;
-	result.native_type = SNAME("Node");
-	result.builtin_type = Variant::OBJECT;
+	result.kind = GDScriptParser::DataType::VARIANT;
 
-	if (!ClassDB::is_parent_class(parser->current_class->base_type.native_type, result.native_type)) {
-		push_error(R"*(Cannot use shorthand "get_node()" notation ("$") on a class that isn't a node.)*", p_get_node);
+	if (!ClassDB::is_parent_class(parser->current_class->base_type.native_type, SNAME("Node"))) {
+		push_error(vformat(R"*(Cannot use shorthand "get_node()" notation ("%c") on a class that isn't a node.)*", p_get_node->use_dollar ? '$' : '%'), p_get_node);
+		p_get_node->set_datatype(result);
+		return;
+	}
+
+	if (static_context) {
+		push_error(vformat(R"*(Cannot use shorthand "get_node()" notation ("%c") in a static function.)*", p_get_node->use_dollar ? '$' : '%'), p_get_node);
+		p_get_node->set_datatype(result);
+		return;
 	}
 
 	mark_lambda_use_self();
 
+	result.type_source = GDScriptParser::DataType::ANNOTATED_EXPLICIT;
+	result.kind = GDScriptParser::DataType::NATIVE;
+	result.builtin_type = Variant::OBJECT;
+	result.native_type = SNAME("Node");
 	p_get_node->set_datatype(result);
 }
 
@@ -3469,6 +3510,9 @@ void GDScriptAnalyzer::reduce_identifier_from_base(GDScriptParser::IdentifierNod
 	for (GDScriptParser::ClassNode *script_class : script_classes) {
 		if (p_base == nullptr && script_class->identifier && script_class->identifier->name == name) {
 			reduce_identifier_from_base_set_class(p_identifier, script_class->get_datatype());
+			if (script_class->outer != nullptr) {
+				p_identifier->source = GDScriptParser::IdentifierNode::MEMBER_CLASS;
+			}
 			return;
 		}
 

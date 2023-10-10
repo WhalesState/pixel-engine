@@ -5,7 +5,19 @@ respective folder names. Use two empty lines to separate categories for
 readability.
 
 
-## astcenc Image Compression ASTC
+## amd-fsr
+
+- Upstream: https://github.com/GPUOpen-Effects/FidelityFX-FSR
+- Version: 1.0.2 (a21ffb8f6c13233ba336352bdff293894c706575, 2021)
+- License: MIT
+
+Files extracted from upstream source:
+
+- `ffx_a.h` and `ffx_fsr1.h` from `ffx-fsr`
+- `license.txt`
+
+
+## astcenc
 
 - Upstream: https://github.com/ARM-software/astc-encoder
 - Version: 4.4.0 (5a5b5a1ef60dd47c27c28c66c118d22c40e3197e, 2023)
@@ -103,7 +115,7 @@ commits.
 ## enet
 
 - Upstream: http://enet.bespin.org
-- Version: 1.3.17 (e0e7045b7e056b454b5093cb34df49dc4cee0bee, 2020)
+- Version: git (ea4607a90dbfbcf4da2669ea998585253d8e70b1, 2023)
 - License: MIT
 
 Files extracted from upstream source:
@@ -166,7 +178,7 @@ Files extracted from upstream source:
 ## freetype
 
 - Upstream: https://www.freetype.org
-- Version: 2.13.0 (de8b92dd7ec634e9e2b25ef534c54a3537555c11, 2023)
+- Version: 2.13.1 (e4586d960f339cf75e2e0b34aee30a0ed8353c0d, 2023)
 - License: FreeType License (BSD-like)
 
 Files extracted from upstream source:
@@ -238,7 +250,7 @@ Files extracted from upstream source:
 ## harfbuzz
 
 - Upstream: https://github.com/harfbuzz/harfbuzz
-- Version: 7.3.0 (4584bcdc326564829d3cee3572386c90e4fd1974, 2023)
+- Version: 8.0.0 (b4305532a7746422e0b615eee6304119c1092fd8, 2023)
 - License: MIT
 
 Files extracted from upstream source:
@@ -246,13 +258,13 @@ Files extracted from upstream source:
 - `AUTHORS`, `COPYING`, `THANKS`
 - from the `src` folder, recursively
   - all the `*.c`, `*.cc`, `*.h`, `*.hh` files
-  - _except_ `main.cc`, `harfbuzz*.cc`, `failing-alloc.c`, `test*.cc`
+  - _except_ `main.cc`, `harfbuzz*.cc`, `failing-alloc.c`, `test*.cc`, `hb-wasm*.*`
 
 
 ## icu4c
 
 - Upstream: https://github.com/unicode-org/icu
-- Version: 73.1 (5861e1fd52f1d7673eee38bc3c965aa18b336062, 2023)
+- Version: 73.2 (680f521746a3bd6a86f25f25ee50a62d88b489cf, 2023)
 - License: Unicode
 
 Files extracted from upstream source:
@@ -268,10 +280,11 @@ Files generated from upstream source:
   https://github.com/unicode-org/icu/blob/master/docs/userguide/icu_data/buildtool.md
   for instructions).
 
-- Step 1: Build ICU with default options - `./runConfigureICU {PLATFORM} && make`.
-- Step 2: Reconfigure ICU with custom data config - `ICU_DATA_FILTER_FILE={GODOT_SOURCE}/thirdparty/icu4c/godot_data.json ./runConfigureICU {PLATFORM} --with-data-packaging=common`.
-- Step 3: Delete `data/out` folder and rebuild data - `cd data && rm -rf ./out && make`.
-- Step 4: Copy `source/data/out/icudt73l.dat` to the `{GODOT_SOURCE}/thirdparty/icu4c/icudt73l.dat`.
+- Step 1: Download and extract both `icu4c-{version}-src.tgz` and `icu4c-{version}-data.zip` (replace `data` subfolder from the main source archive).
+- Step 2: Build ICU with default options - `./runConfigureICU {PLATFORM} && make`.
+- Step 3: Reconfigure ICU with custom data config - `ICU_DATA_FILTER_FILE={GODOT_SOURCE}/thirdparty/icu4c/godot_data.json ./runConfigureICU {PLATFORM} --with-data-packaging=common`.
+- Step 4: Delete `data/out` folder and rebuild data - `cd data && rm -rf ./out && make`.
+- Step 5: Copy `source/data/out/icudt73l.dat` to the `{GODOT_SOURCE}/thirdparty/icu4c/icudt73l.dat`.
 
 
 ## jpeg-compressor
@@ -284,6 +297,24 @@ Files extracted from upstream source:
 
 - `jpgd*.{c,h}`
 - `jpge*.{c,h}`
+
+
+## libktx
+
+- Upstream: https://github.com/KhronosGroup/KTX-Software
+- Version: 4.1.0 (d7255fe73cd53b856731ceb9f2c279181d0dbbca, 2023)
+- License: Apache-2.0
+
+Files extracted from upstream source:
+
+- `LICENSE.md`
+- `include/*`
+- `lib/dfdutils/{LICENSES/Apache-2.0.txt,KHR,*.c,*.h,*.inl}`
+- `lib/{basis_sgd.h,basis_transcode.cpp,checkheader.c,filestream.*,formatsize.h,gl_format.h,hashlist.c,ktxint.h,memstream.*,swap.c,texture*,uthash.h,vk_format.h,vkformat_enum.h}`
+- `utils/unused.h`
+- `other_include/KHR/*`
+
+Some Godot-specific changes are applied via `godot.patch`.
 
 
 ## libogg
@@ -302,14 +333,14 @@ Files extracted from upstream source:
 ## libpng
 
 - Upstream: http://libpng.org/pub/png/libpng.html
-- Version: 1.6.38 (0a158f3506502dfa23edfc42790dfaed82efba17, 2022)
+- Version: 1.6.40 (f135775ad4e5d4408d2e12ffcc71bb36e6b48551, 2023)
 - License: libpng/zlib
 
 Files extracted from upstream source:
 
 - all .c and .h files of the main directory, except from
   `example.c` and `pngtest.c`
-- the arm/ folder
+- `arm/`, `intel/` and `powerpc/` folders
 - `scripts/pnglibconf.h.prebuilt` as `pnglibconf.h`
 - `LICENSE`
 
@@ -343,7 +374,7 @@ Files extracted from upstream source:
 ## libwebp
 
 - Upstream: https://chromium.googlesource.com/webm/libwebp/
-- Version: 1.3.0 (b557776962a3dcc985d83bd4ed94e1e2e50d0fa2, 2022)
+- Version: 1.3.1 (fd7bb21c0cb56e8a82e9bfa376164b842f433f3b, 2023)
 - License: BSD-3-Clause
 
 Files extracted from upstream source:
@@ -357,7 +388,7 @@ Patch `godot-node-debug-fix.patch` workarounds shadowing of godot's Node class i
 ## mbedtls
 
 - Upstream: https://github.com/Mbed-TLS/mbedtls
-- Version: 2.18.3 (981743de6fcdbe672e482b6fd724d31d0a0d2476, 2023)
+- Version: 2.28.4 (aeb97a18913a86f051afab11b2c92c6be0c2eb83, 2023)
 - License: Apache 2.0
 
 File extracted from upstream release tarball:
@@ -371,6 +402,23 @@ File extracted from upstream release tarball:
 - Added 2 files `godot_core_mbedtls_platform.c` and `godot_core_mbedtls_config.h`
   providing configuration for light bundling with core.
 - Added the file `godot_module_mbedtls_config.h` to customize the build configuration when bundling the full library.
+
+
+## meshoptimizer
+
+- Upstream: https://github.com/zeux/meshoptimizer
+- Version: git (4a287848fd664ae1c3fc8e5e008560534ceeb526, 2022)
+- License: MIT
+
+Files extracted from upstream repository:
+
+- All files in `src/`.
+- `LICENSE.md`.
+
+An [experimental upstream feature](https://github.com/zeux/meshoptimizer/tree/simplify-attr),
+has been backported. On top of that, it was modified to report only distance error metrics
+instead of a combination of distance and attribute errors. Patches for both changes can be
+found in the `patches` directory.
 
 
 ## minimp3
@@ -392,7 +440,7 @@ to solve some MSVC warnings. See the patches in the `patches` directory.
 ## miniupnpc
 
 - Upstream: https://github.com/miniupnp/miniupnp
-- Version: 2.2.4 (7d1d8bc3868b08ad003bad235eee57562b95b76d, 2022)
+- Version: 2.2.5 (58837ef586278d18cbebee50be758835ed4be79a, 2023)
 - License: BSD-3-Clause
 
 Files extracted from upstream source:
@@ -553,7 +601,7 @@ Patch files are provided in `oidn/patches/`.
 ## openxr
 
 - Upstream: https://github.com/KhronosGroup/OpenXR-SDK
-- Version: 1.0.26 (e2da9ce83a4388c9622da328bf48548471261290, 2022)
+- Version: 1.0.28 (f5beb0131f1bea8701ace744d1b50df9049bf331, 2023)
 - License: Apache 2.0
 
 Files extracted from upstream source:
@@ -571,7 +619,8 @@ Exclude:
 - src/external/android-jni-wrappers and src/external/jnipp (not used yet)
 - All CMake stuff: cmake/, CMakeLists.txt and *.cmake
 - All Gradle stuff: *gradle*, AndroidManifest.xml
-- All following files (and their .license files): *.{def,in,json,map,pom,rc}
+- All following files (and their .license files): *.{def,expsym,in,json,map,pom,rc,txt}
+- All dotfiles
 
 
 ## pcre2
@@ -682,13 +731,30 @@ instead of `miniz.h` as an external dependency.
 ## thorvg
 
 - Upstream: https://github.com/thorvg/thorvg
-- Version: 0.9.0 (a744006aa1edb918bacf0a415d0a57ca058e25f4, 2023)
+- Version: 0.10.0 (b8c605583fd7de73209a93a1238e1ba72cce2e8f, 2023)
 - License: MIT
 
 Files extracted from upstream source:
 
 See `thorvg/update-thorvg.sh` for extraction instructions. Set the version
 number and run the script.
+
+
+## vhacd
+
+- Upstream: https://github.com/kmammou/v-hacd
+- Version: git (1a49edf29c69039df15286181f2f27e17ceb9aef, 2020)
+- License: BSD-3-Clause
+
+Files extracted from upstream source:
+
+- From `src/VHACD_Lib/`: `inc`, `public` and `src`
+- `LICENSE`
+
+Some downstream changes have been made and are identified by
+`// -- GODOT start --` and `// -- GODOT end --` comments.
+They can be reapplied using the patches included in the `vhacd`
+folder.
 
 
 ## volk
@@ -748,6 +814,18 @@ File extracted from upstream release tarball:
 - `wslay/wslay.h` has a small Godot addition to fix MSVC build.
   See `patches/msvcfix.diff`
 - `COPYING`
+
+
+## xatlas
+
+- Upstream: https://github.com/jpcy/xatlas
+- Version: git (f700c7790aaa030e794b52ba7791a05c085faf0c, 2022)
+- License: MIT
+
+Files extracted from upstream source:
+
+- `source/xatlas/xatlas.{cpp,h}`
+- `LICENSE`
 
 
 ## zlib

@@ -53,6 +53,9 @@
 		</member>
 	</members>
 	<constants>
+		<constant name="MODE_SPATIAL" value="0" enum="Mode">
+			Mode used to draw all 3D objects.
+		</constant>
 		<constant name="MODE_CANVAS_ITEM" value="1" enum="Mode">
 			Mode used to draw all 2D objects.
 		</constant>

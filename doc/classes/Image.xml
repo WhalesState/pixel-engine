@@ -93,6 +93,15 @@
 				For ASTC compression, the [param astc_format] parameter must be supplied.
 			</description>
 		</method>
+		<method name="compute_image_metrics">
+			<return type="Dictionary" />
+			<param index="0" name="compared_image" type="Image" />
+			<param index="1" name="use_luma" type="bool" />
+			<description>
+				Compute image metrics on the current image and the compared image.
+				The dictionary contains [code]max[/code], [code]mean[/code], [code]mean_squared[/code], [code]root_mean_squared[/code] and [code]peak_snr[/code].
+			</description>
+		</method>
 		<method name="convert">
 			<return type="void" />
 			<param index="0" name="format" type="int" enum="Image.Format" />
@@ -226,10 +235,10 @@
 			<param index="1" name="y" type="int" />
 			<description>
 				Returns the color of the pixel at [code](x, y)[/code].
-				This is the same as [method get_pixel_v], but with two integer arguments instead of a [Vector2i] argument.
+				This is the same as [method get_pixelv], but with two integer arguments instead of a [Vector2i] argument.
 			</description>
 		</method>
-		<method name="get_pixel_v" qualifiers="const">
+		<method name="get_pixelv" qualifiers="const">
 			<return type="Color" />
 			<param index="0" name="point" type="Vector2i" />
 			<description>
@@ -322,6 +331,13 @@
 			<param index="0" name="buffer" type="PackedByteArray" />
 			<description>
 				Loads an image from the binary contents of a JPEG file.
+			</description>
+		</method>
+		<method name="load_ktx_from_buffer">
+			<return type="int" enum="Error" />
+			<param index="0" name="buffer" type="PackedByteArray" />
+			<description>
+				Loads an image from the binary contents of a KTX file.
 			</description>
 		</method>
 		<method name="load_png_from_buffer">
@@ -511,10 +527,10 @@
 				img.SetPixel(1, 2, Colors.Red); // Sets the color at (1, 2) to red.
 				[/csharp]
 				[/codeblocks]
-				This is the same as [method set_pixel_v], but with a two integer arguments instead of a [Vector2i] argument.
+				This is the same as [method set_pixelv], but with a two integer arguments instead of a [Vector2i] argument.
 			</description>
 		</method>
-		<method name="set_pixel_v">
+		<method name="set_pixelv">
 			<return type="void" />
 			<param index="0" name="point" type="Vector2i" />
 			<param index="1" name="color" type="Color" />
@@ -527,8 +543,15 @@
 				var img_height = 5
 				var img = Image.create(img_width, img_height, false, Image.FORMAT_RGBA8)
 
-				img.set_pixel_v(Vector2i(1, 2), Color.RED) # Sets the color at (1, 2) to red.
+				img.set_pixelv(Vector2i(1, 2), Color.RED) # Sets the color at (1, 2) to red.
 				[/gdscript]
+				[csharp]
+				int imgWidth = 10;
+				int imgHeight = 5;
+				var img = Image.Create(imgWidth, imgHeight, false, Image.Format.Rgba8);
+
+				img.SetPixelv(new Vector2I(1, 2), Colors.Red); // Sets the color at (1, 2) to red.
+				[/csharp]
 				[/codeblocks]
 				This is the same as [method set_pixel], but with a [Vector2i] argument instead of two integer arguments.
 			</description>

@@ -1267,7 +1267,7 @@ void RasterizerCanvasGLES3::_render_batch(Light *p_lights, uint32_t p_index) {
 			uint32_t range_start = state.canvas_instance_batches[p_index].start * sizeof(InstanceData);
 			_enable_attributes(range_start, false);
 
-			if (pb->color_disabled) {
+			if (pb->color_disabled && pb->color != Color(1.0, 1.0, 1.0, 1.0)) {
 				glVertexAttrib4f(RS::ARRAY_COLOR, pb->color.r, pb->color.g, pb->color.b, pb->color.a);
 			}
 
@@ -1278,7 +1278,7 @@ void RasterizerCanvasGLES3::_render_batch(Light *p_lights, uint32_t p_index) {
 			}
 			glBindVertexArray(0);
 
-			if (pb->color_disabled) {
+			if (pb->color_disabled && pb->color != Color(1.0, 1.0, 1.0, 1.0)) {
 				// Reset so this doesn't pollute other draw calls.
 				glVertexAttrib4f(RS::ARRAY_COLOR, 1.0, 1.0, 1.0, 1.0);
 			}
@@ -2061,7 +2061,7 @@ void RasterizerCanvasGLES3::set_shadow_texture_size(int p_size) {
 
 	if (state.shadow_fb != 0) {
 		glDeleteFramebuffers(1, &state.shadow_fb);
-		glDeleteTextures(1, &state.shadow_texture);
+		GLES3::Utilities::get_singleton()->texture_free_data(state.shadow_texture);
 		glDeleteRenderbuffers(1, &state.shadow_depth_buffer);
 		state.shadow_fb = 0;
 		state.shadow_texture = 0;
@@ -2532,6 +2532,8 @@ RasterizerCanvasGLES3::RasterizerCanvasGLES3() {
 	GLES3::MaterialStorage *material_storage = GLES3::MaterialStorage::get_singleton();
 	GLES3::Config *config = GLES3::Config::get_singleton();
 
+	glVertexAttrib4f(RS::ARRAY_COLOR, 1.0, 1.0, 1.0, 1.0);
+
 	polygon_buffers.last_id = 1;
 	// quad buffer
 	{
@@ -2712,7 +2714,6 @@ RasterizerCanvasGLES3::RasterizerCanvasGLES3() {
 	data.canvas_shader_default_version = GLES3::MaterialStorage::get_singleton()->shaders.canvas_shader.version_create();
 
 	state.shadow_texture_size = GLOBAL_GET("rendering/2d/shadow_atlas/size");
-
 	shadow_render.shader.initialize();
 	shadow_render.shader_version = shadow_render.shader.version_create();
 

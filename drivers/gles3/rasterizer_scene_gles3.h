@@ -43,7 +43,6 @@
 #include "servers/rendering/renderer_scene_render.h"
 #include "servers/rendering_server.h"
 #include "shader_gles3.h"
-#include "storage/light_storage.h"
 #include "storage/material_storage.h"
 #include "storage/render_scene_buffers_gles3.h"
 #include "storage/utilities.h"
@@ -335,28 +334,11 @@ private:
 
 		bool used_depth_prepass = false;
 
-		// GLES3::SceneShaderData::BlendMode current_blend_mode = GLES3::SceneShaderData::BLEND_MODE_MIX;
-		// GLES3::SceneShaderData::DepthDraw current_depth_draw = GLES3::SceneShaderData::DEPTH_DRAW_OPAQUE;
-		// GLES3::SceneShaderData::DepthTest current_depth_test = GLES3::SceneShaderData::DEPTH_TEST_DISABLED;
-		// GLES3::SceneShaderData::Cull cull_mode = GLES3::SceneShaderData::CULL_BACK;
-
 		bool texscreen_copied = false;
 		bool used_screen_texture = false;
 		bool used_normal_texture = false;
 		bool used_depth_texture = false;
 
-		LightData *omni_lights = nullptr;
-		LightData *spot_lights = nullptr;
-
-		InstanceSort<GLES3::LightInstance> *omni_light_sort;
-		InstanceSort<GLES3::LightInstance> *spot_light_sort;
-		GLuint omni_light_buffer = 0;
-		GLuint spot_light_buffer = 0;
-		uint32_t omni_light_count = 0;
-		uint32_t spot_light_count = 0;
-
-		DirectionalLightData *directional_lights = nullptr;
-		GLuint directional_light_buffer = 0;
 	} scene_state;
 
 	struct RenderListParameters {
@@ -461,9 +443,6 @@ public:
 
 	bool free(RID p_rid) override;
 	void update() override;
-
-	void decals_set_filter(RS::DecalFilter p_filter) override;
-	void light_projectors_set_filter(RS::LightProjectorFilter p_filter) override;
 
 	RasterizerSceneGLES3();
 	~RasterizerSceneGLES3();

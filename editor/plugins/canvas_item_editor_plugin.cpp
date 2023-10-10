@@ -44,21 +44,15 @@
 #include "editor/plugins/animation_player_editor_plugin.h"
 #include "editor/plugins/script_editor_plugin.h"
 #include "editor/scene_tree_dock.h"
-#include "scene/2d/cpu_particles_2d.h"
-#include "scene/2d/gpu_particles_2d.h"
-#include "scene/2d/light_2d.h"
 #include "scene/2d/polygon_2d.h"
 #include "scene/2d/skeleton_2d.h"
 #include "scene/2d/sprite_2d.h"
 #include "scene/2d/touch_screen_button.h"
 #include "scene/gui/flow_container.h"
 #include "scene/gui/grid_container.h"
-#include "scene/gui/margin_container.h"
-#include "scene/gui/nine_patch_rect.h"
 #include "scene/gui/separator.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/subviewport_container.h"
-#include "scene/gui/texture_rect.h"
 #include "scene/gui/view_panner.h"
 #include "scene/main/canvas_layer.h"
 #include "scene/main/window.h"
@@ -2283,8 +2277,8 @@ bool CanvasItemEditor::_gui_input_select(const Ref<InputEvent> &p_event) {
 
 		if (b.is_valid() && b->is_pressed() && b->get_button_index() == MouseButton::RIGHT) {
 			add_node_menu->clear();
-			add_node_menu->add_icon_item(get_theme_icon(SNAME("Add"), SNAME("EditorIcons")), TTR("Add Node Here"), ADD_NODE);
-			add_node_menu->add_icon_item(get_theme_icon(SNAME("Instance"), SNAME("EditorIcons")), TTR("Instantiate Scene Here"), ADD_INSTANCE);
+			add_node_menu->add_icon_item(get_theme_icon(SNAME("Add"), SNAME("EditorIcons")), TTR("Add Node Here..."), ADD_NODE);
+			add_node_menu->add_icon_item(get_theme_icon(SNAME("Instance"), SNAME("EditorIcons")), TTR("Instantiate Scene Here..."), ADD_INSTANCE);
 			for (Node *node : SceneTreeDock::get_singleton()->get_node_clipboard()) {
 				if (Object::cast_to<CanvasItem>(node)) {
 					add_node_menu->add_icon_item(get_theme_icon(SNAME("ActionPaste"), SNAME("EditorIcons")), TTR("Paste Node(s) Here"), ADD_PASTE);
@@ -5678,7 +5672,7 @@ void CanvasItemEditorViewport::_perform_drop_data() {
 		} else {
 			Ref<Texture2D> texture = Ref<Texture2D>(Object::cast_to<Texture2D>(*res));
 			if (texture != nullptr && texture.is_valid()) {
-				Node *child = _make_texture_node_type(default_texture_node_type);
+				Node *child = Object::cast_to<Node>(ClassDB::instantiate(default_texture_node_type));
 				_create_nodes(target_node, child, path, drop_pos);
 			}
 		}
@@ -5807,30 +5801,6 @@ void CanvasItemEditorViewport::drop_data(const Point2 &p_point, const Variant &p
 	} else {
 		_perform_drop_data();
 	}
-}
-
-Node *CanvasItemEditorViewport::_make_texture_node_type(String texture_node_type) {
-	Node *node = nullptr;
-	if (texture_node_type == "Sprite2D") {
-		node = memnew(Sprite2D);
-	} else if (texture_node_type == "PointLight2D") {
-		node = memnew(PointLight2D);
-	} else if (texture_node_type == "CPUParticles2D") {
-		node = memnew(CPUParticles2D);
-	} else if (texture_node_type == "GPUParticles2D") {
-		node = memnew(GPUParticles2D);
-	} else if (texture_node_type == "Polygon2D") {
-		node = memnew(Polygon2D);
-	} else if (texture_node_type == "TouchScreenButton") {
-		node = memnew(TouchScreenButton);
-	} else if (texture_node_type == "TextureRect") {
-		node = memnew(TextureRect);
-	} else if (texture_node_type == "TextureButton") {
-		node = memnew(TextureButton);
-	} else if (texture_node_type == "NinePatchRect") {
-		node = memnew(NinePatchRect);
-	}
-	return node;
 }
 
 void CanvasItemEditorViewport::_update_theme() {

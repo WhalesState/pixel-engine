@@ -115,9 +115,11 @@ class TileMapEditorPlugin : public EditorPlugin {
 
 	TileMapEditor *editor = nullptr;
 	Button *button = nullptr;
-	TileMap *tile_map = nullptr;
+	ObjectID tile_map_id;
 
 	bool tile_map_changed_needs_update = false;
+	ObjectID edited_tileset;
+
 	void _tile_map_changed();
 	void _update_tile_map();
 

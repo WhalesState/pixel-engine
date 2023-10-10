@@ -3018,6 +3018,7 @@ ImageMemLoadFunc Image::_tga_mem_loader_func = nullptr;
 ImageMemLoadFunc Image::_bmp_mem_loader_func = nullptr;
 ScalableImageMemLoadFunc Image::_svg_scalable_mem_loader_func = nullptr;
 ImageMemLoadFunc Image::_dds_mem_loader_func = nullptr;
+ImageMemLoadFunc Image::_ktx_mem_loader_func = nullptr;
 
 void (*Image::_image_compress_bc_func)(Image *, Image::UsedChannels) = nullptr;
 void (*Image::_image_compress_bptc_func)(Image *, Image::UsedChannels) = nullptr;
@@ -3275,7 +3276,21 @@ bool Image::point_inside_rect_v(const Point2i &p_point) const {
 }
 
 bool Image::point_inside_rect(int p_x, int p_y) const {
-	return !(p_x < 0 || p_x >= width || p_y < 0 || p_y >= height);
+	Point2i s_pos = selection.position;
+	Point2i s_size = selection.size;
+	if (s_size.x == 0 || s_size.y == 0) {
+		s_size = Point2i(width, height) - s_pos;
+	}
+	return !(p_x < s_pos.x || p_x >= s_size.x + s_pos.x || p_y < s_pos.y || p_y >= s_size.y + s_pos.y);
+}
+
+void Image::set_selection_rect(Point2i p_pos, Point2i p_size) {
+	selection.position = p_pos.clamp(Point2i(0, 0), Point2i(width, height));
+	selection.size = p_size.clamp(Point2i(0, 0), Point2i(width, height) - selection.position);
+}
+
+Rect2i Image::get_selection_rect() const {
+	return selection;
 }
 
 Color Image::get_pixel_v(const Point2i &p_point) const {
@@ -3410,19 +3425,32 @@ void Image::set_pixel_cubic_curve_v(const Point2i &p_point0, const Point2i &p_po
 void Image::set_pixel_cubic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2, int p_x3, int p_y3, const Color &p_color) {
 }
 
-PackedVector2Array Image::get_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled, bool p_square) const {
-	return get_pixel_rect(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_filled, p_square);
+PackedVector2Array Image::get_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled, bool p_square, bool p_centered) const {
+	return get_pixel_rect(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_filled, p_square, p_centered);
 }
 
-PackedVector2Array Image::get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled, bool p_square) const {
+PackedVector2Array Image::get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled, bool p_square, bool p_centered) const {
 	PackedVector2Array arr;
 
 	int dx = p_x1 - p_x0;
 	int dy = p_y1 - p_y0;
 
+	if (p_centered) {
+		if (p_square && abs(dx) != abs(dy)) {
+			if (abs(dx) > abs(dy)) {
+				dy = dy >= 0 ? abs(dx) : -abs(dx);
+			} else {
+				dx = dx >= 0 ? abs(dy) : -abs(dy);
+			}
+		}
+		p_x0 -= dx;
+		p_y0 -= dy;
+		dx = p_x1 - p_x0;
+		dy = p_y1 - p_y0;
+	}
 	if (p_square && abs(dx) != abs(dy)) {
 		if (abs(dx) > abs(dy)) {
-			p_y1 =  dy >= 0 ? p_y1 + abs(abs(dy) - abs(dx)) : p_y1 - abs(abs(dy) - abs(dx));
+			p_y1 = dy >= 0 ? p_y1 + abs(abs(dy) - abs(dx)) : p_y1 - abs(abs(dy) - abs(dx));
 			dy = p_y1 - p_y0;
 		} else {
 			p_x1 = dx >= 0 ? p_x1 + abs(abs(dy) - abs(dx)) : p_x1 - abs(abs(dy) - abs(dx));
@@ -3431,7 +3459,6 @@ PackedVector2Array Image::get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1,
 	}
 	int xx = dx > 0 ? 1 : -1;
 	int yy = dy > 0 ? 1 : -1;
-
 	Point2i st = Point2i(p_x0, p_y0);
 
 	for (int x = 0; x <= abs(dx); x++) {
@@ -3453,40 +3480,52 @@ PackedVector2Array Image::get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1,
 	return arr;
 }
 
-void Image::set_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled, bool p_square) {
-	set_pixel_rect(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_color, p_filled, p_square);
+void Image::set_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled, bool p_square, bool p_centered) {
+	set_pixel_rect(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_color, p_filled, p_square, p_centered);
 }
 
-void Image::set_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled, bool p_square) {
-	PackedVector2Array arr = get_pixel_rect(p_x0, p_y0, p_x1, p_y1, p_filled, p_square);
+void Image::set_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled, bool p_square, bool p_centered) {
+	PackedVector2Array arr = get_pixel_rect(p_x0, p_y0, p_x1, p_y1, p_filled, p_square, p_centered);
 	for (int i = 0; i < arr.size(); i++) {
 		set_pixel(arr[i].x, arr[i].y, p_color);
 	}
 }
 
-PackedVector2Array Image::get_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled, bool p_circle) const {
-	return get_pixel_ellipse(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_filled, p_circle);
+PackedVector2Array Image::get_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled, bool p_circle, bool p_centered) const {
+	return get_pixel_ellipse(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_filled, p_circle, p_centered);
 }
 
-PackedVector2Array Image::get_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled, bool p_circle) const {
+PackedVector2Array Image::get_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled, bool p_circle, bool p_centered) const {
 	PackedVector2Array arr;
 
-	int dx = abs(p_x1 - p_x0);
-	int dy = abs(p_y1 - p_y0);
+	int dx = p_x1 - p_x0;
+	int dy = p_y1 - p_y0;
 
-	if (p_circle) {
-		if (dx != dy) {
-			if (dx > dy) {
-				p_y1 = p_y1 - p_y0 >= 0 ? p_y1 + abs(dy - dx) : p_y1 - abs(dy - dx);
-				dy = abs(p_y1 - p_y0);
+	if (p_centered) {
+		if (p_circle && abs(dx) != abs(dy)) {
+			if (abs(dx) > abs(dy)) {
+				dy = dy >= 0 ? abs(dx) : -abs(dx);
 			} else {
-				p_x1 = p_x1 - p_x0 >= 0 ? p_x1 + abs(dy - dx) : p_x1 - abs(dy - dx);
-				dx = abs(p_x1 - p_x0);
+				dx = dx >= 0 ? abs(dy) : -abs(dy);
 			}
 		}
+		p_x0 -= dx;
+		p_y0 -= dy;
+		dx = p_x1 - p_x0;
+		dy = p_y1 - p_y0;
 	}
+	if (p_circle && abs(dx) != abs(dy)) {
+		if (abs(dx) > abs(dy)) {
+			p_y1 = dy >= 0 ? p_y1 + abs(abs(dy) - abs(dx)) : p_y1 - abs(abs(dy) - abs(dx));
+			dy = p_y1 - p_y0;
+		} else {
+			p_x1 = dx >= 0 ? p_x1 + abs(abs(dy) - abs(dx)) : p_x1 - abs(abs(dy) - abs(dx));
+			dx = p_x1 - p_x0;
+		}
+	}
+	dx = abs(dx);
+	dy = abs(dy);
 	int b1 = dy & 1;
-
 	Point2i d = Point2i(4 * (1.0 - dx) * dy * dy, 4 * (b1 + 1) * dx * dx);
 	int err = d.x + d.y + b1 * dx * dx;
 	int e2;
@@ -3498,7 +3537,6 @@ PackedVector2Array Image::get_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_
 	if (p_y0 > p_y1) {
 		p_y0 = p_y1;
 	}
-
 	p_y0 += (dy + 1) / 2;
 	p_y1 = p_y0 - b1;
 	dx *= 8 * dx;
@@ -3541,12 +3579,12 @@ PackedVector2Array Image::get_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_
 	return arr;
 }
 
-void Image::set_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled, bool p_circle) {
-	set_pixel_ellipse(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_color, p_filled, p_circle);
+void Image::set_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled, bool p_circle, bool p_centered) {
+	set_pixel_ellipse(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_color, p_filled, p_circle, p_centered);
 }
 
-void Image::set_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled, bool p_circle) {
-	PackedVector2Array arr = get_pixel_ellipse(p_x0, p_y0, p_x1, p_y1, p_filled, p_circle);
+void Image::set_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled, bool p_circle, bool p_centered) {
+	PackedVector2Array arr = get_pixel_ellipse(p_x0, p_y0, p_x1, p_y1, p_filled, p_circle, p_centered);
 	for (int i = 0; i < arr.size(); i++) {
 		set_pixel(arr[i].x, arr[i].y, p_color);
 	}
@@ -3756,6 +3794,9 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("point_inside_rect_v", "point"), &Image::point_inside_rect_v);
 	ClassDB::bind_method(D_METHOD("point_inside_rect", "x", "y"), &Image::point_inside_rect);
 
+	ClassDB::bind_method(D_METHOD("set_selection_rect", "position", "size"), &Image::set_selection_rect);
+	ClassDB::bind_method(D_METHOD("get_selection_rect"), &Image::get_selection_rect);
+
 	ClassDB::bind_method(D_METHOD("get_pixel_v", "point"), &Image::get_pixel_v);
 	ClassDB::bind_method(D_METHOD("get_pixel", "x", "y"), &Image::get_pixel);
 	ClassDB::bind_method(D_METHOD("set_pixel_v", "point", "color"), &Image::set_pixel_v);
@@ -3776,15 +3817,15 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_pixel_cubic_curve_v", "point0", "point1", "point2", "point3", "color"), &Image::set_pixel_cubic_curve_v);
 	ClassDB::bind_method(D_METHOD("set_pixel_cubic_curve", "x0", "y0", "x1", "y1", "x2", "y2", "x3", "y3", "color"), &Image::set_pixel_cubic_curve);
 
-	ClassDB::bind_method(D_METHOD("get_pixel_rect_v", "point0", "point1", "filled", "square"), &Image::get_pixel_rect_v);
-	ClassDB::bind_method(D_METHOD("get_pixel_rect", "x0", "y0", "x1", "y1", "filled", "square"), &Image::get_pixel_rect);
-	ClassDB::bind_method(D_METHOD("set_pixel_rect_v", "point0", "point1", "color", "filled", "square"), &Image::set_pixel_rect_v);
-	ClassDB::bind_method(D_METHOD("set_pixel_rect", "x0", "y0", "x1", "y1", "color", "filled", "square"), &Image::set_pixel_rect);
+	ClassDB::bind_method(D_METHOD("get_pixel_rect_v", "point0", "point1", "filled", "square", "centered"), &Image::get_pixel_rect_v);
+	ClassDB::bind_method(D_METHOD("get_pixel_rect", "x0", "y0", "x1", "y1", "filled", "square", "centered"), &Image::get_pixel_rect);
+	ClassDB::bind_method(D_METHOD("set_pixel_rect_v", "point0", "point1", "color", "filled", "square", "centered"), &Image::set_pixel_rect_v);
+	ClassDB::bind_method(D_METHOD("set_pixel_rect", "x0", "y0", "x1", "y1", "color", "filled", "square", "centered"), &Image::set_pixel_rect);
 
-	ClassDB::bind_method(D_METHOD("get_pixel_ellipse_v", "point0", "point1", "filled", "circle"), &Image::get_pixel_ellipse_v);
-	ClassDB::bind_method(D_METHOD("get_pixel_ellipse", "x0", "y0", "x1", "y1", "filled", "circle"), &Image::get_pixel_ellipse);
-	ClassDB::bind_method(D_METHOD("set_pixel_ellipse_v", "point0", "point1", "color", "filled", "circle"), &Image::set_pixel_ellipse_v);
-	ClassDB::bind_method(D_METHOD("set_pixel_ellipse", "x0", "y0", "x1", "y1", "color", "filled", "circle"), &Image::set_pixel_ellipse);
+	ClassDB::bind_method(D_METHOD("get_pixel_ellipse_v", "point0", "point1", "filled", "circle", "centered"), &Image::get_pixel_ellipse_v);
+	ClassDB::bind_method(D_METHOD("get_pixel_ellipse", "x0", "y0", "x1", "y1", "filled", "circle", "centered"), &Image::get_pixel_ellipse);
+	ClassDB::bind_method(D_METHOD("set_pixel_ellipse_v", "point0", "point1", "color", "filled", "circle", "centered"), &Image::set_pixel_ellipse_v);
+	ClassDB::bind_method(D_METHOD("set_pixel_ellipse", "x0", "y0", "x1", "y1", "color", "filled", "circle", "centered"), &Image::set_pixel_ellipse);
 
 	ClassDB::bind_method(D_METHOD("get_pixel_contours", "points", "color"), &Image::get_pixel_contours);
 	ClassDB::bind_method(D_METHOD("set_pixel_contours", "points", "color"), &Image::set_pixel_contours);
@@ -3803,6 +3844,7 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("load_tga_from_buffer", "buffer"), &Image::load_tga_from_buffer);
 	ClassDB::bind_method(D_METHOD("load_bmp_from_buffer", "buffer"), &Image::load_bmp_from_buffer);
 	ClassDB::bind_method(D_METHOD("load_dds_from_buffer", "buffer"), &Image::load_dds_from_buffer);
+	ClassDB::bind_method(D_METHOD("load_ktx_from_buffer", "buffer"), &Image::load_ktx_from_buffer);
 
 	ClassDB::bind_method(D_METHOD("load_svg_from_buffer", "buffer", "scale"), &Image::load_svg_from_buffer, DEFVAL(1.0));
 	ClassDB::bind_method(D_METHOD("load_svg_from_string", "svg_str", "scale"), &Image::load_svg_from_string, DEFVAL(1.0));
@@ -4184,6 +4226,14 @@ Error Image::load_dds_from_buffer(const Vector<uint8_t> &p_array) {
 			ERR_UNAVAILABLE,
 			"The DDS module isn't enabled. Recompile the Godot editor or export template binary with the `module_dds_enabled=yes` SCons option.");
 	return _load_from_buffer(p_array, _dds_mem_loader_func);
+}
+
+Error Image::load_ktx_from_buffer(const Vector<uint8_t> &p_array) {
+	ERR_FAIL_NULL_V_MSG(
+			_ktx_mem_loader_func,
+			ERR_UNAVAILABLE,
+			"The KTX module isn't enabled. Recompile the Godot editor or export template binary with the `module_ktx_enabled=yes` SCons option.");
+	return _load_from_buffer(p_array, _ktx_mem_loader_func);
 }
 
 void Image::convert_rg_to_ra_rgba8() {
