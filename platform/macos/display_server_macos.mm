@@ -754,14 +754,6 @@ void DisplayServerMacOS::window_destroy(WindowID p_window) {
 		gl_manager_legacy->window_destroy(p_window);
 	}
 #endif
-}
-
-void DisplayServerMacOS::window_destroy(WindowID p_window) {
-#if defined(GLES3_ENABLED)
-	if (gl_manager) {
-		gl_manager->window_destroy(p_window);
-	}
-#endif
 	windows.erase(p_window);
 	update_presentation_mode();
 }
@@ -4460,8 +4452,6 @@ DisplayServerMacOS::DisplayServerMacOS(const String &p_rendering_driver, WindowM
 	menu_item = [main_menu addItemWithTitle:@"" action:nil keyEquivalent:@""];
 	[main_menu setSubmenu:apple_menu forItem:menu_item];
 	[main_menu setAutoenablesItems:NO];
-
-	menu_delegate = [[GodotMenuDelegate alloc] init];
 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//TODO - do OpenGL support checks, driver selection and fallback

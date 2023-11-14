@@ -365,7 +365,6 @@ void EditorNode::_update_from_settings() {
 	tree->set_debug_collision_contact_color(GLOBAL_GET("debug/shapes/collision/contact_color"));
 
 	ResourceImporterTexture::get_singleton()->update_imports();
-
 }
 
 void EditorNode::_gdextensions_reloaded() {
@@ -1902,6 +1901,7 @@ void EditorNode::_dialog_action(String p_file) {
 				project_run_bar->play_main_scene((bool)pick_main_scene->get_meta("from_native", false));
 			}
 		} break;
+
 		case RESOURCE_SAVE:
 		case RESOURCE_SAVE_AS: {
 			ERR_FAIL_COND(saving_resource.is_null());
@@ -5874,7 +5874,6 @@ void EditorNode::_file_access_close_error_notify_impl(const String &p_str) {
 // Ideally, we should probably agree on a standardized method name which could be
 // called from here instead.
 void EditorNode::_notify_scene_updated(Node *p_node) {
-
 	for (int i = 0; i < p_node->get_child_count(); i++) {
 		_notify_scene_updated(p_node->get_child(i));
 	}
@@ -7025,8 +7024,6 @@ EditorNode::EditorNode() {
 	ED_SHORTCUT_OVERRIDE_ARRAY("editor/quick_open", "macos", { int32_t(KeyModifierMask::META + KeyModifierMask::CTRL + Key::O), int32_t(KeyModifierMask::CMD_OR_CTRL + Key::P) });
 	file_menu->add_shortcut(ED_SHORTCUT_AND_COMMAND("editor/quick_open_scene", TTR("Quick Open Scene..."), KeyModifierMask::CMD_OR_CTRL + KeyModifierMask::SHIFT + Key::O), FILE_QUICK_OPEN_SCENE);
 	file_menu->add_shortcut(ED_SHORTCUT_AND_COMMAND("editor/quick_open_script", TTR("Quick Open Script..."), KeyModifierMask::CMD_OR_CTRL + KeyModifierMask::ALT + Key::O), FILE_QUICK_OPEN_SCRIPT);
-
-	file_menu->add_separator();
 
 	file_menu->add_separator();
 	file_menu->add_shortcut(ED_GET_SHORTCUT("ui_undo"), EDIT_UNDO, true, true);

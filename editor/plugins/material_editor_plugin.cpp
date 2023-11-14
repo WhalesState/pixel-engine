@@ -74,7 +74,6 @@ void MaterialEditor::edit(Ref<Material> p_material) {
 	}
 }
 
-
 MaterialEditor::MaterialEditor() {
 	// Canvas item
 

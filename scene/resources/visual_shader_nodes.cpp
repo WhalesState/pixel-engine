@@ -7075,7 +7075,6 @@ String VisualShaderNodeFresnel::generate_code(Shader::Mode p_mode, VisualShader:
 }
 
 bool VisualShaderNodeFresnel::is_input_port_default(int p_port, Shader::Mode p_mode) const {
-
 	return p_port == 0 && p_mode == Shader::MODE_CANVAS_ITEM;
 }
 

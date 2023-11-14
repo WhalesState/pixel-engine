@@ -901,7 +901,10 @@ void ScriptEditorDebugger::_notification(int p_what) {
 					Array msg;
 					msg.push_back(transform);
 					_put_msg("scene:override_camera_2D:transform", msg);
-
+				}
+				if (is_breaked() && can_request_idle_draw) {
+					_put_msg("servers:draw", Array());
+					can_request_idle_draw = false;
 				}
 			}
 

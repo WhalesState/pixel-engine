@@ -221,6 +221,9 @@ void DebuggerEditorPlugin::_update_debug_options() {
 	if (check_debug_paths) {
 		_menu_option(RUN_DEBUG_PATHS);
 	}
+	if (check_debug_canvas_redraw) {
+		_menu_option(RUN_DEBUG_CANVAS_REDRAW);
+	}
 	if (check_live_debug) {
 		_menu_option(RUN_LIVE_DEBUG);
 	}

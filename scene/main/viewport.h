@@ -88,7 +88,6 @@ class Viewport : public Node {
 	GDCLASS(Viewport, Node);
 
 public:
-
 	enum MSAA {
 		MSAA_DISABLED,
 		MSAA_2X,

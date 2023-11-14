@@ -1623,18 +1623,6 @@ void ArrayMesh::_set_surfaces(const Array &p_surfaces) {
 			_2d = d["2d"];
 		}
 
-// #ifndef DISABLE_DEPRECATED
-// 		uint64_t surface_version = surface.format & (ARRAY_FLAG_FORMAT_VERSION_MASK << ARRAY_FLAG_FORMAT_VERSION_SHIFT);
-// 		if (surface_version != ARRAY_FLAG_FORMAT_CURRENT_VERSION) {
-// 			RS::get_singleton()->fix_surface_compatibility(surface, get_path());
-// 			surface_version = surface.format & (RS::ARRAY_FLAG_FORMAT_VERSION_MASK << RS::ARRAY_FLAG_FORMAT_VERSION_SHIFT);
-// 			ERR_FAIL_COND_MSG(surface_version != RS::ARRAY_FLAG_FORMAT_CURRENT_VERSION,
-// 					vformat("Surface version provided (%d) does not match current version (%d).",
-// 							(surface_version >> RS::ARRAY_FLAG_FORMAT_VERSION_SHIFT) & RS::ARRAY_FLAG_FORMAT_VERSION_MASK,
-// 							(RS::ARRAY_FLAG_FORMAT_CURRENT_VERSION >> RS::ARRAY_FLAG_FORMAT_VERSION_SHIFT) & RS::ARRAY_FLAG_FORMAT_VERSION_MASK));
-// 		}
-// #endif
-
 		surface_data.push_back(surface);
 		surface_materials.push_back(material);
 		surface_names.push_back(surf_name);

@@ -246,7 +246,6 @@ struct GodotTestCaseListener : public doctest::IReporter {
 			audio_server->init();
 			return;
 		}
-
 	}
 
 	void test_case_end(const doctest::CurrentTestCaseStats &) override {
@@ -261,7 +260,6 @@ struct GodotTestCaseListener : public doctest::IReporter {
 		if (SceneTree::get_singleton()) {
 			memdelete(SceneTree::get_singleton());
 		}
-
 
 		if (physics_server_2d) {
 			physics_server_2d->finish();
