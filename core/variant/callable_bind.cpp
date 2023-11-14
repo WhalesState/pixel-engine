@@ -88,7 +88,7 @@ ObjectID CallableCustomBind::get_object() const {
 }
 
 const Callable *CallableCustomBind::get_base_comparator() const {
-	return &callable;
+	return callable.get_base_comparator();
 }
 
 int CallableCustomBind::get_bound_arguments_count() const {
@@ -222,7 +222,7 @@ ObjectID CallableCustomUnbind::get_object() const {
 }
 
 const Callable *CallableCustomUnbind::get_base_comparator() const {
-	return &callable;
+	return callable.get_base_comparator();
 }
 
 int CallableCustomUnbind::get_bound_arguments_count() const {
@@ -245,9 +245,8 @@ void CallableCustomUnbind::get_bound_arguments(Vector<Variant> &r_arguments, int
 }
 
 void CallableCustomUnbind::call(const Variant **p_arguments, int p_argcount, Variant &r_return_value, Callable::CallError &r_call_error) const {
-	if (argcount > p_argcount) {
+	if (p_argcount < argcount) {
 		r_call_error.error = Callable::CallError::CALL_ERROR_TOO_FEW_ARGUMENTS;
-		r_call_error.argument = 0;
 		r_call_error.expected = argcount;
 		return;
 	}
@@ -255,9 +254,8 @@ void CallableCustomUnbind::call(const Variant **p_arguments, int p_argcount, Var
 }
 
 Error CallableCustomUnbind::rpc(int p_peer_id, const Variant **p_arguments, int p_argcount, Callable::CallError &r_call_error) const {
-	if (argcount > p_argcount) {
+	if (p_argcount < argcount) {
 		r_call_error.error = Callable::CallError::CALL_ERROR_TOO_FEW_ARGUMENTS;
-		r_call_error.argument = 0;
 		r_call_error.expected = argcount;
 		return ERR_UNCONFIGURED;
 	}

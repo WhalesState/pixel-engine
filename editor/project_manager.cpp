@@ -44,6 +44,7 @@
 #include "editor/editor_paths.h"
 #include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
+#include "editor/editor_string_names.h"
 #include "editor/editor_themes.h"
 #include "editor/editor_vcs_interface.h"
 #include "editor/gui/editor_file_dialog.h"
@@ -75,21 +76,21 @@ void ProjectDialog::_set_message(const String &p_msg, MessageType p_type, InputT
 
 	switch (p_type) {
 		case MESSAGE_ERROR: {
-			msg->add_theme_color_override("font_color", get_theme_color(SNAME("error_color"), SNAME("Editor")));
+			msg->add_theme_color_override("font_color", get_theme_color(SNAME("error_color"), EditorStringName(Editor)));
 			msg->set_modulate(Color(1, 1, 1, 1));
-			new_icon = get_theme_icon(SNAME("StatusError"), SNAME("EditorIcons"));
+			new_icon = get_editor_theme_icon(SNAME("StatusError"));
 
 		} break;
 		case MESSAGE_WARNING: {
-			msg->add_theme_color_override("font_color", get_theme_color(SNAME("warning_color"), SNAME("Editor")));
+			msg->add_theme_color_override("font_color", get_theme_color(SNAME("warning_color"), EditorStringName(Editor)));
 			msg->set_modulate(Color(1, 1, 1, 1));
-			new_icon = get_theme_icon(SNAME("StatusWarning"), SNAME("EditorIcons"));
+			new_icon = get_editor_theme_icon(SNAME("StatusWarning"));
 
 		} break;
 		case MESSAGE_SUCCESS: {
 			msg->remove_theme_color_override("font_color");
 			msg->set_modulate(Color(1, 1, 1, 0));
-			new_icon = get_theme_icon(SNAME("StatusSuccess"), SNAME("EditorIcons"));
+			new_icon = get_editor_theme_icon(SNAME("StatusSuccess"));
 
 		} break;
 	}
@@ -207,7 +208,7 @@ String ProjectDialog::_test_path() {
 				}
 
 			} else {
-				_set_message(TTR("Please choose a \"project.godot\" or \".zip\" file."), MESSAGE_ERROR);
+				_set_message(TTR("Please choose a \"project.godot\", a directory with it, or a \".zip\" file."), MESSAGE_ERROR);
 				install_path_container->hide();
 				get_ok_button()->set_disabled(true);
 				return "";
@@ -282,6 +283,9 @@ void ProjectDialog::_path_text_changed(const String &p_path) {
 }
 
 void ProjectDialog::_file_selected(const String &p_path) {
+	// If not already shown.
+	show_dialog();
+
 	String p = p_path;
 	if (mode == MODE_IMPORT) {
 		if (p.ends_with("project.godot")) {
@@ -310,6 +314,9 @@ void ProjectDialog::_file_selected(const String &p_path) {
 }
 
 void ProjectDialog::_path_selected(const String &p_path) {
+	// If not already shown.
+	show_dialog();
+
 	String sp = p_path.simplify_path();
 	project_path->set_text(sp);
 	_path_text_changed(sp);
@@ -327,7 +334,7 @@ void ProjectDialog::_browse_path() {
 	fdialog->set_current_dir(project_path->get_text());
 
 	if (mode == MODE_IMPORT) {
-		fdialog->set_file_mode(EditorFileDialog::FILE_MODE_OPEN_FILE);
+		fdialog->set_file_mode(EditorFileDialog::FILE_MODE_OPEN_ANY);
 		fdialog->clear_filters();
 		fdialog->add_filter("project.godot", vformat("%s %s", VERSION_NAME, TTR("Project")));
 		fdialog->add_filter("*.zip", TTR("ZIP File"));
@@ -601,11 +608,11 @@ void ProjectDialog::cancel_pressed() {
 	project_name->clear();
 	_text_changed("");
 
-	if (status_rect->get_texture() == get_theme_icon(SNAME("StatusError"), SNAME("EditorIcons"))) {
+	if (status_rect->get_texture() == get_editor_theme_icon(SNAME("StatusError"))) {
 		msg->show();
 	}
 
-	if (install_status_rect->get_texture() == get_theme_icon(SNAME("StatusError"), SNAME("EditorIcons"))) {
+	if (install_status_rect->get_texture() == get_editor_theme_icon(SNAME("StatusError"))) {
 		msg->show();
 	}
 }
@@ -624,6 +631,14 @@ void ProjectDialog::set_mode(Mode p_mode) {
 
 void ProjectDialog::set_project_path(const String &p_path) {
 	project_path->set_text(p_path);
+}
+
+void ProjectDialog::ask_for_path_and_show() {
+	// Workaround: for the file selection dialog content to be rendered we need to show its parent dialog.
+	show_dialog();
+	_set_message("");
+
+	_browse_path();
 }
 
 void ProjectDialog::show_dialog() {
@@ -852,20 +867,23 @@ void ProjectListItemControl::_notification(int p_what) {
 			if (icon_needs_reload) {
 				// The project icon may not be loaded by the time the control is displayed,
 				// so use a loading placeholder.
-				project_icon->set_texture(get_theme_icon(SNAME("ProjectIconLoading"), SNAME("EditorIcons")));
+				project_icon->set_texture(get_editor_theme_icon(SNAME("ProjectIconLoading")));
 			}
 
-			project_title->add_theme_font_override("font", get_theme_font(SNAME("title"), SNAME("EditorFonts")));
-			project_title->add_theme_font_size_override("font_size", get_theme_font_size(SNAME("title_size"), SNAME("EditorFonts")));
+			project_title->begin_bulk_theme_override();
+			project_title->add_theme_font_override("font", get_theme_font(SNAME("title"), EditorStringName(EditorFonts)));
+			project_title->add_theme_font_size_override("font_size", get_theme_font_size(SNAME("title_size"), EditorStringName(EditorFonts)));
 			project_title->add_theme_color_override("font_color", get_theme_color(SNAME("font_color"), SNAME("Tree")));
-			project_path->add_theme_color_override("font_color", get_theme_color(SNAME("font_color"), SNAME("Tree")));
-			project_unsupported_features->set_texture(get_theme_icon(SNAME("NodeWarning"), SNAME("EditorIcons")));
+			project_title->end_bulk_theme_override();
 
-			favorite_button->set_texture_normal(get_theme_icon(SNAME("Favorites"), SNAME("EditorIcons")));
+			project_path->add_theme_color_override("font_color", get_theme_color(SNAME("font_color"), SNAME("Tree")));
+			project_unsupported_features->set_texture(get_editor_theme_icon(SNAME("NodeWarning")));
+
+			favorite_button->set_texture_normal(get_editor_theme_icon(SNAME("Favorites")));
 			if (project_is_missing) {
-				explore_button->set_icon(get_theme_icon(SNAME("FileBroken"), SNAME("EditorIcons")));
+				explore_button->set_icon(get_editor_theme_icon(SNAME("FileBroken")));
 			} else {
-				explore_button->set_icon(get_theme_icon(SNAME("Load"), SNAME("EditorIcons")));
+				explore_button->set_icon(get_editor_theme_icon(SNAME("Load")));
 			}
 		} break;
 
@@ -967,12 +985,12 @@ void ProjectListItemControl::set_is_missing(bool p_missing) {
 	if (project_is_missing) {
 		project_icon->set_modulate(Color(1, 1, 1, 0.5));
 
-		explore_button->set_icon(get_theme_icon(SNAME("FileBroken"), SNAME("EditorIcons")));
+		explore_button->set_icon(get_editor_theme_icon(SNAME("FileBroken")));
 		explore_button->set_tooltip_text(TTR("Error: Project is missing on the filesystem."));
 	} else {
 		project_icon->set_modulate(Color(1, 1, 1, 1.0));
 
-		explore_button->set_icon(get_theme_icon(SNAME("Load"), SNAME("EditorIcons")));
+		explore_button->set_icon(get_editor_theme_icon(SNAME("Load")));
 #if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 		explore_button->set_tooltip_text(TTR("Show in File Manager"));
 #else
@@ -1139,7 +1157,7 @@ void ProjectList::_update_icons_async() {
 void ProjectList::_load_project_icon(int p_index) {
 	Item &item = _projects.write[p_index];
 
-	Ref<Texture2D> default_icon = get_theme_icon(SNAME("DefaultProjectIcon"), SNAME("EditorIcons"));
+	Ref<Texture2D> default_icon = get_editor_theme_icon(SNAME("DefaultProjectIcon"));
 	Ref<Texture2D> icon;
 	if (!item.icon.is_empty()) {
 		Ref<Image> img;
@@ -1725,7 +1743,7 @@ void ProjectList::_panel_input(const Ref<InputEvent> &p_ev, Node *p_hb) {
 			CRASH_COND(anchor_index == -1);
 			_select_project_range(anchor_index, clicked_index);
 
-		} else if (mb->is_ctrl_pressed()) {
+		} else if (mb->is_command_or_control_pressed()) {
 			_toggle_project(clicked_index);
 
 		} else {
@@ -1737,7 +1755,7 @@ void ProjectList::_panel_input(const Ref<InputEvent> &p_ev, Node *p_hb) {
 
 		// Do not allow opening a project more than once using a single project manager instance.
 		// Opening the same project in several editor instances at once can lead to various issues.
-		if (!mb->is_ctrl_pressed() && mb->is_double_click() && !project_opening_initiated) {
+		if (!mb->is_command_or_control_pressed() && mb->is_double_click() && !project_opening_initiated) {
 			emit_signal(SNAME(SIGNAL_PROJECT_ASK_OPEN));
 		}
 	}
@@ -1806,28 +1824,28 @@ void ProjectManager::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
-			background_panel->add_theme_style_override("panel", get_theme_stylebox(SNAME("Background"), SNAME("EditorStyles")));
-			loading_label->add_theme_font_override("font", get_theme_font(SNAME("bold"), SNAME("EditorFonts")));
+			background_panel->add_theme_style_override("panel", get_theme_stylebox(SNAME("Background"), EditorStringName(EditorStyles)));
+			loading_label->add_theme_font_override("font", get_theme_font(SNAME("bold"), EditorStringName(EditorFonts)));
 			search_panel->add_theme_style_override("panel", get_theme_stylebox(SNAME("search_panel"), SNAME("ProjectManager")));
 
 			// Top bar.
-			search_box->set_right_icon(get_theme_icon(SNAME("Search"), SNAME("EditorIcons")));
-			language_btn->set_icon(get_theme_icon(SNAME("Environment"), SNAME("EditorIcons")));
+			search_box->set_right_icon(get_editor_theme_icon(SNAME("Search")));
+			language_btn->set_icon(get_editor_theme_icon(SNAME("Environment")));
 
 			// Sidebar.
-			create_btn->set_icon(get_theme_icon(SNAME("Add"), SNAME("EditorIcons")));
-			import_btn->set_icon(get_theme_icon(SNAME("Load"), SNAME("EditorIcons")));
-			scan_btn->set_icon(get_theme_icon(SNAME("Search"), SNAME("EditorIcons")));
-			open_btn->set_icon(get_theme_icon(SNAME("Edit"), SNAME("EditorIcons")));
-			run_btn->set_icon(get_theme_icon(SNAME("Play"), SNAME("EditorIcons")));
-			rename_btn->set_icon(get_theme_icon(SNAME("Rename"), SNAME("EditorIcons")));
-			manage_tags_btn->set_icon(get_theme_icon("Script", "EditorIcons"));
-			erase_btn->set_icon(get_theme_icon(SNAME("Remove"), SNAME("EditorIcons")));
-			erase_missing_btn->set_icon(get_theme_icon(SNAME("Clear"), SNAME("EditorIcons")));
-			create_tag_btn->set_icon(get_theme_icon("Add", "EditorIcons"));
+			create_btn->set_icon(get_editor_theme_icon(SNAME("Add")));
+			import_btn->set_icon(get_editor_theme_icon(SNAME("Load")));
+			scan_btn->set_icon(get_editor_theme_icon(SNAME("Search")));
+			open_btn->set_icon(get_editor_theme_icon(SNAME("Edit")));
+			run_btn->set_icon(get_editor_theme_icon(SNAME("Play")));
+			rename_btn->set_icon(get_editor_theme_icon(SNAME("Rename")));
+			manage_tags_btn->set_icon(get_editor_theme_icon("Script"));
+			erase_btn->set_icon(get_editor_theme_icon(SNAME("Remove")));
+			erase_missing_btn->set_icon(get_editor_theme_icon(SNAME("Clear")));
+			create_tag_btn->set_icon(get_editor_theme_icon("Add"));
 
-			tag_error->add_theme_color_override("font_color", get_theme_color("error_color", "Editor"));
-			tag_edit_error->add_theme_color_override("font_color", get_theme_color("error_color", "Editor"));
+			tag_error->add_theme_color_override("font_color", get_theme_color("error_color", EditorStringName(Editor)));
+			tag_edit_error->add_theme_color_override("font_color", get_theme_color("error_color", EditorStringName(Editor)));
 
 			create_btn->add_theme_constant_override("h_separation", get_theme_constant(SNAME("sidebar_button_icon_separation"), SNAME("ProjectManager")));
 			import_btn->add_theme_constant_override("h_separation", get_theme_constant(SNAME("sidebar_button_icon_separation"), SNAME("ProjectManager")));
@@ -1917,9 +1935,9 @@ void ProjectManager::_build_icon_type_cache(Ref<Theme> p_theme) {
 		return;
 	}
 	List<StringName> tl;
-	p_theme->get_icon_list(SNAME("EditorIcons"), &tl);
+	p_theme->get_icon_list(EditorStringName(EditorIcons), &tl);
 	for (List<StringName>::Element *E = tl.front(); E; E = E->next()) {
-		icon_type_cache[E->get()] = p_theme->get_icon(E->get(), SNAME("EditorIcons"));
+		icon_type_cache[E->get()] = p_theme->get_icon(E->get(), EditorStringName(EditorIcons));
 	}
 }
 
@@ -2325,7 +2343,7 @@ void ProjectManager::_new_project() {
 
 void ProjectManager::_import_project() {
 	npdialog->set_mode(ProjectDialog::MODE_IMPORT);
-	npdialog->show_dialog();
+	npdialog->ask_for_path_and_show();
 }
 
 void ProjectManager::_rename_project() {
@@ -2593,6 +2611,14 @@ void ProjectManager::_on_search_term_changed(const String &p_term) {
 	_update_project_buttons();
 }
 
+void ProjectManager::_on_search_term_submitted(const String &p_text) {
+	if (tabs->get_current_tab() != 0) {
+		return;
+	}
+
+	_open_selected_projects_ask();
+}
+
 void ProjectManager::_bind_methods() {
 	ClassDB::bind_method("_update_project_buttons", &ProjectManager::_update_project_buttons);
 	ClassDB::bind_method("_version_button_pressed", &ProjectManager::_version_button_pressed);
@@ -2697,8 +2723,9 @@ ProjectManager::ProjectManager() {
 	}
 
 	EditorColorMap::create();
+	EditorTheme::initialize();
 	Ref<Theme> theme = create_custom_theme();
-	DisplayServer::set_early_window_clear_color_override(true, theme->get_color(SNAME("background"), SNAME("Editor")));
+	DisplayServer::set_early_window_clear_color_override(true, theme->get_color(SNAME("background"), EditorStringName(Editor)));
 
 	set_theme(theme);
 	set_anchors_and_offsets_preset(Control::PRESET_FULL_RECT);
@@ -2759,6 +2786,7 @@ ProjectManager::ProjectManager() {
 		search_box->set_tooltip_text(TTR("This field filters projects by name and last path component.\nTo filter projects by name and full path, the query must contain at least one `/` character."));
 		search_box->set_clear_button_enabled(true);
 		search_box->connect("text_changed", callable_mp(this, &ProjectManager::_on_search_term_changed));
+		search_box->connect("text_submitted", callable_mp(this, &ProjectManager::_on_search_term_submitted));
 		search_box->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 		hb->add_child(search_box);
 
@@ -3137,6 +3165,9 @@ ProjectManager::~ProjectManager() {
 	if (EditorSettings::get_singleton()) {
 		EditorSettings::destroy();
 	}
+
+	EditorColorMap::finish();
+	EditorTheme::finalize();
 }
 
 void ProjectTag::_notification(int p_what) {

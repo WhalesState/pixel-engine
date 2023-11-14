@@ -37,6 +37,23 @@ RenderSceneBuffersGLES3::~RenderSceneBuffersGLES3() {
 	free_render_buffer_data();
 }
 
+// void RenderSceneBuffersGLES3::configure(const RenderSceneBuffersConfiguration *p_config) {
+// 	//internal_size.x = p_config->get_internal_size().x; // ignore for now
+// 	//internal_size.y = p_config->get_internal_size().y;
+// 	width = p_config->get_target_size().x;
+// 	height = p_config->get_target_size().y;
+// 	//scaling_3d_mode = p_config->get_scaling_3d_mode()
+// 	//fsr_sharpness = p_config->get_fsr_sharpness();
+// 	//texture_mipmap_bias = p_config->get_texture_mipmap_bias();
+// 	render_target = p_config->get_render_target();
+// 	//msaa = p_config->get_msaa_3d();
+// 	//screen_space_aa = p_config->get_screen_space_aa();
+// 	//use_debanding = p_config->get_use_debanding();
+// 	view_count = p_config->get_view_count();
+
+// 	free_render_buffer_data();
+// }
+
 void RenderSceneBuffersGLES3::free_render_buffer_data() {
 }
 

@@ -104,7 +104,15 @@ Ref<PropertyTweener> Tween::tween_property(const Object *p_target, const NodePat
 	CHECK_VALID();
 
 	Vector<StringName> property_subnames = p_property.get_as_property_path().get_subnames();
-	if (!_validate_type_match(p_target->get_indexed(property_subnames), p_to)) {
+#ifdef DEBUG_ENABLED
+	bool prop_valid;
+	const Variant &prop_value = p_target->get_indexed(property_subnames, &prop_valid);
+	ERR_FAIL_COND_V_MSG(!prop_valid, nullptr, vformat("The tweened property \"%s\" does not exist in object \"%s\".", p_property, p_target));
+#else
+	const Variant &prop_value = p_target->get_indexed(property_subnames);
+#endif
+
+	if (!_validate_type_match(prop_value, p_to)) {
 		return nullptr;
 	}
 
@@ -675,6 +683,10 @@ bool CallbackTweener::step(double &r_delta) {
 		return false;
 	}
 
+	if (!callback.is_valid()) {
+		return false;
+	}
+
 	elapsed_time += r_delta;
 	if (elapsed_time >= delay) {
 		Variant result;
@@ -733,6 +745,10 @@ void MethodTweener::start() {
 
 bool MethodTweener::step(double &r_delta) {
 	if (finished) {
+		return false;
+	}
+
+	if (!callback.is_valid()) {
 		return false;
 	}
 

@@ -805,6 +805,22 @@ TEST_CASE("[String] sprintf") {
 	REQUIRE(error == false);
 	CHECK(output == String("fish +99.990000 frog"));
 
+	// Real with sign (negative zero).
+	format = "fish %+f frog";
+	args.clear();
+	args.push_back(-0.0);
+	output = format.sprintf(args, &error);
+	REQUIRE(error == false);
+	CHECK(output == String("fish -0.000000 frog"));
+
+	// Real with sign (positive zero).
+	format = "fish %+f frog";
+	args.clear();
+	args.push_back(0.0);
+	output = format.sprintf(args, &error);
+	REQUIRE(error == false);
+	CHECK(output == String("fish +0.000000 frog"));
+
 	// Real with 1 decimal.
 	format = "fish %.1f frog";
 	args.clear();
@@ -1700,7 +1716,7 @@ TEST_CASE("[String] validate_identifier") {
 	CHECK(empty_string.validate_identifier() == "_");
 
 	String numeric_only = "12345";
-	CHECK(numeric_only.validate_identifier() == "_2345");
+	CHECK(numeric_only.validate_identifier() == "_12345");
 
 	String name_with_spaces = "Name with spaces";
 	CHECK(name_with_spaces.validate_identifier() == "Name_with_spaces");

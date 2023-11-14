@@ -244,6 +244,11 @@ bool ProjectSettings::get_ignore_value_in_docs(const String &p_name) const {
 #endif
 }
 
+void ProjectSettings::add_hidden_prefix(const String &p_prefix) {
+	ERR_FAIL_COND_MSG(hidden_prefixes.find(p_prefix) > -1, vformat("Hidden prefix '%s' already exists.", p_prefix));
+	hidden_prefixes.push_back(p_prefix);
+}
+
 String ProjectSettings::globalize_path(const String &p_path) const {
 	if (p_path.begins_with("res://")) {
 		if (!resource_path.is_empty()) {
@@ -383,7 +388,18 @@ void ProjectSettings::_get_property_list(List<PropertyInfo> *p_list) const {
 		vc.name = E.key;
 		vc.order = v->order;
 		vc.type = v->variant.get_type();
-		if (v->internal || vc.name.begins_with("input/") || vc.name.begins_with("importer_defaults/") || vc.name.begins_with("import/") || vc.name.begins_with("autoload/") || vc.name.begins_with("editor_plugins/") || vc.name.begins_with("shader_globals/")) {
+
+		bool internal = v->internal;
+		if (!internal) {
+			for (const String &F : hidden_prefixes) {
+				if (vc.name.begins_with(F)) {
+					internal = true;
+					break;
+				}
+			}
+		}
+
+		if (internal) {
 			vc.flags = PROPERTY_USAGE_STORAGE;
 		} else {
 			vc.flags = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_STORAGE;
@@ -831,8 +847,8 @@ Error ProjectSettings::_save_settings_binary(const String &p_file, const RBMap<S
 	}
 
 	if (!p_custom_features.is_empty()) {
+		// Store how many properties are saved, add one for custom features, which must always go first.
 		file->store_32(count + 1);
-		//store how many properties are saved, add one for custom featuers, which must always go first
 		String key = CoreStringNames::get_singleton()->_custom_features;
 		file->store_pascal_string(key);
 
@@ -849,7 +865,8 @@ Error ProjectSettings::_save_settings_binary(const String &p_file, const RBMap<S
 		file->store_buffer(buff.ptr(), buff.size());
 
 	} else {
-		file->store_32(count); //store how many properties are saved
+		// Store how many properties are saved.
+		file->store_32(count);
 	}
 
 	for (const KeyValue<String, List<String>> &E : p_props) {
@@ -941,6 +958,7 @@ Error ProjectSettings::_save_custom_bnd(const String &p_file) { // add other par
 #ifdef TOOLS_ENABLED
 bool _csproj_exists(String p_root_dir) {
 	Ref<DirAccess> dir = DirAccess::open(p_root_dir);
+	ERR_FAIL_COND_V(dir.is_null(), false);
 
 	dir->list_dir_begin();
 	String file_name = dir->_get_next();
@@ -1320,6 +1338,9 @@ ProjectSettings::ProjectSettings() {
 	GLOBAL_DEF_RST("audio/general/text_to_speech", false);
 	GLOBAL_DEF_RST(PropertyInfo(Variant::FLOAT, "audio/general/2d_panning_strength", PROPERTY_HINT_RANGE, "0,2,0.01"), 0.5f);
 
+	GLOBAL_DEF(PropertyInfo(Variant::INT, "audio/general/ios/session_category", PROPERTY_HINT_ENUM, "Ambient,Multi Route,Play and Record,Playback,Record,Solo Ambient"), 0);
+	GLOBAL_DEF("audio/general/ios/mix_with_others", false);
+
 	PackedStringArray extensions;
 	extensions.push_back("gd");
 	if (Engine::get_singleton()->has_singleton("GodotSharp")) {
@@ -1369,15 +1390,18 @@ ProjectSettings::ProjectSettings() {
 	GLOBAL_DEF("rendering/rendering_device/staging_buffer/max_size_mb", 128);
 	GLOBAL_DEF("rendering/rendering_device/staging_buffer/texture_upload_region_size_px", 64);
 	GLOBAL_DEF("rendering/rendering_device/pipeline_cache/save_chunk_size_mb", 3.0);
+	GLOBAL_DEF("rendering/rendering_device/vulkan/max_descriptors_per_pool", 64);
 
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/textures/canvas_textures/default_texture_filter", PROPERTY_HINT_ENUM, "Nearest,Linear,Linear Mipmap,Nearest Mipmap"), 0);
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/textures/canvas_textures/default_texture_repeat", PROPERTY_HINT_ENUM, "Disable,Enable,Mirror"), 0);
 
-	// These properties will not show up in the dialog nor in the documentation. If you want to exclude whole groups, see _get_property_list() method.
+	// These properties will not show up in the dialog. If you want to exclude whole groups, use add_hidden_prefix().
 	GLOBAL_DEF_INTERNAL("application/config/features", PackedStringArray());
 	GLOBAL_DEF_INTERNAL("internationalization/locale/translation_remaps", PackedStringArray());
 	GLOBAL_DEF_INTERNAL("internationalization/locale/translations", PackedStringArray());
 	GLOBAL_DEF_INTERNAL("internationalization/locale/translations_pot_files", PackedStringArray());
+
+	ProjectSettings::get_singleton()->add_hidden_prefix("input/");
 }
 
 ProjectSettings::~ProjectSettings() {

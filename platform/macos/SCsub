@@ -23,6 +23,7 @@ files = [
     "dir_access_macos.mm",
     "tts_macos.mm",
     "joypad_macos.cpp",
+    "gl_manager_macos_angle.mm",
     "gl_manager_macos_legacy.mm",
 ]
 

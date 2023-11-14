@@ -180,10 +180,6 @@ void EditorPlugin::remove_tool_menu_item(const String &p_name) {
 	EditorNode::get_singleton()->remove_tool_menu_item(p_name);
 }
 
-// PopupMenu *EditorPlugin::get_export_as_menu() {
-// 	return EditorNode::get_singleton()->get_export_as_menu();
-// }
-
 void EditorPlugin::set_input_event_forwarding_always_enabled() {
 	input_event_forwarding_always_enabled = true;
 	EditorPluginList *always_input_forwarding_list = EditorNode::get_singleton()->get_editor_plugins_force_input_forwarding();
@@ -278,6 +274,10 @@ bool EditorPlugin::handles(Object *p_object) const {
 	return success;
 }
 
+bool EditorPlugin::can_auto_hide() const {
+	return true;
+}
+
 Dictionary EditorPlugin::get_state() const {
 	Dictionary state;
 	GDVIRTUAL_CALL(_get_state, state);
@@ -321,11 +321,11 @@ bool EditorPlugin::get_remove_list(List<Node *> *p_list) {
 }
 
 void EditorPlugin::add_undo_redo_inspector_hook_callback(Callable p_callable) {
-	EditorNode::get_singleton()->get_editor_data().add_undo_redo_inspector_hook_callback(p_callable);
+	EditorNode::get_editor_data().add_undo_redo_inspector_hook_callback(p_callable);
 }
 
 void EditorPlugin::remove_undo_redo_inspector_hook_callback(Callable p_callable) {
-	EditorNode::get_singleton()->get_editor_data().remove_undo_redo_inspector_hook_callback(p_callable);
+	EditorNode::get_editor_data().remove_undo_redo_inspector_hook_callback(p_callable);
 }
 
 void EditorPlugin::add_translation_parser_plugin(const Ref<EditorTranslationParserPlugin> &p_parser) {
@@ -442,19 +442,24 @@ void EditorPlugin::remove_resource_conversion_plugin(const Ref<EditorResourceCon
 	EditorNode::get_singleton()->remove_resource_conversion_plugin(p_plugin);
 }
 
+#ifndef DISABLE_DEPRECATED
 void EditorPlugin::_editor_project_settings_changed() {
 	emit_signal(SNAME("project_settings_changed"));
 }
+#endif
+
 void EditorPlugin::_notification(int p_what) {
+#ifndef DISABLE_DEPRECATED
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
-			EditorNode::get_singleton()->connect("project_settings_changed", callable_mp(this, &EditorPlugin::_editor_project_settings_changed));
+			ProjectSettings::get_singleton()->connect("settings_changed", callable_mp(this, &EditorPlugin::_editor_project_settings_changed));
 		} break;
 
 		case NOTIFICATION_EXIT_TREE: {
-			EditorNode::get_singleton()->disconnect("project_settings_changed", callable_mp(this, &EditorPlugin::_editor_project_settings_changed));
+			ProjectSettings::get_singleton()->disconnect("settings_changed", callable_mp(this, &EditorPlugin::_editor_project_settings_changed));
 		} break;
 	}
+#endif
 }
 
 void EditorPlugin::_bind_methods() {
@@ -467,7 +472,6 @@ void EditorPlugin::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_tool_menu_item", "name", "callable"), &EditorPlugin::add_tool_menu_item);
 	ClassDB::bind_method(D_METHOD("add_tool_submenu_item", "name", "submenu"), &EditorPlugin::add_tool_submenu_item);
 	ClassDB::bind_method(D_METHOD("remove_tool_menu_item", "name"), &EditorPlugin::remove_tool_menu_item);
-	// ClassDB::bind_method(D_METHOD("get_export_as_menu"), &EditorPlugin::get_export_as_menu);
 	ClassDB::bind_method(D_METHOD("add_custom_type", "type", "base", "script", "icon"), &EditorPlugin::add_custom_type);
 	ClassDB::bind_method(D_METHOD("remove_custom_type", "type"), &EditorPlugin::remove_custom_type);
 

@@ -1662,7 +1662,7 @@ void Curve3D::_bake() const {
 		const Vector3 *forward_ptr = baked_forward_vector_cache.ptr();
 		const Vector3 *points_ptr = baked_point_cache.ptr();
 
-		Basis frame; // X-right, Y-up, Z-forward.
+		Basis frame; // X-right, Y-up, -Z-forward.
 		Basis frame_prev;
 
 		// Set the initial frame based on Y-up rule.
@@ -1683,7 +1683,7 @@ void Curve3D::_bake() const {
 			Vector3 forward = forward_ptr[idx];
 
 			Basis rotate;
-			rotate.rotate_to_align(frame_prev.get_column(2), forward);
+			rotate.rotate_to_align(-frame_prev.get_column(2), forward);
 			frame = rotate * frame_prev;
 			frame.orthonormalize(); // guard against float error accumulation
 
@@ -1808,7 +1808,7 @@ real_t Curve3D::_sample_baked_tilt(Interval p_interval) const {
 }
 
 // Internal method for getting posture at a baked point. Assuming caller
-// make all sanity checks.
+// make all safety checks.
 Basis Curve3D::_compose_posture(int p_index) const {
 	Vector3 forward = baked_forward_vector_cache[p_index];
 

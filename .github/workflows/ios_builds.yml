@@ -33,7 +33,7 @@ jobs:
             sconsflags: optimize=speed_trace
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Pixel Engine build cache
         uses: ./.github/actions/godot-cache

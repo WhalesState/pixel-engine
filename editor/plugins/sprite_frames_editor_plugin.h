@@ -188,6 +188,7 @@ class SpriteFramesEditor : public HSplitContainer {
 	void _down_pressed();
 	void _frame_duration_changed(double p_value);
 	void _update_library(bool p_skip_selector = false);
+	void _update_library_impl();
 
 	void _update_stop_icon();
 	void _play_pressed();
@@ -212,6 +213,9 @@ class SpriteFramesEditor : public HSplitContainer {
 	void _zoom_in();
 	void _zoom_out();
 	void _zoom_reset();
+
+	bool animations_dirty = false;
+	bool pending_update = false;
 
 	bool updating;
 	bool updating_split_settings = false; // Skip SpinBox/Range callback when setting value by code.

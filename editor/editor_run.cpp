@@ -108,12 +108,17 @@ Error EditorRun::run(const String &p_scene, const String &p_write_movie) {
 
 	bool debug_collisions = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_collisions", false);
 	bool debug_paths = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_paths", false);
+	bool debug_canvas_redraw = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_canvas_redraw", false);
+
 	if (debug_collisions) {
 		args.push_back("--debug-collisions");
 	}
 
 	if (debug_paths) {
 		args.push_back("--debug-paths");
+	}
+	if (debug_canvas_redraw) {
+		args.push_back("--debug-canvas-item-redraw");
 	}
 
 	if (p_write_movie != "") {

@@ -30,6 +30,7 @@
 
 #include "gdscript_rpc_callable.h"
 
+#include "core/object/script_language.h"
 #include "core/templates/hashfuncs.h"
 #include "scene/main/node.h"
 
@@ -72,12 +73,13 @@ void GDScriptRPCCallable::call(const Variant **p_arguments, int p_argcount, Vari
 }
 
 GDScriptRPCCallable::GDScriptRPCCallable(Object *p_object, const StringName &p_method) {
+	ERR_FAIL_NULL(p_object);
 	object = p_object;
 	method = p_method;
 	h = method.hash();
 	h = hash_murmur3_one_64(object->get_instance_id(), h);
 	node = Object::cast_to<Node>(object);
-	ERR_FAIL_COND_MSG(!node, "RPC can only be defined on class that extends Node.");
+	ERR_FAIL_NULL_MSG(node, "RPC can only be defined on class that extends Node.");
 }
 
 Error GDScriptRPCCallable::rpc(int p_peer_id, const Variant **p_arguments, int p_argcount, Callable::CallError &r_call_error) const {

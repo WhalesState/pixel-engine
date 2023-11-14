@@ -35,7 +35,6 @@ env_ktx.Prepend(CPPPATH=[thirdparty_dir + "lib"])
 env_ktx.Prepend(CPPPATH=[thirdparty_dir + "other_include"])
 env_ktx.Prepend(CPPPATH=["#thirdparty/basis_universal"])
 
-
 # Falls back on bundled `vkformat_enum.h`.
 env_ktx.Append(CPPDEFINES=["LIBKTX"])
 

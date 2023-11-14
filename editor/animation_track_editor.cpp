@@ -31,11 +31,13 @@
 #include "animation_track_editor.h"
 
 #include "animation_track_editor_plugins.h"
+#include "core/error/error_macros.h"
 #include "core/input/input.h"
 #include "editor/animation_bezier_editor.h"
 #include "editor/editor_node.h"
 #include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
+#include "editor/editor_string_names.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/gui/editor_spin_slider.h"
 #include "editor/gui/scene_tree_editor.h"
@@ -76,10 +78,10 @@ void AnimationTrackKeyEdit::_fix_node_path(Variant &value) {
 	Node *root = EditorNode::get_singleton()->get_tree()->get_root();
 
 	Node *np_node = root->get_node(np);
-	ERR_FAIL_COND(!np_node);
+	ERR_FAIL_NULL(np_node);
 
 	Node *edited_node = root->get_node(base);
-	ERR_FAIL_COND(!edited_node);
+	ERR_FAIL_NULL(edited_node);
 
 	value = edited_node->get_path_to(np_node);
 }
@@ -300,6 +302,7 @@ bool AnimationTrackKeyEdit::_set(const StringName &p_name, const Variant &p_valu
 				undo_redo->commit_action();
 
 				setting = false;
+				notify_change(); // To update limits for `start_offset`/`end_offset` sliders (they depend on the stream length).
 				return true;
 			}
 
@@ -548,8 +551,10 @@ void AnimationTrackKeyEdit::_get_property_list(List<PropertyInfo> *p_list) const
 		} break;
 		case Animation::TYPE_AUDIO: {
 			p_list->push_back(PropertyInfo(Variant::OBJECT, PNAME("stream"), PROPERTY_HINT_RESOURCE_TYPE, "AudioStream"));
-			p_list->push_back(PropertyInfo(Variant::FLOAT, PNAME("start_offset"), PROPERTY_HINT_RANGE, "0,3600,0.0001,or_greater"));
-			p_list->push_back(PropertyInfo(Variant::FLOAT, PNAME("end_offset"), PROPERTY_HINT_RANGE, "0,3600,0.0001,or_greater"));
+			Ref<AudioStream> audio_stream = animation->audio_track_get_key_stream(track, key);
+			String hint_string = vformat("0,%.4f,0.0001,or_greater", audio_stream.is_valid() ? audio_stream->get_length() : 3600.0);
+			p_list->push_back(PropertyInfo(Variant::FLOAT, PNAME("start_offset"), PROPERTY_HINT_RANGE, hint_string));
+			p_list->push_back(PropertyInfo(Variant::FLOAT, PNAME("end_offset"), PROPERTY_HINT_RANGE, hint_string));
 
 		} break;
 		case Animation::TYPE_ANIMATION: {
@@ -618,10 +623,10 @@ void AnimationMultiTrackKeyEdit::_fix_node_path(Variant &value, NodePath &base) 
 	Node *root = EditorNode::get_singleton()->get_tree()->get_root();
 
 	Node *np_node = root->get_node(np);
-	ERR_FAIL_COND(!np_node);
+	ERR_FAIL_NULL(np_node);
 
 	Node *edited_node = root->get_node(base);
-	ERR_FAIL_COND(!edited_node);
+	ERR_FAIL_NULL(edited_node);
 
 	value = edited_node->get_path_to(np_node);
 }
@@ -1235,10 +1240,10 @@ void AnimationTimelineEdit::_anim_loop_pressed() {
 }
 
 int AnimationTimelineEdit::get_buttons_width() const {
-	Ref<Texture2D> interp_mode = get_theme_icon(SNAME("TrackContinuous"), SNAME("EditorIcons"));
-	Ref<Texture2D> interp_type = get_theme_icon(SNAME("InterpRaw"), SNAME("EditorIcons"));
-	Ref<Texture2D> loop_type = get_theme_icon(SNAME("InterpWrapClamp"), SNAME("EditorIcons"));
-	Ref<Texture2D> remove_icon = get_theme_icon(SNAME("Remove"), SNAME("EditorIcons"));
+	Ref<Texture2D> interp_mode = get_editor_theme_icon(SNAME("TrackContinuous"));
+	Ref<Texture2D> interp_type = get_editor_theme_icon(SNAME("InterpRaw"));
+	Ref<Texture2D> loop_type = get_editor_theme_icon(SNAME("InterpWrapClamp"));
+	Ref<Texture2D> remove_icon = get_editor_theme_icon(SNAME("Remove"));
 	Ref<Texture2D> down_icon = get_theme_icon(SNAME("select_arrow"), SNAME("Tree"));
 
 	int total_w = interp_mode->get_width() + interp_type->get_width() + loop_type->get_width() + remove_icon->get_width();
@@ -1248,7 +1253,7 @@ int AnimationTimelineEdit::get_buttons_width() const {
 }
 
 int AnimationTimelineEdit::get_name_limit() const {
-	Ref<Texture2D> hsize_icon = get_theme_icon(SNAME("Hsize"), SNAME("EditorIcons"));
+	Ref<Texture2D> hsize_icon = get_editor_theme_icon(SNAME("Hsize"));
 
 	int limit = MAX(name_limit, add_track->get_minimum_size().width + hsize_icon->get_width());
 
@@ -1262,17 +1267,20 @@ void AnimationTimelineEdit::_notification(int p_what) {
 		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
 			panner->setup((ViewPanner::ControlScheme)EDITOR_GET("editors/panning/animation_editors_panning_scheme").operator int(), ED_GET_SHORTCUT("canvas_item_editor/pan_view"), bool(EDITOR_GET("editors/panning/simple_panning")));
-			add_track->set_icon(get_theme_icon(SNAME("Add"), SNAME("EditorIcons")));
-			loop->set_icon(get_theme_icon(SNAME("Loop"), SNAME("EditorIcons")));
-			time_icon->set_texture(get_theme_icon(SNAME("Time"), SNAME("EditorIcons")));
+			add_track->set_icon(get_editor_theme_icon(SNAME("Add")));
+			loop->set_icon(get_editor_theme_icon(SNAME("Loop")));
+			time_icon->set_texture(get_editor_theme_icon(SNAME("Time")));
 
 			add_track->get_popup()->clear();
-			add_track->get_popup()->add_icon_item(get_theme_icon(SNAME("KeyValue"), SNAME("EditorIcons")), TTR("Property Track"));
-			add_track->get_popup()->add_icon_item(get_theme_icon(SNAME("KeyBlendShape"), SNAME("EditorIcons")), TTR("Blend Shape Track"));
-			add_track->get_popup()->add_icon_item(get_theme_icon(SNAME("KeyCall"), SNAME("EditorIcons")), TTR("Call Method Track"));
-			add_track->get_popup()->add_icon_item(get_theme_icon(SNAME("KeyBezier"), SNAME("EditorIcons")), TTR("Bezier Curve Track"));
-			add_track->get_popup()->add_icon_item(get_theme_icon(SNAME("KeyAudio"), SNAME("EditorIcons")), TTR("Audio Playback Track"));
-			add_track->get_popup()->add_icon_item(get_theme_icon(SNAME("KeyAnimation"), SNAME("EditorIcons")), TTR("Animation Playback Track"));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyValue")), TTR("Property Track"));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyXPosition")), TTR("3D Position Track"));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyXRotation")), TTR("3D Rotation Track"));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyXScale")), TTR("3D Scale Track"));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyBlendShape")), TTR("Blend Shape Track"));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyCall")), TTR("Call Method Track"));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyBezier")), TTR("Bezier Curve Track"));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyAudio")), TTR("Audio Playback Track"));
+			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyAnimation")), TTR("Animation Playback Track"));
 		} break;
 
 		case EditorSettings::NOTIFICATION_EDITOR_SETTINGS_CHANGED: {
@@ -1304,7 +1312,7 @@ void AnimationTimelineEdit::_notification(int p_what) {
 				l = 0.0001; // Avoid crashor.
 			}
 
-			Ref<Texture2D> hsize_icon = get_theme_icon(SNAME("Hsize"), SNAME("EditorIcons"));
+			Ref<Texture2D> hsize_icon = get_editor_theme_icon(SNAME("Hsize"));
 			hsize_rect = Rect2(get_name_limit() - hsize_icon->get_width() - 2 * EDSCALE, (get_size().height - hsize_icon->get_height()) / 2, hsize_icon->get_width(), hsize_icon->get_height());
 			draw_texture(hsize_icon, hsize_rect.position);
 
@@ -1345,7 +1353,7 @@ void AnimationTimelineEdit::_notification(int p_what) {
 
 			int end_px = (l - get_value()) * scale;
 			int begin_px = -get_value() * scale;
-			Color notimecol = get_theme_color(SNAME("dark_color_2"), SNAME("Editor"));
+			Color notimecol = get_theme_color(SNAME("dark_color_2"), EditorStringName(Editor));
 			Color timecolor = color;
 			timecolor.a = 0.2;
 			Color linecolor = color;
@@ -1481,7 +1489,7 @@ Size2 AnimationTimelineEdit::get_minimum_size() const {
 	Ref<Font> font = get_theme_font(SNAME("font"), SNAME("Label"));
 	int font_size = get_theme_font_size(SNAME("font_size"), SNAME("Label"));
 	ms.height = MAX(ms.height, font->get_height(font_size));
-	ms.width = get_buttons_width() + add_track->get_minimum_size().width + get_theme_icon(SNAME("Hsize"), SNAME("EditorIcons"))->get_width() + 2;
+	ms.width = get_buttons_width() + add_track->get_minimum_size().width + get_editor_theme_icon(SNAME("Hsize"))->get_width() + 2;
 	return ms;
 }
 
@@ -1530,15 +1538,15 @@ void AnimationTimelineEdit::update_values() {
 
 	switch (animation->get_loop_mode()) {
 		case Animation::LOOP_NONE: {
-			loop->set_icon(get_theme_icon(SNAME("Loop"), SNAME("EditorIcons")));
+			loop->set_icon(get_editor_theme_icon(SNAME("Loop")));
 			loop->set_pressed(false);
 		} break;
 		case Animation::LOOP_LINEAR: {
-			loop->set_icon(get_theme_icon(SNAME("Loop"), SNAME("EditorIcons")));
+			loop->set_icon(get_editor_theme_icon(SNAME("Loop")));
 			loop->set_pressed(true);
 		} break;
 		case Animation::LOOP_PINGPONG: {
-			loop->set_icon(get_theme_icon(SNAME("PingPongLoop"), SNAME("EditorIcons")));
+			loop->set_icon(get_editor_theme_icon(SNAME("PingPongLoop")));
 			loop->set_pressed(true);
 		} break;
 		default:
@@ -1559,11 +1567,11 @@ void AnimationTimelineEdit::_play_position_draw() {
 	int px = (-get_value() + play_position_pos) * scale + get_name_limit();
 
 	if (px >= get_name_limit() && px < (play_position->get_size().width - get_buttons_width())) {
-		Color color = get_theme_color(SNAME("accent_color"), SNAME("Editor"));
+		Color color = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
 		play_position->draw_line(Point2(px, 0), Point2(px, h), color, Math::round(2 * EDSCALE));
 		play_position->draw_texture(
-				get_theme_icon(SNAME("TimelineIndicator"), SNAME("EditorIcons")),
-				Point2(px - get_theme_icon(SNAME("TimelineIndicator"), SNAME("EditorIcons"))->get_width() * 0.5, 0),
+				get_editor_theme_icon(SNAME("TimelineIndicator")),
+				Point2(px - get_editor_theme_icon(SNAME("TimelineIndicator"))->get_width() * 0.5, 0),
 				color);
 	}
 }
@@ -1741,7 +1749,7 @@ void AnimationTrackEdit::_notification(int p_what) {
 			ERR_FAIL_INDEX(track, animation->get_track_count());
 
 			type_icon = _get_key_type_icon();
-			selected_icon = get_theme_icon(SNAME("KeySelected"), SNAME("EditorIcons"));
+			selected_icon = get_editor_theme_icon(SNAME("KeySelected"));
 		} break;
 
 		case NOTIFICATION_DRAW: {
@@ -1763,10 +1771,10 @@ void AnimationTrackEdit::_notification(int p_what) {
 			}
 
 			if (has_focus()) {
-				Color accent = get_theme_color(SNAME("accent_color"), SNAME("Editor"));
+				Color accent = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
 				accent.a *= 0.7;
 				// Offside so the horizontal sides aren't cutoff.
-				draw_style_box(get_theme_stylebox(SNAME("Focus"), SNAME("EditorStyles")), Rect2(Point2(1 * EDSCALE, 0), get_size() - Size2(1 * EDSCALE, 0)));
+				draw_style_box(get_theme_stylebox(SNAME("Focus"), EditorStringName(EditorStyles)), Rect2(Point2(1 * EDSCALE, 0), get_size() - Size2(1 * EDSCALE, 0)));
 			}
 
 			Ref<Font> font = get_theme_font(SNAME("font"), SNAME("Label"));
@@ -1776,7 +1784,7 @@ void AnimationTrackEdit::_notification(int p_what) {
 			Color linecolor = color;
 			linecolor.a = 0.2;
 
-			Color dc = get_theme_color(SNAME("disabled_font_color"), SNAME("Editor"));
+			Color dc = get_theme_color(SNAME("disabled_font_color"), EditorStringName(Editor));
 
 			// NAMES AND ICONS //
 
@@ -1802,7 +1810,7 @@ void AnimationTrackEdit::_notification(int p_what) {
 				String text;
 				Color text_color = color;
 				if (node && EditorNode::get_singleton()->get_editor_selection()->is_selected(node)) {
-					text_color = get_theme_color(SNAME("accent_color"), SNAME("Editor"));
+					text_color = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
 				}
 
 				if (in_group) {
@@ -1877,24 +1885,24 @@ void AnimationTrackEdit::_notification(int p_what) {
 
 			{
 				Ref<Texture2D> wrap_icon[2] = {
-					get_theme_icon(SNAME("InterpWrapClamp"), SNAME("EditorIcons")),
-					get_theme_icon(SNAME("InterpWrapLoop"), SNAME("EditorIcons")),
+					get_editor_theme_icon(SNAME("InterpWrapClamp")),
+					get_editor_theme_icon(SNAME("InterpWrapLoop")),
 				};
 				Ref<Texture2D> interp_icon[5] = {
-					get_theme_icon(SNAME("InterpRaw"), SNAME("EditorIcons")),
-					get_theme_icon(SNAME("InterpLinear"), SNAME("EditorIcons")),
-					get_theme_icon(SNAME("InterpCubic"), SNAME("EditorIcons")),
-					get_theme_icon(SNAME("InterpLinearAngle"), SNAME("EditorIcons")),
-					get_theme_icon(SNAME("InterpCubicAngle"), SNAME("EditorIcons")),
+					get_editor_theme_icon(SNAME("InterpRaw")),
+					get_editor_theme_icon(SNAME("InterpLinear")),
+					get_editor_theme_icon(SNAME("InterpCubic")),
+					get_editor_theme_icon(SNAME("InterpLinearAngle")),
+					get_editor_theme_icon(SNAME("InterpCubicAngle")),
 				};
 				Ref<Texture2D> cont_icon[3] = {
-					get_theme_icon(SNAME("TrackContinuous"), SNAME("EditorIcons")),
-					get_theme_icon(SNAME("TrackDiscrete"), SNAME("EditorIcons")),
-					get_theme_icon(SNAME("TrackCapture"), SNAME("EditorIcons"))
+					get_editor_theme_icon(SNAME("TrackContinuous")),
+					get_editor_theme_icon(SNAME("TrackDiscrete")),
+					get_editor_theme_icon(SNAME("TrackCapture"))
 				};
 				Ref<Texture2D> blend_icon[2] = {
-					get_theme_icon(SNAME("UseBlendEnable"), SNAME("EditorIcons")),
-					get_theme_icon(SNAME("UseBlendDisable"), SNAME("EditorIcons")),
+					get_editor_theme_icon(SNAME("UseBlendEnable")),
+					get_editor_theme_icon(SNAME("UseBlendDisable")),
 				};
 
 				int ofs = get_size().width - timeline->get_buttons_width();
@@ -2024,7 +2032,7 @@ void AnimationTrackEdit::_notification(int p_what) {
 				{
 					// Erase.
 
-					Ref<Texture2D> icon = get_theme_icon(animation->track_is_compressed(track) ? SNAME("Lock") : SNAME("Remove"), SNAME("EditorIcons"));
+					Ref<Texture2D> icon = get_editor_theme_icon(animation->track_is_compressed(track) ? SNAME("Lock") : SNAME("Remove"));
 
 					remove_rect.position.x = ofs + ((get_size().width - ofs) - icon->get_width());
 					remove_rect.position.y = int(get_size().height - icon->get_height()) / 2;
@@ -2045,7 +2053,7 @@ void AnimationTrackEdit::_notification(int p_what) {
 			}
 
 			if (dropping_at != 0) {
-				Color drop_color = get_theme_color(SNAME("accent_color"), SNAME("Editor"));
+				Color drop_color = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
 				if (dropping_at < 0) {
 					draw_line(Vector2(0, 0), Vector2(get_size().width, 0), drop_color, Math::round(EDSCALE));
 				} else {
@@ -2104,7 +2112,7 @@ void AnimationTrackEdit::draw_key_link(int p_index, float p_pixels_sec, int p_x,
 
 	Variant current = animation->track_get_key_value(get_track(), p_index);
 	Variant next = animation->track_get_key_value(get_track(), p_index + 1);
-	if (current != next) {
+	if (current != next || animation->track_get_type(get_track()) == Animation::TrackType::TYPE_METHOD) {
 		return;
 	}
 
@@ -2130,7 +2138,7 @@ void AnimationTrackEdit::draw_key(int p_index, float p_pixels_sec, int p_x, bool
 
 	if (animation->track_get_type(track) == Animation::TYPE_VALUE && !Math::is_equal_approx(animation->track_get_key_transition(track, p_index), real_t(1.0))) {
 		// Use a different icon for keys with non-linear easing.
-		icon_to_draw = get_theme_icon(p_selected ? SNAME("KeyEasedSelected") : SNAME("KeyValueEased"), SNAME("EditorIcons"));
+		icon_to_draw = get_editor_theme_icon(p_selected ? SNAME("KeyEasedSelected") : SNAME("KeyValueEased"));
 	}
 
 	// Override type icon for invalid value keys, unless selected.
@@ -2138,7 +2146,7 @@ void AnimationTrackEdit::draw_key(int p_index, float p_pixels_sec, int p_x, bool
 		const Variant &v = animation->track_get_key_value(track, p_index);
 		Variant::Type valid_type = Variant::NIL;
 		if (!_is_value_key_valid(v, valid_type)) {
-			icon_to_draw = get_theme_icon(SNAME("KeyInvalid"), SNAME("EditorIcons"));
+			icon_to_draw = get_editor_theme_icon(SNAME("KeyInvalid"));
 		}
 	}
 
@@ -2261,7 +2269,7 @@ void AnimationTrackEdit::set_animation_and_track(const Ref<Animation> &p_animati
 
 	node_path = animation->track_get_path(p_track);
 	type_icon = _get_key_type_icon();
-	selected_icon = get_theme_icon(SNAME("KeySelected"), SNAME("EditorIcons"));
+	selected_icon = get_editor_theme_icon(SNAME("KeySelected"));
 }
 
 NodePath AnimationTrackEdit::get_path() const {
@@ -2269,7 +2277,7 @@ NodePath AnimationTrackEdit::get_path() const {
 }
 
 Size2 AnimationTrackEdit::get_minimum_size() const {
-	Ref<Texture2D> texture = get_theme_icon(SNAME("Object"), SNAME("EditorIcons"));
+	Ref<Texture2D> texture = get_editor_theme_icon(SNAME("Object"));
 	Ref<Font> font = get_theme_font(SNAME("font"), SNAME("Label"));
 	int font_size = get_theme_font_size(SNAME("font_size"), SNAME("Label"));
 	int separation = get_theme_constant(SNAME("v_separation"), SNAME("ItemList"));
@@ -2302,7 +2310,7 @@ void AnimationTrackEdit::_play_position_draw() {
 	int px = (-timeline->get_value() + play_position_pos) * scale + timeline->get_name_limit();
 
 	if (px >= timeline->get_name_limit() && px < (get_size().width - timeline->get_buttons_width())) {
-		Color color = get_theme_color(SNAME("accent_color"), SNAME("Editor"));
+		Color color = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
 		play_position->draw_line(Point2(px, 0), Point2(px, h), color, Math::round(2 * EDSCALE));
 	}
 }
@@ -2360,15 +2368,15 @@ bool AnimationTrackEdit::_is_value_key_valid(const Variant &p_key_value, Variant
 
 Ref<Texture2D> AnimationTrackEdit::_get_key_type_icon() const {
 	const Ref<Texture2D> type_icons[9] = {
-		get_theme_icon(SNAME("KeyValue"), SNAME("EditorIcons")),
-		get_theme_icon(SNAME("KeyTrackPosition"), SNAME("EditorIcons")),
-		get_theme_icon(SNAME("KeyTrackRotation"), SNAME("EditorIcons")),
-		get_theme_icon(SNAME("KeyTrackScale"), SNAME("EditorIcons")),
-		get_theme_icon(SNAME("KeyTrackBlendShape"), SNAME("EditorIcons")),
-		get_theme_icon(SNAME("KeyCall"), SNAME("EditorIcons")),
-		get_theme_icon(SNAME("KeyBezier"), SNAME("EditorIcons")),
-		get_theme_icon(SNAME("KeyAudio"), SNAME("EditorIcons")),
-		get_theme_icon(SNAME("KeyAnimation"), SNAME("EditorIcons"))
+		get_editor_theme_icon(SNAME("KeyValue")),
+		get_editor_theme_icon(SNAME("KeyTrackPosition")),
+		get_editor_theme_icon(SNAME("KeyTrackRotation")),
+		get_editor_theme_icon(SNAME("KeyTrackScale")),
+		get_editor_theme_icon(SNAME("KeyTrackBlendShape")),
+		get_editor_theme_icon(SNAME("KeyCall")),
+		get_editor_theme_icon(SNAME("KeyBezier")),
+		get_editor_theme_icon(SNAME("KeyAudio")),
+		get_editor_theme_icon(SNAME("KeyAnimation"))
 	};
 	return type_icons[animation->track_get_type(track)];
 }
@@ -2437,10 +2445,16 @@ String AnimationTrackEdit::get_tooltip(const Point2 &p_pos) const {
 			String text = TTR("Time (s):") + " " + TS->format_number(rtos(Math::snapped(animation->track_get_key_time(track, key_idx), 0.0001))) + "\n";
 			switch (animation->track_get_type(track)) {
 				case Animation::TYPE_POSITION_3D: {
+					Vector3 t = animation->track_get_key_value(track, key_idx);
+					text += TTR("Position:") + " " + String(t) + "\n";
 				} break;
 				case Animation::TYPE_ROTATION_3D: {
+					Quaternion t = animation->track_get_key_value(track, key_idx);
+					text += TTR("Rotation:") + " " + String(t) + "\n";
 				} break;
 				case Animation::TYPE_SCALE_3D: {
+					Vector3 t = animation->track_get_key_value(track, key_idx);
+					text += TTR("Scale:") + " " + String(t) + "\n";
 				} break;
 				case Animation::TYPE_BLEND_SHAPE: {
 					float t = animation->track_get_key_value(track, key_idx);
@@ -2585,12 +2599,12 @@ void AnimationTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 				}
 				menu->clear();
 				if (animation->track_get_type(track) == Animation::TYPE_AUDIO) {
-					menu->add_icon_item(get_theme_icon(SNAME("UseBlendEnable"), SNAME("EditorIcons")), TTR("Use Blend"), MENU_USE_BLEND_ENABLED);
-					menu->add_icon_item(get_theme_icon(SNAME("UseBlendDisable"), SNAME("EditorIcons")), TTR("Don't Use Blend"), MENU_USE_BLEND_DISABLED);
+					menu->add_icon_item(get_editor_theme_icon(SNAME("UseBlendEnable")), TTR("Use Blend"), MENU_USE_BLEND_ENABLED);
+					menu->add_icon_item(get_editor_theme_icon(SNAME("UseBlendDisable")), TTR("Don't Use Blend"), MENU_USE_BLEND_DISABLED);
 				} else {
-					menu->add_icon_item(get_theme_icon(SNAME("TrackContinuous"), SNAME("EditorIcons")), TTR("Continuous"), MENU_CALL_MODE_CONTINUOUS);
-					menu->add_icon_item(get_theme_icon(SNAME("TrackDiscrete"), SNAME("EditorIcons")), TTR("Discrete"), MENU_CALL_MODE_DISCRETE);
-					menu->add_icon_item(get_theme_icon(SNAME("TrackCapture"), SNAME("EditorIcons")), TTR("Capture"), MENU_CALL_MODE_CAPTURE);
+					menu->add_icon_item(get_editor_theme_icon(SNAME("TrackContinuous")), TTR("Continuous"), MENU_CALL_MODE_CONTINUOUS);
+					menu->add_icon_item(get_editor_theme_icon(SNAME("TrackDiscrete")), TTR("Discrete"), MENU_CALL_MODE_DISCRETE);
+					menu->add_icon_item(get_editor_theme_icon(SNAME("TrackCapture")), TTR("Capture"), MENU_CALL_MODE_CAPTURE);
 				}
 				menu->reset_size();
 
@@ -2607,23 +2621,34 @@ void AnimationTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 					menu->connect("id_pressed", callable_mp(this, &AnimationTrackEdit::_menu_selected));
 				}
 				menu->clear();
-				menu->add_icon_item(get_theme_icon(SNAME("InterpRaw"), SNAME("EditorIcons")), TTR("Nearest"), MENU_INTERPOLATION_NEAREST);
-				menu->add_icon_item(get_theme_icon(SNAME("InterpLinear"), SNAME("EditorIcons")), TTR("Linear"), MENU_INTERPOLATION_LINEAR);
-				menu->add_icon_item(get_theme_icon(SNAME("InterpCubic"), SNAME("EditorIcons")), TTR("Cubic"), MENU_INTERPOLATION_CUBIC);
+				menu->add_icon_item(get_editor_theme_icon(SNAME("InterpRaw")), TTR("Nearest"), MENU_INTERPOLATION_NEAREST);
+				menu->add_icon_item(get_editor_theme_icon(SNAME("InterpLinear")), TTR("Linear"), MENU_INTERPOLATION_LINEAR);
+				menu->add_icon_item(get_editor_theme_icon(SNAME("InterpCubic")), TTR("Cubic"), MENU_INTERPOLATION_CUBIC);
 				// Check whether it is angle property.
 				AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
 				if (ape) {
 					AnimationPlayer *ap = ape->get_player();
 					if (ap) {
 						NodePath npath = animation->track_get_path(track);
-						Node *nd = ap->get_node(ap->get_root())->get_node(NodePath(npath.get_concatenated_names()));
-						StringName prop = npath.get_concatenated_subnames();
-						PropertyInfo prop_info;
-						ClassDB::get_property_info(nd->get_class(), prop, &prop_info);
-						bool is_angle = prop_info.type == Variant::FLOAT && prop_info.hint_string.find("radians") != -1;
-						if (is_angle) {
-							menu->add_icon_item(get_theme_icon(SNAME("InterpLinearAngle"), SNAME("EditorIcons")), TTR("Linear Angle"), MENU_INTERPOLATION_LINEAR_ANGLE);
-							menu->add_icon_item(get_theme_icon(SNAME("InterpCubicAngle"), SNAME("EditorIcons")), TTR("Cubic Angle"), MENU_INTERPOLATION_CUBIC_ANGLE);
+						Node *a_ap_root_node = ap->get_node(ap->get_root_node());
+						Node *nd = nullptr;
+						// We must test that we have a valid a_ap_root_node before trying to access its content to init the nd Node.
+						if (a_ap_root_node) {
+							nd = a_ap_root_node->get_node(NodePath(npath.get_concatenated_names()));
+						}
+						if (nd) {
+							StringName prop = npath.get_concatenated_subnames();
+							PropertyInfo prop_info;
+							ClassDB::get_property_info(nd->get_class(), prop, &prop_info);
+#ifdef DISABLE_DEPRECATED
+							bool is_angle = prop_info.type == Variant::FLOAT && prop_info.hint_string.find("radians_as_degrees") != -1;
+#else
+							bool is_angle = prop_info.type == Variant::FLOAT && prop_info.hint_string.find("radians") != -1;
+#endif // DISABLE_DEPRECATED
+							if (is_angle) {
+								menu->add_icon_item(get_editor_theme_icon(SNAME("InterpLinearAngle")), TTR("Linear Angle"), MENU_INTERPOLATION_LINEAR_ANGLE);
+								menu->add_icon_item(get_editor_theme_icon(SNAME("InterpCubicAngle")), TTR("Cubic Angle"), MENU_INTERPOLATION_CUBIC_ANGLE);
+							}
 						}
 					}
 				}
@@ -2642,8 +2667,8 @@ void AnimationTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 					menu->connect("id_pressed", callable_mp(this, &AnimationTrackEdit::_menu_selected));
 				}
 				menu->clear();
-				menu->add_icon_item(get_theme_icon(SNAME("InterpWrapClamp"), SNAME("EditorIcons")), TTR("Clamp Loop Interp"), MENU_LOOP_CLAMP);
-				menu->add_icon_item(get_theme_icon(SNAME("InterpWrapLoop"), SNAME("EditorIcons")), TTR("Wrap Loop Interp"), MENU_LOOP_WRAP);
+				menu->add_icon_item(get_editor_theme_icon(SNAME("InterpWrapClamp")), TTR("Clamp Loop Interp"), MENU_LOOP_CLAMP);
+				menu->add_icon_item(get_editor_theme_icon(SNAME("InterpWrapLoop")), TTR("Wrap Loop Interp"), MENU_LOOP_WRAP);
 				menu->reset_size();
 
 				Vector2 popup_pos = get_screen_position() + loop_wrap_rect.position + Vector2(0, loop_wrap_rect.size.height);
@@ -2740,18 +2765,18 @@ void AnimationTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 				}
 
 				menu->clear();
-				menu->add_icon_item(get_theme_icon(SNAME("Key"), SNAME("EditorIcons")), TTR("Insert Key"), MENU_KEY_INSERT);
+				menu->add_icon_item(get_editor_theme_icon(SNAME("Key")), TTR("Insert Key"), MENU_KEY_INSERT);
 				if (editor->is_selection_active()) {
 					menu->add_separator();
-					menu->add_icon_item(get_theme_icon(SNAME("Duplicate"), SNAME("EditorIcons")), TTR("Duplicate Key(s)"), MENU_KEY_DUPLICATE);
+					menu->add_icon_item(get_editor_theme_icon(SNAME("Duplicate")), TTR("Duplicate Key(s)"), MENU_KEY_DUPLICATE);
 
 					AnimationPlayer *player = AnimationPlayerEditor::get_singleton()->get_player();
 					if (!player->has_animation(SceneStringNames::get_singleton()->RESET) || animation != player->get_animation(SceneStringNames::get_singleton()->RESET)) {
-						menu->add_icon_item(get_theme_icon(SNAME("Reload"), SNAME("EditorIcons")), TTR("Add RESET Value(s)"), MENU_KEY_ADD_RESET);
+						menu->add_icon_item(get_editor_theme_icon(SNAME("Reload")), TTR("Add RESET Value(s)"), MENU_KEY_ADD_RESET);
 					}
 
 					menu->add_separator();
-					menu->add_icon_item(get_theme_icon(SNAME("Remove"), SNAME("EditorIcons")), TTR("Delete Key(s)"), MENU_KEY_DELETE);
+					menu->add_icon_item(get_editor_theme_icon(SNAME("Remove")), TTR("Delete Key(s)"), MENU_KEY_DELETE);
 				}
 				menu->reset_size();
 
@@ -3086,26 +3111,7 @@ AnimationTrackEdit::AnimationTrackEdit() {
 
 AnimationTrackEdit *AnimationTrackEditPlugin::create_value_track_edit(Object *p_object, Variant::Type p_type, const String &p_property, PropertyHint p_hint, const String &p_hint_string, int p_usage) {
 	if (get_script_instance()) {
-		Variant args[6] = {
-			p_object,
-			p_type,
-			p_property,
-			p_hint,
-			p_hint_string,
-			p_usage
-		};
-
-		Variant *argptrs[6] = {
-			&args[0],
-			&args[1],
-			&args[2],
-			&args[3],
-			&args[4],
-			&args[5]
-		};
-
-		Callable::CallError ce;
-		return Object::cast_to<AnimationTrackEdit>(get_script_instance()->callp("create_value_track_edit", (const Variant **)&argptrs, 6, ce).operator Object *());
+		return Object::cast_to<AnimationTrackEdit>(get_script_instance()->call("create_value_track_edit", p_object, p_type, p_property, p_hint, p_hint_string, p_usage));
 	}
 	return nullptr;
 }
@@ -3137,11 +3143,11 @@ void AnimationTrackEditGroup::_notification(int p_what) {
 			if (root && root->has_node(node)) {
 				Node *n = root->get_node(node);
 				if (n && EditorNode::get_singleton()->get_editor_selection()->is_selected(n)) {
-					color = get_theme_color(SNAME("accent_color"), SNAME("Editor"));
+					color = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
 				}
 			}
 
-			Color bgcol = get_theme_color(SNAME("dark_color_2"), SNAME("Editor"));
+			Color bgcol = get_theme_color(SNAME("dark_color_2"), EditorStringName(Editor));
 			bgcol.a *= 0.6;
 			draw_rect(Rect2(Point2(), get_size()), bgcol);
 			Color linecolor = color;
@@ -3159,10 +3165,26 @@ void AnimationTrackEditGroup::_notification(int p_what) {
 			int px = (-timeline->get_value() + timeline->get_play_position()) * timeline->get_zoom_scale() + timeline->get_name_limit();
 
 			if (px >= timeline->get_name_limit() && px < (get_size().width - timeline->get_buttons_width())) {
-				Color accent = get_theme_color(SNAME("accent_color"), SNAME("Editor"));
+				Color accent = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
 				draw_line(Point2(px, 0), Point2(px, get_size().height), accent, Math::round(2 * EDSCALE));
 			}
 		} break;
+	}
+}
+
+void AnimationTrackEditGroup::gui_input(const Ref<InputEvent> &p_event) {
+	ERR_FAIL_COND(p_event.is_null());
+
+	Ref<InputEventMouseButton> mb = p_event;
+	if (mb.is_valid() && mb->is_pressed() && mb->get_button_index() == MouseButton::LEFT) {
+		Point2 pos = mb->get_position();
+		Rect2 node_name_rect = Rect2(0, 0, timeline->get_name_limit(), get_size().height);
+
+		if (node_name_rect.has_point(pos)) {
+			EditorSelection *editor_selection = EditorNode::get_singleton()->get_editor_selection();
+			editor_selection->clear();
+			editor_selection->add_node(root->get_node(node));
+		}
 	}
 }
 
@@ -3658,7 +3680,7 @@ void AnimationTrackEditor::_insert_animation_key(NodePath p_path, const Variant 
 }
 
 void AnimationTrackEditor::insert_node_value_key(Node *p_node, const String &p_property, const Variant &p_value, bool p_only_if_exists) {
-	ERR_FAIL_COND(!root);
+	ERR_FAIL_NULL(root);
 
 	// Let's build a node path.
 	Node *node = p_node;
@@ -3755,10 +3777,10 @@ void AnimationTrackEditor::insert_node_value_key(Node *p_node, const String &p_p
 void AnimationTrackEditor::insert_value_key(const String &p_property, const Variant &p_value, bool p_advance) {
 	EditorSelectionHistory *history = EditorNode::get_singleton()->get_editor_selection_history();
 
-	ERR_FAIL_COND(!root);
+	ERR_FAIL_NULL(root);
 	ERR_FAIL_COND(history->get_path_size() == 0);
 	Object *obj = ObjectDB::get_instance(history->get_path_object(0));
-	ERR_FAIL_COND(!Object::cast_to<Node>(obj));
+	ERR_FAIL_NULL(Object::cast_to<Node>(obj));
 
 	// Let's build a node path.
 	Node *node = Object::cast_to<Node>(obj);
@@ -3852,13 +3874,15 @@ Ref<Animation> AnimationTrackEditor::_create_and_get_reset_animation() {
 		return player->get_animation(SceneStringNames::get_singleton()->RESET);
 	} else {
 		Ref<AnimationLibrary> al;
-		if (!player->has_animation_library("")) {
-			al.instantiate();
-			player->add_animation_library("", al);
-		} else {
-			al = player->get_animation_library("");
+		AnimationMixer *mixer = AnimationPlayerEditor::get_singleton()->fetch_mixer_for_library();
+		if (mixer) {
+			if (!mixer->has_animation_library("")) {
+				al.instantiate();
+				mixer->add_animation_library("", al);
+			} else {
+				al = mixer->get_animation_library("");
+			}
 		}
-
 		Ref<Animation> reset_anim;
 		reset_anim.instantiate();
 		reset_anim->set_length(ANIM_MIN_LENGTH);
@@ -3948,6 +3972,12 @@ PropertyInfo AnimationTrackEditor::_find_hint_for_track(int p_idx, NodePath &r_b
 	for (int i = 0; i < leftover_path.size() - 1; i++) {
 		bool valid;
 		property_info_base = property_info_base.get_named(leftover_path[i], valid);
+	}
+
+	if (property_info_base.is_null()) {
+		WARN_PRINT(vformat("Could not determine track hint for '%s:%s' because its base property is null.",
+				String(path.get_concatenated_names()), String(path.get_concatenated_subnames())));
+		return PropertyInfo();
 	}
 
 	List<PropertyInfo> pinfo;
@@ -4145,6 +4175,14 @@ void AnimationTrackEditor::show_select_node_warning(bool p_show) {
 	info_message->set_visible(p_show);
 }
 
+void AnimationTrackEditor::show_dummy_player_warning(bool p_show) {
+	dummy_player_warning->set_visible(p_show);
+}
+
+void AnimationTrackEditor::show_inactive_player_warning(bool p_show) {
+	inactive_player_warning->set_visible(p_show);
+}
+
 bool AnimationTrackEditor::is_key_selected(int p_track, int p_key) const {
 	SelectedKey sk;
 	sk.key = p_key;
@@ -4158,7 +4196,7 @@ bool AnimationTrackEditor::is_selection_active() const {
 }
 
 bool AnimationTrackEditor::is_snap_enabled() const {
-	return snap->is_pressed() ^ Input::get_singleton()->is_key_pressed(Key::CTRL);
+	return snap->is_pressed() ^ Input::get_singleton()->is_key_pressed(Key::CMD_OR_CTRL);
 }
 
 void AnimationTrackEditor::_update_tracks() {
@@ -4291,7 +4329,7 @@ void AnimationTrackEditor::_update_tracks() {
 
 			if (!group_sort.has(base_path)) {
 				AnimationTrackEditGroup *g = memnew(AnimationTrackEditGroup);
-				Ref<Texture2D> icon = get_theme_icon(SNAME("Node"), SNAME("EditorIcons"));
+				Ref<Texture2D> icon = get_editor_theme_icon(SNAME("Node"));
 				String name = base_path;
 				String tooltip;
 				if (root && root->has_node(base_path)) {
@@ -4472,14 +4510,16 @@ void AnimationTrackEditor::_notification(int p_what) {
 			[[fallthrough]];
 		}
 		case NOTIFICATION_THEME_CHANGED: {
-			zoom_icon->set_texture(get_theme_icon(SNAME("Zoom"), SNAME("EditorIcons")));
-			bezier_edit_icon->set_icon(get_theme_icon(SNAME("EditBezier"), SNAME("EditorIcons")));
-			snap->set_icon(get_theme_icon(SNAME("Snap"), SNAME("EditorIcons")));
-			view_group->set_icon(get_theme_icon(view_group->is_pressed() ? SNAME("AnimationTrackList") : SNAME("AnimationTrackGroup"), SNAME("EditorIcons")));
-			selected_filter->set_icon(get_theme_icon(SNAME("AnimationFilter"), SNAME("EditorIcons")));
-			imported_anim_warning->set_icon(get_theme_icon(SNAME("NodeWarning"), SNAME("EditorIcons")));
+			zoom_icon->set_texture(get_editor_theme_icon(SNAME("Zoom")));
+			bezier_edit_icon->set_icon(get_editor_theme_icon(SNAME("EditBezier")));
+			snap->set_icon(get_editor_theme_icon(SNAME("Snap")));
+			view_group->set_icon(get_editor_theme_icon(view_group->is_pressed() ? SNAME("AnimationTrackList") : SNAME("AnimationTrackGroup")));
+			selected_filter->set_icon(get_editor_theme_icon(SNAME("AnimationFilter")));
+			imported_anim_warning->set_icon(get_editor_theme_icon(SNAME("NodeWarning")));
+			dummy_player_warning->set_icon(get_editor_theme_icon(SNAME("NodeWarning")));
+			inactive_player_warning->set_icon(get_editor_theme_icon(SNAME("NodeWarning")));
 			main_panel->add_theme_style_override("panel", get_theme_stylebox(SNAME("panel"), SNAME("Tree")));
-			edit->get_popup()->set_item_icon(edit->get_popup()->get_item_index(EDIT_APPLY_RESET), get_theme_icon(SNAME("Reload"), SNAME("EditorIcons")));
+			edit->get_popup()->set_item_icon(edit->get_popup()->get_item_index(EDIT_APPLY_RESET), get_editor_theme_icon(SNAME("Reload")));
 		} break;
 
 		case NOTIFICATION_READY: {
@@ -4541,9 +4581,9 @@ void AnimationTrackEditor::_dropped_track(int p_from_track, int p_to_track) {
 }
 
 void AnimationTrackEditor::_new_track_node_selected(NodePath p_path) {
-	ERR_FAIL_COND(!root);
+	ERR_FAIL_NULL(root);
 	Node *node = get_node(p_path);
-	ERR_FAIL_COND(!node);
+	ERR_FAIL_NULL(node);
 	NodePath path_to = root->get_path_to(node, true);
 
 	if (adding_track_type == Animation::TYPE_BLEND_SHAPE) {
@@ -5106,8 +5146,8 @@ float AnimationTrackEditor::get_moving_selection_offset() const {
 
 void AnimationTrackEditor::_box_selection_draw() {
 	const Rect2 selection_rect = Rect2(Point2(), box_selection->get_size());
-	box_selection->draw_rect(selection_rect, get_theme_color(SNAME("box_selection_fill_color"), SNAME("Editor")));
-	box_selection->draw_rect(selection_rect, get_theme_color(SNAME("box_selection_stroke_color"), SNAME("Editor")), false, Math::round(EDSCALE));
+	box_selection->draw_rect(selection_rect, get_theme_color(SNAME("box_selection_fill_color"), EditorStringName(Editor)));
+	box_selection->draw_rect(selection_rect, get_theme_color(SNAME("box_selection_stroke_color"), EditorStringName(Editor)), false, Math::round(EDSCALE));
 }
 
 void AnimationTrackEditor::_scroll_input(const Ref<InputEvent> &p_event) {
@@ -5384,10 +5424,10 @@ void AnimationTrackEditor::_edit_menu_pressed(int p_option) {
 				}
 
 				String text;
-				Ref<Texture2D> icon = get_theme_icon(SNAME("Node"), SNAME("EditorIcons"));
+				Ref<Texture2D> icon = get_editor_theme_icon(SNAME("Node"));
 				if (node) {
-					if (has_theme_icon(node->get_class(), SNAME("EditorIcons"))) {
-						icon = get_theme_icon(node->get_class(), SNAME("EditorIcons"));
+					if (has_theme_icon(node->get_class(), EditorStringName(EditorIcons))) {
+						icon = get_editor_theme_icon(node->get_class());
 					}
 
 					text = node->get_name();
@@ -5845,7 +5885,7 @@ void AnimationTrackEditor::_edit_menu_pressed(int p_option) {
 		} break;
 		case EDIT_BAKE_ANIMATION_CONFIRM: {
 			EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-			undo_redo->create_action(TTR("Bake Animation as Linear keys."));
+			undo_redo->create_action(TTR("Bake Animation as Linear Keys"));
 
 			int track_len = animation->get_track_count();
 			bool b_trs = bake_trs->is_pressed();
@@ -6011,7 +6051,7 @@ void AnimationTrackEditor::_cleanup_animation(Ref<Animation> p_animation) {
 
 void AnimationTrackEditor::_view_group_toggle() {
 	_update_tracks();
-	view_group->set_icon(get_theme_icon(view_group->is_pressed() ? SNAME("AnimationTrackList") : SNAME("AnimationTrackGroup"), SNAME("EditorIcons")));
+	view_group->set_icon(get_editor_theme_icon(view_group->is_pressed() ? SNAME("AnimationTrackList") : SNAME("AnimationTrackGroup")));
 	bezier_edit->set_filtered(selected_filter->is_pressed());
 }
 
@@ -6060,8 +6100,17 @@ float AnimationTrackEditor::snap_time(float p_value, bool p_relative) {
 void AnimationTrackEditor::_show_imported_anim_warning() {
 	// It looks terrible on a single line but the TTR extractor doesn't support line breaks yet.
 	EditorNode::get_singleton()->show_warning(
-			TTR("This animation belongs to an imported scene, so changes to imported tracks will not be saved.\n\nTo modify this animation, navigate to the scene's Advanced Import settings and select the animation.\nSome options, including looping, are available here. To add custom tracks, enable \"Save To File\" and\n\"Keep Custom Tracks\"."),
-			TTR("Warning: Editing imported animation"));
+			TTR("This animation belongs to an imported scene, so changes to imported tracks will not be saved.\n\nTo modify this animation, navigate to the scene's Advanced Import settings and select the animation.\nSome options, including looping, are available here. To add custom tracks, enable \"Save To File\" and\n\"Keep Custom Tracks\"."));
+}
+
+void AnimationTrackEditor::_show_dummy_player_warning() {
+	EditorNode::get_singleton()->show_warning(
+			TTR("Some AnimationPlayerEditor's options are disabled since this is the dummy AnimationPlayer for preview.\n\nThe dummy player is forced active, non-deterministic and doesn't have the root motion track. Furthermore, the original node is inactive temporary."));
+}
+
+void AnimationTrackEditor::_show_inactive_player_warning() {
+	EditorNode::get_singleton()->show_warning(
+			TTR("AnimationPlayer is inactive. The playback will not be processed."));
 }
 
 void AnimationTrackEditor::_select_all_tracks_for_copy() {
@@ -6246,8 +6295,23 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	imported_anim_warning->connect("pressed", callable_mp(this, &AnimationTrackEditor::_show_imported_anim_warning));
 	bottom_hb->add_child(imported_anim_warning);
 
+	dummy_player_warning = memnew(Button);
+	dummy_player_warning->hide();
+	dummy_player_warning->set_text(TTR("Dummy Player"));
+	dummy_player_warning->set_tooltip_text(TTR("Warning: Editing dummy AnimationPlayer"));
+	dummy_player_warning->connect("pressed", callable_mp(this, &AnimationTrackEditor::_show_dummy_player_warning));
+	bottom_hb->add_child(dummy_player_warning);
+
+	inactive_player_warning = memnew(Button);
+	inactive_player_warning->hide();
+	inactive_player_warning->set_text(TTR("Inactive Player"));
+	inactive_player_warning->set_tooltip_text(TTR("Warning: AnimationPlayer is inactive"));
+	inactive_player_warning->connect("pressed", callable_mp(this, &AnimationTrackEditor::_show_inactive_player_warning));
+	bottom_hb->add_child(inactive_player_warning);
+
+	bottom_hb->add_spacer();
+
 	bezier_edit_icon = memnew(Button);
-	bezier_edit_icon->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
 	bezier_edit_icon->set_flat(true);
 	bezier_edit_icon->set_disabled(true);
 	bezier_edit_icon->set_toggle_mode(true);

@@ -109,7 +109,10 @@
 
 #ifdef MODULE_GDSCRIPT_ENABLED
 #include "modules/gdscript/gdscript.h"
-#endif
+#if defined(TOOLS_ENABLED) && !defined(GDSCRIPT_NO_LSP)
+#include "modules/gdscript/language_server/gdscript_language_server.h"
+#endif // TOOLS_ENABLED && !GDSCRIPT_NO_LSP
+#endif // MODULE_GDSCRIPT_ENABLED
 
 /* Static members */
 
@@ -197,6 +200,7 @@ static bool use_debug_profiler = false;
 #ifdef DEBUG_ENABLED
 static bool debug_collisions = false;
 static bool debug_paths = false;
+static bool debug_canvas_item_redraw = false;
 #endif
 static int max_fps = -1;
 static int frame_delay = 0;
@@ -209,6 +213,7 @@ static bool print_fps = false;
 #ifdef TOOLS_ENABLED
 static bool dump_gdextension_interface = false;
 static bool dump_extension_api = false;
+static bool include_docs_in_extension_api_dump = false;
 static bool validate_extension_api = false;
 static String validate_extension_api_file;
 #endif
@@ -331,7 +336,10 @@ void Main::print_help(const char *p_binary) {
 	OS::get_singleton()->print("  -e, --editor                      Start the editor instead of running the scene.\n");
 	OS::get_singleton()->print("  -p, --project-manager             Start the project manager, even if a project is auto-detected.\n");
 	OS::get_singleton()->print("  --debug-server <uri>              Start the editor debug server (<protocol>://<host/IP>[:<port>], e.g. tcp://127.0.0.1:6007)\n");
-#endif
+#if defined(MODULE_GDSCRIPT_ENABLED) && !defined(GDSCRIPT_NO_LSP)
+	OS::get_singleton()->print("  --lsp-port <port>                 Use the specified port for the language server protocol. The port must be between 0 to 65535.\n");
+#endif // MODULE_GDSCRIPT_ENABLED && !GDSCRIPT_NO_LSP
+#endif // TOOLS_ENABLED
 	OS::get_singleton()->print("  --quit                            Quit after the first iteration.\n");
 	OS::get_singleton()->print("  --quit-after <int>                Quit after the given number of iterations. Set to 0 to disable.\n");
 	OS::get_singleton()->print("  -l, --language <locale>           Use a specific locale (<locale> being a two-letter code).\n");
@@ -403,12 +411,14 @@ void Main::print_help(const char *p_binary) {
 #if DEBUG_ENABLED
 	OS::get_singleton()->print("  --gpu-abort                       Abort on graphics API usage errors (usually validation layer errors). May help see the problem if your system freezes.\n");
 #endif
+	OS::get_singleton()->print("  --generate-spirv-debug-info       Generate SPIR-V debug information. This allows source-level shader debugging with RenderDoc.\n");
 	OS::get_singleton()->print("  --remote-debug <uri>              Remote debug (<protocol>://<host/IP>[:<port>], e.g. tcp://127.0.0.1:6007).\n");
 	OS::get_singleton()->print("  --single-threaded-scene           Scene tree runs in single-threaded mode. Sub-thread groups are disabled and run on the main thread.\n");
 #if defined(DEBUG_ENABLED)
 	OS::get_singleton()->print("  --debug-collisions                Show collision shapes when running the scene.\n");
 	OS::get_singleton()->print("  --debug-paths                     Show path lines when running the scene.\n");
 	OS::get_singleton()->print("  --debug-stringnames               Print all StringName allocations to stdout when the engine quits.\n");
+	OS::get_singleton()->print("  --debug-canvas-item-redraw        Display a rectangle each time a canvas item requests a redraw (useful to troubleshoot low processor mode).\n");
 #endif
 	OS::get_singleton()->print("  --max-fps <fps>                   Set a maximum number of frames per second rendered (can be used to limit power usage). A value of 0 results in unlimited framerate.\n");
 	OS::get_singleton()->print("  --frame-delay <ms>                Simulate high CPU load (delay each frame by <ms> milliseconds). Do not use as a FPS limiter; use --max-fps instead.\n");
@@ -445,7 +455,8 @@ void Main::print_help(const char *p_binary) {
 	OS::get_singleton()->print("  --build-solutions                 Build the scripting solutions (e.g. for C# projects). Implies --editor and requires a valid project to edit.\n");
 	OS::get_singleton()->print("  --dump-gdextension-interface      Generate GDExtension header file 'gdextension_interface.h' in the current folder. This file is the base file required to implement a GDExtension.\n");
 	OS::get_singleton()->print("  --dump-extension-api              Generate JSON dump of the Godot API for GDExtension bindings named 'extension_api.json' in the current folder.\n");
-	OS::get_singleton()->print("  --validate-extension-api <path>   Validate an extension API file dumped (with the option above) from a previous version of the engine to ensure API compatibility. If incompatibilities or errors are detected, the return code will be non zero.\n");
+	OS::get_singleton()->print("  --dump-extension-api-with-docs    Generate JSON dump of the Godot API like the previous option, but including documentation.\n");
+	OS::get_singleton()->print("  --validate-extension-api <path>   Validate an extension API file dumped (with one of the two previous options) from a previous version of the engine to ensure API compatibility. If incompatibilities or errors are detected, the return code will be non zero.\n");
 	OS::get_singleton()->print("  --benchmark                       Benchmark the run time and print it to console.\n");
 	OS::get_singleton()->print("  --benchmark-file <path>           Benchmark the run time and save it to a given file in JSON format. The path should be absolute.\n");
 #ifdef TESTS_ENABLED
@@ -506,8 +517,14 @@ Error Main::test_setup() {
 
 	ResourceLoader::load_path_remaps();
 
+	// Initialize ThemeDB early so that scene types can register their theme items.
+	// Default theme will be initialized later, after modules and ScriptServer are ready.
+	initialize_theme_db();
+
 	register_scene_types();
 	register_driver_types();
+
+	register_scene_singletons();
 
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_SCENE);
 	GDExtensionManager::get_singleton()->initialize_extensions(GDExtension::INITIALIZATION_LEVEL_SCENE);
@@ -524,9 +541,7 @@ Error Main::test_setup() {
 	register_platform_apis();
 
 	// Theme needs modules to be initialized so that sub-resources can be loaded.
-	initialize_theme_db();
-	theme_db->initialize_theme();
-	register_scene_singletons();
+	theme_db->initialize_theme_noproject();
 
 	ERR_FAIL_COND_V(TextServerManager::get_singleton()->get_interface_count() == 0, ERR_CANT_CREATE);
 
@@ -652,8 +667,7 @@ int Main::test_entrypoint(int argc, char *argv[], bool &tests_need_run) {
  *   responsible for the initialization of all low level singletons and core types, and parsing
  *   command line arguments to configure things accordingly.
  *   If p_second_phase is true, it will chain into setup2() (default behavior). This is
- *   disabled on some platforms (Android, iOS, UWP) which trigger the second step in their
- *   own time.
+ *   disabled on some platforms (Android, iOS) which trigger the second step in their own time.
  *
  * - setup2(p_main_tid_override) registers high level servers and singletons, displays the
  *   boot splash, then registers higher level types (scene, editor, etc.).
@@ -747,6 +761,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 	String default_renderer = "gl_compatibility";
 	String default_renderer_mobile = "gl_compatibility";
+	String renderer_hints = "";
 
 	packed_data = PackedData::get_singleton();
 	if (!packed_data) {
@@ -937,13 +952,11 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 				goto error;
 			}
 		} else if (I->get() == "-f" || I->get() == "--fullscreen") { // force fullscreen
-
 			init_fullscreen = true;
+			window_mode = DisplayServer::WINDOW_MODE_FULLSCREEN;
 		} else if (I->get() == "-m" || I->get() == "--maximized") { // force maximized window
-
 			init_maximized = true;
 			window_mode = DisplayServer::WINDOW_MODE_MAXIMIZED;
-
 		} else if (I->get() == "-w" || I->get() == "--windowed") { // force windowed window
 
 			init_windowed = true;
@@ -961,6 +974,8 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 		} else if (I->get() == "--gpu-abort") {
 			Engine::singleton->abort_on_gpu_errors = true;
 #endif
+		} else if (I->get() == "--generate-spirv-debug-info") {
+			Engine::singleton->generate_spirv_debug_info = true;
 		} else if (I->get() == "--tablet-driver") {
 			if (I->next()) {
 				tablet_driver = I->next()->get();
@@ -1166,6 +1181,17 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 			// run the project instead of a cmdline tool.
 			// Needs full refactoring to fix properly.
 			main_args.push_back(I->get());
+		} else if (I->get() == "--dump-extension-api-with-docs") {
+			// Register as an editor instance to use low-end fallback if relevant.
+			editor = true;
+			cmdline_tool = true;
+			dump_extension_api = true;
+			include_docs_in_extension_api_dump = true;
+			print_line("Dumping Extension API including documentation");
+			// Hack. Not needed but otherwise we end up detecting that this should
+			// run the project instead of a cmdline tool.
+			// Needs full refactoring to fix properly.
+			main_args.push_back(I->get());
 		} else if (I->get() == "--validate-extension-api") {
 			// Register as an editor instance to use low-end fallback if relevant.
 			editor = true;
@@ -1235,6 +1261,19 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 			audio_driver = NULL_AUDIO_DRIVER;
 			display_driver = NULL_DISPLAY_DRIVER;
 			main_args.push_back(I->get());
+#ifdef MODULE_GDSCRIPT_ENABLED
+		} else if (I->get() == "--gdscript-docs") {
+			if (I->next()) {
+				project_path = I->next()->get();
+				// Will be handled in start()
+				main_args.push_back(I->get());
+				main_args.push_back(I->next()->get());
+				N = I->next()->next();
+			} else {
+				OS::get_singleton()->print("Missing relative or absolute path to project for --gdscript-docs, aborting.\n");
+				goto error;
+			}
+#endif // MODULE_GDSCRIPT_ENABLED
 #endif // TOOLS_ENABLED
 		} else if (I->get() == "--path") { // set path of project to start or edit
 
@@ -1336,6 +1375,8 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 			debug_collisions = true;
 		} else if (I->get() == "--debug-paths") {
 			debug_paths = true;
+		} else if (I->get() == "--debug-canvas-item-redraw") {
+			debug_canvas_item_redraw = true;
 		} else if (I->get() == "--debug-stringnames") {
 			StringName::set_debug_stringnames(true);
 #endif
@@ -1404,7 +1445,21 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 				OS::get_singleton()->print("Missing <path> argument for --benchmark-file <path>.\n");
 				goto error;
 			}
-
+#if defined(TOOLS_ENABLED) && defined(MODULE_GDSCRIPT_ENABLED) && !defined(GDSCRIPT_NO_LSP)
+		} else if (I->get() == "--lsp-port") {
+			if (I->next()) {
+				int port_override = I->next()->get().to_int();
+				if (port_override < 0 || port_override > 65535) {
+					OS::get_singleton()->print("<port> argument for --lsp-port <port> must be between 0 and 65535.\n");
+					goto error;
+				}
+				GDScriptLanguageServer::port_override = port_override;
+				N = I->next()->next();
+			} else {
+				OS::get_singleton()->print("Missing <port> argument for --lsp-port <port>.\n");
+				goto error;
+			}
+#endif // TOOLS_ENABLED && MODULE_GDSCRIPT_ENABLED && !GDSCRIPT_NO_LSP
 		} else if (I->get() == "--" || I->get() == "++") {
 			adding_user_args = true;
 		} else {
@@ -1472,6 +1527,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 #ifdef TOOLS_ENABLED
 	if (editor) {
 		Engine::get_singleton()->set_editor_hint(true);
+		Engine::get_singleton()->set_extension_reloading_enabled(true);
 	}
 #endif
 
@@ -1503,7 +1559,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	if (editor) {
 		packed_data->set_disabled(true);
 		main_args.push_back("--editor");
-		if (!init_windowed) {
+		if (!init_windowed && !init_fullscreen) {
 			init_maximized = true;
 			window_mode = DisplayServer::WINDOW_MODE_MAXIMIZED;
 		}
@@ -1563,7 +1619,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	}
 	if (bool(GLOBAL_GET("application/run/disable_stderr"))) {
 		CoreGlobals::print_error_enabled = false;
-	};
+	}
 
 	if (quiet_stdout) {
 		CoreGlobals::print_line_enabled = false;
@@ -1578,20 +1634,63 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 		String default_driver = driver_hints;
 
-		GLOBAL_DEF("rendering/rendering_device/driver", default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.windows", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.linuxbsd", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.android", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.ios", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.macos", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF("rendering/gl_compatibility/driver", default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.windows", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.linuxbsd", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.web", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.android", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.ios", PROPERTY_HINT_ENUM, driver_hints), default_driver);
-		GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.macos", PROPERTY_HINT_ENUM, driver_hints), default_driver);
+		// For now everything defaults to vulkan when available. This can change in future updates.
+		GLOBAL_DEF_RST_NOVAL("rendering/rendering_device/driver", default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.windows", PROPERTY_HINT_ENUM, driver_hints), default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.linuxbsd", PROPERTY_HINT_ENUM, driver_hints), default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.android", PROPERTY_HINT_ENUM, driver_hints), default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.ios", PROPERTY_HINT_ENUM, driver_hints), default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/rendering_device/driver.macos", PROPERTY_HINT_ENUM, driver_hints), default_driver);
+	}
+
+	{
+		String driver_hints = "";
+		String driver_hints_angle = "";
+		String driver_hints_egl = "";
+#ifdef GLES3_ENABLED
+		driver_hints = "opengl3";
+		driver_hints_angle = "opengl3,opengl3_angle";
+		driver_hints_egl = "opengl3,opengl3_es";
+#endif
+
+		String default_driver = driver_hints.get_slice(",", 0);
+		String default_driver_macos = default_driver;
+#if defined(GLES3_ENABLED) && defined(EGL_STATIC) && defined(MACOS_ENABLED)
+		default_driver_macos = "opengl3_angle"; // Default to ANGLE if it's built-in.
+#endif
+
+		GLOBAL_DEF_RST_NOVAL("rendering/gl_compatibility/driver", default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.windows", PROPERTY_HINT_ENUM, driver_hints_angle), default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.linuxbsd", PROPERTY_HINT_ENUM, driver_hints_egl), default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.web", PROPERTY_HINT_ENUM, driver_hints), default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.android", PROPERTY_HINT_ENUM, driver_hints), default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.ios", PROPERTY_HINT_ENUM, driver_hints), default_driver);
+		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "rendering/gl_compatibility/driver.macos", PROPERTY_HINT_ENUM, driver_hints_angle), default_driver_macos);
+
 		GLOBAL_DEF_RST("rendering/gl_compatibility/nvidia_disable_threaded_optimization", true);
+		GLOBAL_DEF_RST("rendering/gl_compatibility/fallback_to_angle", true);
+		GLOBAL_DEF_RST("rendering/gl_compatibility/fallback_to_native", true);
+
+		GLOBAL_DEF_RST(PropertyInfo(Variant::ARRAY, "rendering/gl_compatibility/force_angle_on_devices", PROPERTY_HINT_ARRAY_TYPE, vformat("%s/%s:%s", Variant::DICTIONARY, PROPERTY_HINT_NONE, String())), Array());
+	}
+
+#ifdef GLES3_ENABLED
+	if (!renderer_hints.is_empty()) {
+		renderer_hints += ",";
+	}
+	renderer_hints += "gl_compatibility";
+	if (default_renderer_mobile.is_empty()) {
+		default_renderer_mobile = "gl_compatibility";
+	}
+	// Default to Compatibility when using the project manager.
+	if (rendering_driver.is_empty() && rendering_method.is_empty() && project_manager) {
+		rendering_driver = "opengl3";
+		rendering_method = "gl_compatibility";
+		default_renderer_mobile = "gl_compatibility";
+	}
+#endif
+	if (renderer_hints.is_empty()) {
+		ERR_PRINT("No renderers available.");
 	}
 
 	if (rendering_method != "gl_compatibility") {
@@ -1635,7 +1734,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 		// Set a default renderer if none selected. Try to choose one that matches the driver.
 		if (rendering_method.is_empty()) {
-			if (rendering_driver == "opengl3") {
+			if (rendering_driver == "opengl3" || rendering_driver == "opengl3_angle" || rendering_driver == "opengl3_es") {
 				rendering_method = "gl_compatibility";
 			}
 		}
@@ -1643,11 +1742,13 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 		// Now validate whether the selected driver matches with the renderer.
 		bool valid_combination = false;
 		Vector<String> available_drivers;
-
+#ifdef GLES3_ENABLED
 		if (rendering_method == "gl_compatibility") {
 			available_drivers.push_back("opengl3");
+			available_drivers.push_back("opengl3_angle");
+			available_drivers.push_back("opengl3_es");
 		}
-
+#endif
 		if (available_drivers.is_empty()) {
 			OS::get_singleton()->print("Unknown renderer name '%s', aborting.\n", rendering_method.utf8().get_data());
 			goto error;
@@ -1736,19 +1837,29 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 		}
 		window_mode = (DisplayServer::WindowMode)(GLOBAL_GET("display/window/size/mode").operator int());
 		int initial_position_type = GLOBAL_GET("display/window/size/initial_position_type").operator int();
-		if (initial_position_type == 0) {
+		if (initial_position_type == 0) { // Absolute.
 			if (!init_use_custom_pos) {
 				init_custom_pos = GLOBAL_GET("display/window/size/initial_position").operator Vector2i();
 				init_use_custom_pos = true;
 			}
-		} else if (initial_position_type == 1) {
+		} else if (initial_position_type == 1) { // Center of Primary Screen.
 			if (!init_use_custom_screen) {
 				init_screen = DisplayServer::SCREEN_PRIMARY;
 				init_use_custom_screen = true;
 			}
-		} else if (initial_position_type == 2) {
+		} else if (initial_position_type == 2) { // Center of Other Screen.
 			if (!init_use_custom_screen) {
 				init_screen = GLOBAL_GET("display/window/size/initial_screen").operator int();
+				init_use_custom_screen = true;
+			}
+		} else if (initial_position_type == 3) { // Center of Screen With Mouse Pointer.
+			if (!init_use_custom_screen) {
+				init_screen = DisplayServer::SCREEN_WITH_MOUSE_FOCUS;
+				init_use_custom_screen = true;
+			}
+		} else if (initial_position_type == 4) { // Center of Screen With Keyboard Focus.
+			if (!init_use_custom_screen) {
+				init_screen = DisplayServer::SCREEN_WITH_KEYBOARD_FOCUS;
 				init_use_custom_screen = true;
 			}
 		}
@@ -2013,6 +2124,8 @@ Error Main::setup2() {
 		// Editor setting class is not available, load config directly.
 		if (!init_use_custom_screen && (editor || project_manager) && EditorPaths::get_singleton()->are_paths_valid()) {
 			Ref<DirAccess> dir = DirAccess::open(EditorPaths::get_singleton()->get_config_dir());
+			ERR_FAIL_COND_V(dir.is_null(), FAILED);
+
 			String config_file_name = "editor_settings-" + itos(VERSION_MAJOR) + ".tres";
 			String config_file_path = EditorPaths::get_singleton()->get_config_dir().path_join(config_file_name);
 			if (dir->file_exists(config_file_name)) {
@@ -2314,6 +2427,9 @@ Error Main::setup2() {
 		id->set_emulate_mouse_from_touch(bool(GLOBAL_DEF_BASIC("input_devices/pointing/emulate_mouse_from_touch", true)));
 	}
 
+	GLOBAL_DEF_BASIC("input_devices/pointing/android/enable_long_press_as_right_click", false);
+	GLOBAL_DEF_BASIC("input_devices/pointing/android/enable_pan_and_scale_gestures", false);
+
 	MAIN_PRINT("Main: Load Translations and Remaps");
 
 	translation_server->setup(); //register translations, load them, etc.
@@ -2391,8 +2507,14 @@ Error Main::setup2() {
 
 	OS::get_singleton()->benchmark_begin_measure("scene");
 
+	// Initialize ThemeDB early so that scene types can register their theme items.
+	// Default theme will be initialized later, after modules and ScriptServer are ready.
+	initialize_theme_db();
+
 	register_scene_types();
 	register_driver_types();
+
+	register_scene_singletons();
 
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_SCENE);
 	GDExtensionManager::get_singleton()->initialize_extensions(GDExtension::INITIALIZATION_LEVEL_SCENE);
@@ -2410,11 +2532,6 @@ Error Main::setup2() {
 	MAIN_PRINT("Main: Load Modules");
 
 	register_platform_apis();
-
-	// Theme needs modules to be initialized so that sub-resources can be loaded.
-	// Default theme is initialized later, after ScriptServer is ready.
-	initialize_theme_db();
-	register_scene_singletons();
 
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::STRING, "display/mouse_cursor/custom_image", PROPERTY_HINT_FILE, "*.png,*.webp"), String());
 	GLOBAL_DEF_BASIC("display/mouse_cursor/custom_image_hotspot", Vector2());
@@ -2497,7 +2614,7 @@ bool Main::start() {
 
 #ifdef TOOLS_ENABLED
 	String doc_tool_path;
-	bool doc_base = true;
+	BitField<DocTools::GenerateFlags> gen_flags;
 	String _export_preset;
 	bool export_debug = false;
 	bool export_pack_only = false;
@@ -2522,7 +2639,7 @@ bool Main::start() {
 			check_only = true;
 #ifdef TOOLS_ENABLED
 		} else if (args[i] == "--no-docbase") {
-			doc_base = false;
+			gen_flags.set_flag(DocTools::GENERATE_FLAG_SKIP_BASIC_TYPES);
 #ifndef DISABLE_DEPRECATED
 		} else if (args[i] == "--convert-3to4") {
 			converting_project = true;
@@ -2605,38 +2722,10 @@ bool Main::start() {
 
 #ifdef TOOLS_ENABLED
 #ifdef MODULE_GDSCRIPT_ENABLED
-	if (!doc_tool_path.is_empty() && !gdscript_docs_path.is_empty()) {
-		DocTools docs;
-		Error err;
-
-		Vector<String> paths = get_files_with_extension(gdscript_docs_path, "gd");
-		ERR_FAIL_COND_V_MSG(paths.size() == 0, false, "Couldn't find any GDScript files under the given directory: " + gdscript_docs_path);
-
-		for (const String &path : paths) {
-			Ref<GDScript> gdscript = ResourceLoader::load(path);
-			for (const DocData::ClassDoc &class_doc : gdscript->get_documentation()) {
-				docs.add_doc(class_doc);
-			}
-		}
-
-		if (doc_tool_path == ".") {
-			doc_tool_path = "./docs";
-		}
-
-		Ref<DirAccess> da = DirAccess::create_for_path(doc_tool_path);
-		err = da->make_dir_recursive(doc_tool_path);
-		ERR_FAIL_COND_V_MSG(err != OK, false, "Error: Can't create GDScript docs directory: " + doc_tool_path + ": " + itos(err));
-
-		HashMap<String, String> doc_data_classes;
-		err = docs.save_classes(doc_tool_path, doc_data_classes, false);
-		ERR_FAIL_COND_V_MSG(err != OK, false, "Error saving GDScript docs:" + itos(err));
-
-		OS::get_singleton()->set_exit_code(EXIT_SUCCESS);
-		return false;
-	}
-#endif // MODULE_GDSCRIPT_ENABLED
-
+	if (!doc_tool_path.is_empty() && gdscript_docs_path.is_empty()) {
+#else
 	if (!doc_tool_path.is_empty()) {
+#endif
 		// Needed to instance editor-only classes for their default values
 		Engine::get_singleton()->set_editor_hint(true);
 
@@ -2661,7 +2750,7 @@ bool Main::start() {
 
 		Error err;
 		DocTools doc;
-		doc.generate(doc_base);
+		doc.generate(gen_flags);
 
 		DocTools docsrc;
 		HashMap<String, String> doc_data_classes;
@@ -2728,7 +2817,8 @@ bool Main::start() {
 	}
 
 	if (dump_extension_api) {
-		GDExtensionAPIDump::generate_extension_json_file("extension_api.json");
+		Engine::get_singleton()->set_editor_hint(true); // "extension_api.json" should always contains editor singletons.
+		GDExtensionAPIDump::generate_extension_json_file("extension_api.json", include_docs_in_extension_api_dump);
 	}
 
 	if (dump_gdextension_interface || dump_extension_api) {
@@ -2847,7 +2937,7 @@ bool Main::start() {
 			return false;
 		} else {
 			Object *ml = ClassDB::instantiate(main_loop_type);
-			ERR_FAIL_COND_V_MSG(!ml, false, "Can't instance MainLoop type.");
+			ERR_FAIL_NULL_V_MSG(ml, false, "Can't instance MainLoop type.");
 
 			main_loop = Object::cast_to<MainLoop>(ml);
 			if (!main_loop) {
@@ -2867,6 +2957,9 @@ bool Main::start() {
 		}
 		if (debug_paths) {
 			sml->set_debug_paths_hint(true);
+		}
+		if (debug_canvas_item_redraw) {
+			RenderingServer::get_singleton()->canvas_item_set_debug_redraw(true);
 		}
 #endif
 
@@ -2957,6 +3050,38 @@ bool Main::start() {
 		}
 
 #ifdef TOOLS_ENABLED
+#ifdef MODULE_GDSCRIPT_ENABLED
+		if (!doc_tool_path.is_empty() && !gdscript_docs_path.is_empty()) {
+			DocTools docs;
+			Error err;
+
+			Vector<String> paths = get_files_with_extension(gdscript_docs_path, "gd");
+			ERR_FAIL_COND_V_MSG(paths.size() == 0, false, "Couldn't find any GDScript files under the given directory: " + gdscript_docs_path);
+
+			for (const String &path : paths) {
+				Ref<GDScript> gdscript = ResourceLoader::load(path);
+				for (const DocData::ClassDoc &class_doc : gdscript->get_documentation()) {
+					docs.add_doc(class_doc);
+				}
+			}
+
+			if (doc_tool_path == ".") {
+				doc_tool_path = "./docs";
+			}
+
+			Ref<DirAccess> da = DirAccess::create_for_path(doc_tool_path);
+			err = da->make_dir_recursive(doc_tool_path);
+			ERR_FAIL_COND_V_MSG(err != OK, false, "Error: Can't create GDScript docs directory: " + doc_tool_path + ": " + itos(err));
+
+			HashMap<String, String> doc_data_classes;
+			err = docs.save_classes(doc_tool_path, doc_data_classes, false);
+			ERR_FAIL_COND_V_MSG(err != OK, false, "Error saving GDScript docs:" + itos(err));
+
+			OS::get_singleton()->set_exit_code(EXIT_SUCCESS);
+			return false;
+		}
+#endif // MODULE_GDSCRIPT_ENABLED
+
 		EditorNode *editor_node = nullptr;
 		if (editor) {
 			OS::get_singleton()->benchmark_begin_measure("editor");
@@ -3068,6 +3193,8 @@ bool Main::start() {
 
 						if (sep == -1) {
 							Ref<DirAccess> da = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
+							ERR_FAIL_COND_V(da.is_null(), false);
+
 							local_game_path = da->get_current_dir().path_join(local_game_path);
 						} else {
 							Ref<DirAccess> da = DirAccess::open(local_game_path.substr(0, sep));
@@ -3116,7 +3243,7 @@ bool Main::start() {
 					scene = scenedata->instantiate();
 				}
 
-				ERR_FAIL_COND_V_MSG(!scene, false, "Failed loading scene: " + local_game_path);
+				ERR_FAIL_NULL_V_MSG(scene, false, "Failed loading scene: " + local_game_path + ".");
 				sml->add_current_scene(scene);
 
 #ifdef MACOS_ENABLED

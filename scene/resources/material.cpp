@@ -912,7 +912,7 @@ void BaseMaterial3D::set_texture(TextureParam p_param, const Ref<Texture2D> &p_t
 	ERR_FAIL_INDEX(p_param, TEXTURE_MAX);
 
 	textures[p_param] = p_texture;
-	RID rid = p_texture.is_valid() ? p_texture->get_rid() : RID();
+	Variant rid = p_texture.is_valid() ? Variant(p_texture->get_rid()) : Variant();
 	RS::get_singleton()->material_set_param(_get_material(), shader_names->texture_names[p_param], rid);
 
 	if (p_texture.is_valid() && p_param == TEXTURE_ALBEDO) {
@@ -2071,6 +2071,8 @@ BaseMaterial3D::BaseMaterial3D(bool p_orm) :
 
 	flags[FLAG_ALBEDO_TEXTURE_MSDF] = false;
 	flags[FLAG_USE_TEXTURE_REPEAT] = true;
+
+	current_key.invalid_key = 1;
 
 	_mark_initialized(callable_mp(this, &BaseMaterial3D::_queue_shader_change));
 }

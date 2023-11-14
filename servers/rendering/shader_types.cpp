@@ -146,6 +146,7 @@ ShaderTypes::ShaderTypes() {
 		shader_modes[RS::SHADER_CANVAS_ITEM].modes.push_back({ PNAME("blend"), "mix", "add", "sub", "mul", "premul_alpha", "disabled" });
 		shader_modes[RS::SHADER_CANVAS_ITEM].modes.push_back({ PNAME("unshaded") });
 		shader_modes[RS::SHADER_CANVAS_ITEM].modes.push_back({ PNAME("light_only") });
+		shader_modes[RS::SHADER_CANVAS_ITEM].modes.push_back({ PNAME("world_vertex_coords") });
 	}
 
 	/************ PARTICLES **************************/
@@ -172,6 +173,8 @@ ShaderTypes::ShaderTypes() {
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["NUMBER"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["INDEX"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["EMISSION_TRANSFORM"] = constt(ShaderLanguage::TYPE_MAT4);
+	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["EMITTER_VELOCITY"] = constt(ShaderLanguage::TYPE_VEC3);
+	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["INTERPOLATE_TO_END"] = constt(ShaderLanguage::TYPE_FLOAT);
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["RANDOM_SEED"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["FLAG_EMIT_POSITION"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["FLAG_EMIT_ROT_SCALE"] = constt(ShaderLanguage::TYPE_UINT);
@@ -183,6 +186,7 @@ ShaderTypes::ShaderTypes() {
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["RESTART_VELOCITY"] = constt(ShaderLanguage::TYPE_BOOL);
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["RESTART_COLOR"] = constt(ShaderLanguage::TYPE_BOOL);
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["RESTART_CUSTOM"] = constt(ShaderLanguage::TYPE_BOOL);
+	shader_modes[RS::SHADER_PARTICLES].functions["start"].built_ins["AMOUNT_RATIO"] = ShaderLanguage::TYPE_FLOAT;
 	shader_modes[RS::SHADER_PARTICLES].functions["start"].main_function = true;
 
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["COLOR"] = ShaderLanguage::TYPE_VEC4;
@@ -203,6 +207,8 @@ ShaderTypes::ShaderTypes() {
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["NUMBER"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["INDEX"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["EMISSION_TRANSFORM"] = constt(ShaderLanguage::TYPE_MAT4);
+	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["EMITTER_VELOCITY"] = constt(ShaderLanguage::TYPE_VEC3);
+	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["INTERPOLATE_TO_END"] = constt(ShaderLanguage::TYPE_FLOAT);
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["RANDOM_SEED"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["FLAG_EMIT_POSITION"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["FLAG_EMIT_ROT_SCALE"] = constt(ShaderLanguage::TYPE_UINT);
@@ -213,6 +219,7 @@ ShaderTypes::ShaderTypes() {
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["COLLISION_NORMAL"] = constt(ShaderLanguage::TYPE_VEC3);
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["COLLISION_DEPTH"] = constt(ShaderLanguage::TYPE_FLOAT);
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["ATTRACTOR_FORCE"] = constt(ShaderLanguage::TYPE_VEC3);
+	shader_modes[RS::SHADER_PARTICLES].functions["process"].built_ins["AMOUNT_RATIO"] = ShaderLanguage::TYPE_FLOAT;
 	shader_modes[RS::SHADER_PARTICLES].functions["process"].main_function = true;
 
 	{

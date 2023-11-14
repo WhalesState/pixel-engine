@@ -33,6 +33,7 @@
 #include "core/config/project_settings.h"
 #include "core/io/file_access_memory.h"
 #include "core/io/resource_loader.h"
+#include "core/object/script_language.h"
 #include "core/os/os.h"
 #include "editor/editor_paths.h"
 #include "editor/editor_scale.h"
@@ -42,7 +43,6 @@
 #include "scene/resources/font.h"
 #include "scene/resources/gradient_texture.h"
 #include "scene/resources/image_texture.h"
-// #include "scene/resources/material.h"
 #include "scene/resources/mesh.h"
 #include "servers/audio/audio_stream.h"
 
@@ -324,6 +324,7 @@ Ref<Texture2D> EditorScriptPreviewPlugin::generate(const Ref<Resource> &p_from, 
 	Color text_color = EDITOR_GET("text_editor/theme/highlighting/text_color");
 	Color symbol_color = EDITOR_GET("text_editor/theme/highlighting/symbol_color");
 	Color comment_color = EDITOR_GET("text_editor/theme/highlighting/comment_color");
+	Color doc_comment_color = EDITOR_GET("text_editor/theme/highlighting/doc_comment_color");
 
 	if (bg_color.a == 0) {
 		bg_color = Color(0, 0, 0, 0);
@@ -341,6 +342,7 @@ Ref<Texture2D> EditorScriptPreviewPlugin::generate(const Ref<Resource> &p_from, 
 	bool in_control_flow_keyword = false;
 	bool in_keyword = false;
 	bool in_comment = false;
+	bool in_doc_comment = false;
 	for (int i = 0; i < code.length(); i++) {
 		char32_t c = code[i];
 		if (c > 32) {
@@ -348,11 +350,17 @@ Ref<Texture2D> EditorScriptPreviewPlugin::generate(const Ref<Resource> &p_from, 
 				Color color = text_color;
 
 				if (c == '#') {
-					in_comment = true;
+					if (i < code.length() - 1 && code[i + 1] == '#') {
+						in_doc_comment = true;
+					} else {
+						in_comment = true;
+					}
 				}
 
 				if (in_comment) {
 					color = comment_color;
+				} else if (in_doc_comment) {
+					color = doc_comment_color;
 				} else {
 					if (is_symbol(c)) {
 						//make symbol a little visible
@@ -397,6 +405,7 @@ Ref<Texture2D> EditorScriptPreviewPlugin::generate(const Ref<Resource> &p_from, 
 
 			if (c == '\n') {
 				in_comment = false;
+				in_doc_comment = false;
 
 				col = x0;
 				line++;
@@ -506,6 +515,10 @@ void EditorFontPreviewPlugin::_generate_frame_started() {
 }
 
 void EditorFontPreviewPlugin::_preview_done() {
+	preview_done.post();
+}
+
+void EditorFontPreviewPlugin::abort() {
 	preview_done.post();
 }
 

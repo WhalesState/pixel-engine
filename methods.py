@@ -96,9 +96,6 @@ def add_source_files_scu(self, sources, files, allow_gen=False):
         if section_name not in (_scu_folders):
             return False
 
-        if self["verbose"]:
-            print("SCU building " + section_name)
-
         # Add all the gen.cpp files in the SCU directory
         add_source_files_orig(self, sources, subdir + "scu/scu_*.gen.cpp", True)
         return True
@@ -776,8 +773,18 @@ def add_to_vs_project(env, sources):
                 env.vs_srcs += [basename + ".cpp"]
 
 
-def generate_vs_project(env, num_jobs, project_name="godot"):
+def generate_vs_project(env, original_args, project_name="godot"):
     batch_file = find_visual_c_batch_file(env)
+    filtered_args = original_args.copy()
+    # Ignore the "vsproj" option to not regenerate the VS project on every build
+    filtered_args.pop("vsproj", None)
+    # The "platform" option is ignored because only the Windows platform is currently supported for VS projects
+    filtered_args.pop("platform", None)
+    # The "target" option is ignored due to the way how targets configuration is performed for VS projects (there is a separate project configuration for each target)
+    filtered_args.pop("target", None)
+    # The "progress" option is ignored as the current compilation progress indication doesn't work in VS
+    filtered_args.pop("progress", None)
+
     if batch_file:
 
         class ModuleConfigs(Mapping):
@@ -853,26 +860,10 @@ def generate_vs_project(env, num_jobs, project_name="godot"):
                     "platform=windows",
                     f"target={configuration_getter}",
                     "progress=no",
-                    "-j%s" % num_jobs,
                 ]
 
-                if env["dev_build"]:
-                    common_build_postfix.append("dev_build=yes")
-
-                if env["dev_mode"]:
-                    common_build_postfix.append("dev_mode=yes")
-
-                elif env["tests"]:
-                    common_build_postfix.append("tests=yes")
-
-                if env["custom_modules"]:
-                    common_build_postfix.append("custom_modules=%s" % env["custom_modules"])
-
-                if env["windows_subsystem"] == "console":
-                    common_build_postfix.append("windows_subsystem=console")
-
-                if env["precision"] == "double":
-                    common_build_postfix.append("precision=double")
+                for arg, value in filtered_args.items():
+                    common_build_postfix.append(f"{arg}={value}")
 
                 result = " ^& ".join(common_build_prefix + [" ".join([commands] + common_build_postfix)])
                 return result
@@ -1008,9 +999,21 @@ def is_vanilla_clang(env):
 
 def get_compiler_version(env):
     """
-    Returns an array of version numbers as ints: [major, minor, patch].
-    The return array should have at least two values (major, minor).
+    Returns a dictionary with various version information:
+
+    - major, minor, patch: Version following semantic versioning system
+    - metadata1, metadata2: Extra information
+    - date: Date of the build
     """
+    ret = {
+        "major": -1,
+        "minor": -1,
+        "patch": -1,
+        "metadata1": None,
+        "metadata2": None,
+        "date": None,
+    }
+
     if not env.msvc:
         # Not using -dumpversion as some GCC distros only return major, and
         # Clang used to return hardcoded 4.2.1: # https://reviews.llvm.org/D56803
@@ -1018,23 +1021,28 @@ def get_compiler_version(env):
             version = subprocess.check_output([env.subst(env["CXX"]), "--version"]).strip().decode("utf-8")
         except (subprocess.CalledProcessError, OSError):
             print("Couldn't parse CXX environment variable to infer compiler version.")
-            return None
-    else:  # TODO: Implement for MSVC
-        return None
+            return ret
+    else:
+        # TODO: Implement for MSVC
+        return ret
     match = re.search(
-        "(?:(?<=version )|(?<=\) )|(?<=^))"
-        "(?P<major>\d+)"
-        "(?:\.(?P<minor>\d*))?"
-        "(?:\.(?P<patch>\d*))?"
-        "(?:-(?P<metadata1>[0-9a-zA-Z-]*))?"
-        "(?:\+(?P<metadata2>[0-9a-zA-Z-]*))?"
-        "(?: (?P<date>[0-9]{8}|[0-9]{6})(?![0-9a-zA-Z]))?",
+        r"(?:(?<=version )|(?<=\) )|(?<=^))"
+        r"(?P<major>\d+)"
+        r"(?:\.(?P<minor>\d*))?"
+        r"(?:\.(?P<patch>\d*))?"
+        r"(?:-(?P<metadata1>[0-9a-zA-Z-]*))?"
+        r"(?:\+(?P<metadata2>[0-9a-zA-Z-]*))?"
+        r"(?: (?P<date>[0-9]{8}|[0-9]{6})(?![0-9a-zA-Z]))?",
         version,
     )
     if match is not None:
-        return match.groupdict()
-    else:
-        return None
+        for key, value in match.groupdict().items():
+            if value is not None:
+                ret[key] = value
+    # Transform semantic versioning to integers
+    for key in ["major", "minor", "patch"]:
+        ret[key] = int(ret[key] or -1)
+    return ret
 
 
 def using_gcc(env):

@@ -270,20 +270,21 @@ void Window::set_title(const String &p_title) {
 	ERR_MAIN_THREAD_GUARD;
 
 	title = p_title;
+	tr_title = atr(p_title);
+#ifdef DEBUG_ENABLED
+	if (window_id == DisplayServer::MAIN_WINDOW_ID) {
+		// Append a suffix to the window title to denote that the project is running
+		// from a debug build (including the editor). Since this results in lower performance,
+		// this should be clearly presented to the user.
+		tr_title = vformat("%s (DEBUG)", tr_title);
+	}
+#endif
 
 	if (embedder) {
 		embedder->_sub_window_update(this);
 	} else if (window_id != DisplayServer::INVALID_WINDOW_ID) {
-		String tr_title = atr(p_title);
-#ifdef DEBUG_ENABLED
-		if (window_id == DisplayServer::MAIN_WINDOW_ID) {
-			// Append a suffix to the window title to denote that the project is running
-			// from a debug build (including the editor). Since this results in lower performance,
-			// this should be clearly presented to the user.
-			tr_title = vformat("%s (DEBUG)", tr_title);
-		}
-#endif
 		DisplayServer::get_singleton()->window_set_title(tr_title, window_id);
+		_update_window_size();
 	}
 }
 
@@ -340,6 +341,25 @@ Point2i Window::get_position() const {
 	ERR_READ_THREAD_GUARD_V(Point2i());
 
 	return position;
+}
+
+void Window::move_to_center() {
+	ERR_MAIN_THREAD_GUARD;
+	ERR_FAIL_COND(!is_inside_tree());
+
+	Rect2 parent_rect;
+
+	if (is_embedded()) {
+		parent_rect = get_embedder()->get_visible_rect();
+	} else {
+		int parent_screen = DisplayServer::get_singleton()->window_get_current_screen(get_window_id());
+		parent_rect.position = DisplayServer::get_singleton()->screen_get_position(parent_screen);
+		parent_rect.size = DisplayServer::get_singleton()->screen_get_size(parent_screen);
+	}
+
+	if (parent_rect != Rect2()) {
+		set_position(parent_rect.position + (parent_rect.size - get_size()) / 2);
+	}
 }
 
 void Window::set_size(const Size2i &p_size) {
@@ -567,15 +587,6 @@ void Window::_make_window() {
 	DisplayServer::get_singleton()->window_set_max_size(Size2i(), window_id);
 	DisplayServer::get_singleton()->window_set_min_size(Size2i(), window_id);
 	DisplayServer::get_singleton()->window_set_mouse_passthrough(mpath, window_id);
-	String tr_title = atr(title);
-#ifdef DEBUG_ENABLED
-	if (window_id == DisplayServer::MAIN_WINDOW_ID) {
-		// Append a suffix to the window title to denote that the project is running
-		// from a debug build (including the editor). Since this results in lower performance,
-		// this should be clearly presented to the user.
-		tr_title = vformat("%s (DEBUG)", tr_title);
-	}
-#endif
 	DisplayServer::get_singleton()->window_set_title(tr_title, window_id);
 	DisplayServer::get_singleton()->window_attach_instance_id(get_instance_id(), window_id);
 
@@ -768,7 +779,7 @@ void Window::set_visible(bool p_visible) {
 		return;
 	}
 
-	ERR_FAIL_COND_MSG(get_parent() == nullptr, "Can't change visibility of main window.");
+	ERR_FAIL_NULL_MSG(get_parent(), "Can't change visibility of main window.");
 
 	visible = p_visible;
 
@@ -810,16 +821,7 @@ void Window::set_visible(bool p_visible) {
 
 	//update transient exclusive
 	if (transient_parent) {
-		if (exclusive && visible) {
-			if (!is_in_edited_scene_root()) {
-				ERR_FAIL_COND_MSG(transient_parent->exclusive_child && transient_parent->exclusive_child != this, "Transient parent has another exclusive child.");
-				transient_parent->exclusive_child = this;
-			}
-		} else {
-			if (transient_parent->exclusive_child == this) {
-				transient_parent->exclusive_child = nullptr;
-			}
-		}
+		_set_transient_exclusive_child(true);
 	}
 }
 
@@ -859,20 +861,28 @@ void Window::_make_transient() {
 	if (window) {
 		transient_parent = window;
 		window->transient_children.insert(this);
-		if (is_inside_tree() && is_visible() && exclusive) {
-			if (transient_parent->exclusive_child == nullptr) {
-				if (!is_in_edited_scene_root()) {
-					transient_parent->exclusive_child = this;
-				}
-			} else if (transient_parent->exclusive_child != this) {
-				ERR_PRINT("Making child transient exclusive, but parent has another exclusive child");
-			}
-		}
+		_set_transient_exclusive_child();
 	}
 
 	//see if we can make transient
 	if (transient_parent->window_id != DisplayServer::INVALID_WINDOW_ID && window_id != DisplayServer::INVALID_WINDOW_ID) {
 		DisplayServer::get_singleton()->window_set_transient(window_id, transient_parent->window_id);
+	}
+}
+
+void Window::_set_transient_exclusive_child(bool p_clear_invalid) {
+	if (exclusive && visible && is_inside_tree()) {
+		if (!is_in_edited_scene_root()) {
+			// Transient parent has another exclusive child.
+			if (transient_parent->exclusive_child && transient_parent->exclusive_child != this) {
+				ERR_PRINT(vformat("Attempting to make child window exclusive, but the parent window already has another exclusive child. This window: %s, parent window: %s, current exclusive child window: %s", this->get_description(), transient_parent->get_description(), transient_parent->exclusive_child->get_description()));
+			}
+			transient_parent->exclusive_child = this;
+		}
+	} else if (p_clear_invalid) {
+		if (transient_parent->exclusive_child == this) {
+			transient_parent->exclusive_child = nullptr;
+		}
 	}
 }
 
@@ -917,16 +927,7 @@ void Window::set_exclusive(bool p_exclusive) {
 	}
 
 	if (transient_parent) {
-		if (p_exclusive && is_inside_tree() && is_visible()) {
-			ERR_FAIL_COND_MSG(transient_parent->exclusive_child && transient_parent->exclusive_child != this, "Transient parent has another exclusive child.");
-			if (!is_in_edited_scene_root()) {
-				transient_parent->exclusive_child = this;
-			}
-		} else {
-			if (transient_parent->exclusive_child == this) {
-				transient_parent->exclusive_child = nullptr;
-			}
-		}
+		_set_transient_exclusive_child(true);
 	}
 }
 
@@ -985,6 +986,12 @@ void Window::_update_window_size() {
 		}
 
 		DisplayServer::get_singleton()->window_set_max_size(max_size_used, window_id);
+
+		if (keep_title_visible) {
+			Size2i title_size = DisplayServer::get_singleton()->window_get_title_size(tr_title, window_id);
+			size_limit = size_limit.max(title_size);
+		}
+
 		DisplayServer::get_singleton()->window_set_min_size(size_limit, window_id);
 		DisplayServer::get_singleton()->window_set_size(size, window_id);
 	}
@@ -1250,7 +1257,9 @@ void Window::_notification(int p_what) {
 				notification(NOTIFICATION_TRANSLATION_CHANGED);
 			}
 #endif
-			notification(NOTIFICATION_THEME_CHANGED);
+
+			// Emits NOTIFICATION_THEME_CHANGED internally.
+			set_theme_context(ThemeDB::get_singleton()->get_nearest_theme_context(this));
 		} break;
 
 		case NOTIFICATION_READY: {
@@ -1270,17 +1279,19 @@ void Window::_notification(int p_what) {
 			_invalidate_theme_cache();
 			_update_theme_item_cache();
 
-			if (!embedder && window_id != DisplayServer::INVALID_WINDOW_ID) {
-				String tr_title = atr(title);
+			tr_title = atr(title);
 #ifdef DEBUG_ENABLED
-				if (window_id == DisplayServer::MAIN_WINDOW_ID) {
-					// Append a suffix to the window title to denote that the project is running
-					// from a debug build (including the editor). Since this results in lower performance,
-					// this should be clearly presented to the user.
-					tr_title = vformat("%s (DEBUG)", tr_title);
-				}
+			if (window_id == DisplayServer::MAIN_WINDOW_ID) {
+				// Append a suffix to the window title to denote that the project is running
+				// from a debug build (including the editor). Since this results in lower performance,
+				// this should be clearly presented to the user.
+				tr_title = vformat("%s (DEBUG)", tr_title);
+			}
 #endif
+
+			if (!embedder && window_id != DisplayServer::INVALID_WINDOW_ID) {
 				DisplayServer::get_singleton()->window_set_title(tr_title, window_id);
+				_update_window_size();
 			}
 		} break;
 
@@ -1294,6 +1305,8 @@ void Window::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_EXIT_TREE: {
+			set_theme_context(nullptr, false);
+
 			if (transient) {
 				_clear_transient();
 			}
@@ -1369,6 +1382,20 @@ void Window::set_content_scale_stretch(ContentScaleStretch p_stretch) {
 
 Window::ContentScaleStretch Window::get_content_scale_stretch() const {
 	return content_scale_stretch;
+}
+
+void Window::set_keep_title_visible(bool p_title_visible) {
+	if (keep_title_visible == p_title_visible) {
+		return;
+	}
+	keep_title_visible = p_title_visible;
+	if (window_id != DisplayServer::INVALID_WINDOW_ID) {
+		_update_window_size();
+	}
+}
+
+bool Window::get_keep_title_visible() const {
+	return keep_title_visible;
 }
 
 void Window::set_content_scale_factor(real_t p_factor) {
@@ -1781,7 +1808,7 @@ Rect2i Window::fit_rect_in_parent(Rect2i p_rect, const Rect2i &p_parent_rect) co
 		p_rect.position.x = 0;
 	}
 
-	int title_height = get_flag(Window::FLAG_BORDERLESS) ? 0 : get_theme_constant(SNAME("title_height"));
+	int title_height = get_flag(Window::FLAG_BORDERLESS) ? 0 : theme_cache.title_height;
 
 	if (p_rect.position.y < title_height) {
 		p_rect.position.y = title_height;
@@ -1870,6 +1897,11 @@ bool Window::has_theme_owner_node() const {
 	return theme_owner->has_owner_node();
 }
 
+void Window::set_theme_context(ThemeContext *p_context, bool p_propagate) {
+	ERR_MAIN_THREAD_GUARD;
+	theme_owner->set_owner_context(p_context, p_propagate);
+}
+
 void Window::set_theme(const Ref<Theme> &p_theme) {
 	ERR_MAIN_THREAD_GUARD;
 	if (theme == p_theme) {
@@ -1937,6 +1969,8 @@ void Window::_update_theme_item_cache() {
 	} else {
 		child_controls_changed();
 	}
+
+	ThemeDB::get_singleton()->update_class_instance_items(this);
 }
 
 void Window::_update_embedded_window() {
@@ -1969,7 +2003,7 @@ StringName Window::get_theme_type_variation() const {
 Ref<Texture2D> Window::get_theme_icon(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(Ref<Texture2D>());
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -1993,7 +2027,7 @@ Ref<Texture2D> Window::get_theme_icon(const StringName &p_name, const StringName
 Ref<StyleBox> Window::get_theme_stylebox(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(Ref<StyleBox>());
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2017,7 +2051,7 @@ Ref<StyleBox> Window::get_theme_stylebox(const StringName &p_name, const StringN
 Ref<Font> Window::get_theme_font(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(Ref<Font>());
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2041,7 +2075,7 @@ Ref<Font> Window::get_theme_font(const StringName &p_name, const StringName &p_t
 int Window::get_theme_font_size(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(0);
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2065,7 +2099,7 @@ int Window::get_theme_font_size(const StringName &p_name, const StringName &p_th
 Color Window::get_theme_color(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(Color());
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2089,7 +2123,7 @@ Color Window::get_theme_color(const StringName &p_name, const StringName &p_them
 int Window::get_theme_constant(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(0);
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2110,10 +2144,37 @@ int Window::get_theme_constant(const StringName &p_name, const StringName &p_the
 	return constant;
 }
 
+Variant Window::get_theme_item(Theme::DataType p_data_type, const StringName &p_name, const StringName &p_theme_type) const {
+	switch (p_data_type) {
+		case Theme::DATA_TYPE_COLOR:
+			return get_theme_color(p_name, p_theme_type);
+		case Theme::DATA_TYPE_CONSTANT:
+			return get_theme_constant(p_name, p_theme_type);
+		case Theme::DATA_TYPE_FONT:
+			return get_theme_font(p_name, p_theme_type);
+		case Theme::DATA_TYPE_FONT_SIZE:
+			return get_theme_font_size(p_name, p_theme_type);
+		case Theme::DATA_TYPE_ICON:
+			return get_theme_icon(p_name, p_theme_type);
+		case Theme::DATA_TYPE_STYLEBOX:
+			return get_theme_stylebox(p_name, p_theme_type);
+		case Theme::DATA_TYPE_MAX:
+			break; // Can't happen, but silences warning.
+	}
+
+	return Variant();
+}
+
+#ifdef TOOLS_ENABLED
+Ref<Texture2D> Window::get_editor_theme_icon(const StringName &p_name) const {
+	return get_theme_icon(p_name, SNAME("EditorIcons"));
+}
+#endif
+
 bool Window::has_theme_icon(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(false);
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2130,7 +2191,7 @@ bool Window::has_theme_icon(const StringName &p_name, const StringName &p_theme_
 bool Window::has_theme_stylebox(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(false);
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2147,7 +2208,7 @@ bool Window::has_theme_stylebox(const StringName &p_name, const StringName &p_th
 bool Window::has_theme_font(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(false);
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2164,7 +2225,7 @@ bool Window::has_theme_font(const StringName &p_name, const StringName &p_theme_
 bool Window::has_theme_font_size(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(false);
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2181,7 +2242,7 @@ bool Window::has_theme_font_size(const StringName &p_name, const StringName &p_t
 bool Window::has_theme_color(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(false);
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2198,7 +2259,7 @@ bool Window::has_theme_color(const StringName &p_name, const StringName &p_theme
 bool Window::has_theme_constant(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(false);
 	if (!initialized) {
-		WARN_PRINT_ONCE("Attempting to access theme items too early; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED");
+		WARN_PRINT_ONCE(vformat("Attempting to access theme items too early in %s; prefer NOTIFICATION_POSTINITIALIZE and NOTIFICATION_THEME_CHANGED", this->get_description()));
 	}
 
 	if (p_theme_type == StringName() || p_theme_type == get_class_name() || p_theme_type == theme_type_variation) {
@@ -2602,6 +2663,7 @@ void Window::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_position", "position"), &Window::set_position);
 	ClassDB::bind_method(D_METHOD("get_position"), &Window::get_position);
+	ClassDB::bind_method(D_METHOD("move_to_center"), &Window::move_to_center);
 
 	ClassDB::bind_method(D_METHOD("set_size", "size"), &Window::set_size);
 	ClassDB::bind_method(D_METHOD("get_size"), &Window::get_size);
@@ -2664,6 +2726,9 @@ void Window::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_content_scale_stretch", "stretch"), &Window::set_content_scale_stretch);
 	ClassDB::bind_method(D_METHOD("get_content_scale_stretch"), &Window::get_content_scale_stretch);
+
+	ClassDB::bind_method(D_METHOD("set_keep_title_visible", "title_visible"), &Window::set_keep_title_visible);
+	ClassDB::bind_method(D_METHOD("get_keep_title_visible"), &Window::get_keep_title_visible);
 
 	ClassDB::bind_method(D_METHOD("set_content_scale_factor", "factor"), &Window::set_content_scale_factor);
 	ClassDB::bind_method(D_METHOD("get_content_scale_factor"), &Window::get_content_scale_factor);
@@ -2778,6 +2843,7 @@ void Window::_bind_methods() {
 	ADD_GROUP("Limits", "");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "min_size", PROPERTY_HINT_NONE, "suffix:px"), "set_min_size", "get_min_size");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "max_size", PROPERTY_HINT_NONE, "suffix:px"), "set_max_size", "get_max_size");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "keep_title_visible"), "set_keep_title_visible", "get_keep_title_visible");
 
 	ADD_GROUP("Content Scale", "content_scale_");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "content_scale_size"), "set_content_scale_size", "get_content_scale_size");
@@ -2852,6 +2918,23 @@ void Window::_bind_methods() {
 	BIND_ENUM_CONSTANT(WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_KEYBOARD_FOCUS);
 
 	GDVIRTUAL_BIND(_get_contents_minimum_size);
+
+	BIND_THEME_ITEM(Theme::DATA_TYPE_STYLEBOX, Window, embedded_border);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_STYLEBOX, Window, embedded_unfocused_border);
+
+	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT, Window, title_font);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT_SIZE, Window, title_font_size);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, Window, title_color);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, Window, title_height);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, Window, title_outline_modulate);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, Window, title_outline_size);
+
+	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, Window, close);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, Window, close_pressed);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, Window, close_h_offset);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, Window, close_v_offset);
+
+	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, Window, resize_margin);
 }
 
 Window::Window() {
@@ -2861,7 +2944,7 @@ Window::Window() {
 		max_size_used = max_size; // Update max_size_used.
 	}
 
-	theme_owner = memnew(ThemeOwner);
+	theme_owner = memnew(ThemeOwner(this));
 	RS::get_singleton()->viewport_set_update_mode(get_viewport_rid(), RS::VIEWPORT_UPDATE_DISABLED);
 }
 

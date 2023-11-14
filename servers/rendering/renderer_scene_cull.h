@@ -424,6 +424,9 @@ public:
 					}
 
 				} break;
+				default: {
+					// Ignored notifications.
+				} break;
 			}
 		}
 
@@ -728,8 +731,7 @@ public:
 
 	uint32_t geometry_instance_pair_mask = 0; // used in traditional forward, unnecessary on clustered
 
-	const int TAA_JITTER_COUNT = 16;
-	LocalVector<Vector2> taa_jitter_array;
+	LocalVector<Vector2> camera_jitter_array;
 
 	virtual RID instance_allocate();
 	virtual void instance_initialize(RID p_rid);

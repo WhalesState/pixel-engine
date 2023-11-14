@@ -29,14 +29,17 @@
 /**************************************************************************/
 
 #include "rasterizer_scene_gles3.h"
-#include "core/config/project_settings.h"
-#include "core/templates/sort_array.h"
-#include "servers/rendering/rendering_server_default.h"
-#include "servers/rendering/rendering_server_globals.h"
+
+#include "rasterizer_gles3.h"
 #include "storage/config.h"
 #include "storage/mesh_storage.h"
 #include "storage/particles_storage.h"
 #include "storage/texture_storage.h"
+
+#include "core/config/project_settings.h"
+#include "core/templates/sort_array.h"
+#include "servers/rendering/rendering_server_default.h"
+#include "servers/rendering/rendering_server_globals.h"
 
 #ifdef GLES3_ENABLED
 

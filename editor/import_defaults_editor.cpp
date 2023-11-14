@@ -109,8 +109,7 @@ void ImportDefaultsEditor::_save() {
 		} else {
 			ProjectSettings::get_singleton()->set("importer_defaults/" + settings->importer->get_importer_name(), Variant());
 		}
-
-		emit_signal(SNAME("project_settings_changed"));
+		ProjectSettings::get_singleton()->save();
 	}
 }
 
@@ -169,14 +168,12 @@ void ImportDefaultsEditor::_importer_selected(int p_index) {
 
 void ImportDefaultsEditor::clear() {
 	String last_selected;
-	if (importers->get_selected() > 0) {
+
+	if (importers->get_selected() >= 0) {
 		last_selected = importers->get_item_text(importers->get_selected());
 	}
 
 	importers->clear();
-
-	importers->add_item("<" + TTR("Select Importer") + ">");
-	importers->set_item_disabled(0, true);
 
 	List<Ref<ResourceImporter>> importer_list;
 	ResourceFormatImporter::get_singleton()->get_importers(&importer_list);
@@ -187,27 +184,31 @@ void ImportDefaultsEditor::clear() {
 	}
 	names.sort();
 
+	// `last_selected.is_empty()` means it's the first time being called.
+	if (last_selected.is_empty() && !names.is_empty()) {
+		last_selected = names[0];
+	}
+
 	for (int i = 0; i < names.size(); i++) {
 		importers->add_item(names[i]);
 
 		if (names[i] == last_selected) {
-			importers->select(i + 1);
+			importers->select(i);
+			_update_importer();
 		}
 	}
 }
 
-void ImportDefaultsEditor::_bind_methods() {
-	ADD_SIGNAL(MethodInfo("project_settings_changed"));
-}
-
 ImportDefaultsEditor::ImportDefaultsEditor() {
+	ProjectSettings::get_singleton()->add_hidden_prefix("importer_defaults/");
+
 	HBoxContainer *hb = memnew(HBoxContainer);
 	hb->add_child(memnew(Label(TTR("Importer:"))));
 	importers = memnew(OptionButton);
 	hb->add_child(importers);
+	hb->add_spacer();
 	importers->connect("item_selected", callable_mp(this, &ImportDefaultsEditor::_importer_selected));
 	reset_defaults = memnew(Button);
-	reset_defaults->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
 	reset_defaults->set_text(TTR("Reset to Defaults"));
 	reset_defaults->set_disabled(true);
 	reset_defaults->connect("pressed", callable_mp(this, &ImportDefaultsEditor::_reset));

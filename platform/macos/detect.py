@@ -1,6 +1,6 @@
 import os
 import sys
-from methods import detect_darwin_sdk_path
+from methods import detect_darwin_sdk_path, get_compiler_version, is_vanilla_clang
 from platform_methods import detect_arch
 
 from typing import TYPE_CHECKING
@@ -26,12 +26,12 @@ def get_opts():
     return [
         ("osxcross_sdk", "OSXCross SDK version", "darwin16"),
         ("MACOS_SDK_PATH", "Path to the macOS SDK", ""),
-        ("vulkan_sdk_path", "Path to the Vulkan SDK", ""),
         EnumVariable("macports_clang", "Build using Clang from MacPorts", "no", ("no", "5.0", "devel")),
         BoolVariable("use_ubsan", "Use LLVM/GCC compiler undefined behavior sanitizer (UBSAN)", False),
         BoolVariable("use_asan", "Use LLVM/GCC compiler address sanitizer (ASAN)", False),
         BoolVariable("use_tsan", "Use LLVM/GCC compiler thread sanitizer (TSAN)", False),
         BoolVariable("use_coverage", "Use instrumentation codes in the binary (e.g. for code coverage)", False),
+        ("angle_libs", "Path to the ANGLE static libraries", ""),
     ]
 
 
@@ -48,7 +48,6 @@ def get_doc_path():
 def get_flags():
     return [
         ("arch", detect_arch()),
-        ("use_volk", False),
     ]
 
 
@@ -118,6 +117,15 @@ def configure(env: "Environment"):
         env.Append(ASFLAGS=["-arch", "x86_64", "-mmacosx-version-min=10.13"])
         env.Append(CCFLAGS=["-arch", "x86_64", "-mmacosx-version-min=10.13"])
         env.Append(LINKFLAGS=["-arch", "x86_64", "-mmacosx-version-min=10.13"])
+
+    cc_version = get_compiler_version(env)
+    cc_version_major = cc_version["major"]
+    cc_version_minor = cc_version["minor"]
+    vanilla = is_vanilla_clang(env)
+
+    # Workaround for Xcode 15 linker bug.
+    if not vanilla and cc_version_major == 15 and cc_version_minor == 0:
+        env.Prepend(LINKFLAGS=["-ld_classic"])
 
     env.Append(CCFLAGS=["-fobjc-arc"])
 
@@ -239,6 +247,12 @@ def configure(env: "Environment"):
 
     if env["opengl3"]:
         env.Append(CPPDEFINES=["GLES3_ENABLED"])
-        env.Append(LINKFLAGS=["-framework", "OpenGL"])
+        if env["angle_libs"] != "":
+            env.AppendUnique(CPPDEFINES=["EGL_STATIC"])
+            env.Append(LINKFLAGS=["-L" + env["angle_libs"]])
+            env.Append(LINKFLAGS=["-lANGLE.macos." + env["arch"]])
+            env.Append(LINKFLAGS=["-lEGL.macos." + env["arch"]])
+            env.Append(LINKFLAGS=["-lGLES.macos." + env["arch"]])
+        env.Prepend(CPPPATH=["#thirdparty/angle/include"])
 
     env.Append(LINKFLAGS=["-rpath", "@executable_path/../Frameworks", "-rpath", "@executable_path"])

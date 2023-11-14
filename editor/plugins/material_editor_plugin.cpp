@@ -34,6 +34,7 @@
 #include "editor/editor_node.h"
 #include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
+#include "editor/editor_undo_redo_manager.h"
 #include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
 #include "scene/gui/color_rect.h"
@@ -41,10 +42,10 @@
 #include "scene/main/viewport.h"
 #include "scene/resources/particle_process_material.h"
 
-
 void MaterialEditor::_update_theme_item_cache() {
 	Control::_update_theme_item_cache();
-	theme_cache.checkerboard = get_theme_icon(SNAME("Checkerboard"), SNAME("EditorIcons"));
+
+	theme_cache.checkerboard = get_editor_theme_icon(SNAME("Checkerboard"));
 }
 
 void MaterialEditor::_notification(int p_what) {
@@ -75,6 +76,8 @@ void MaterialEditor::edit(Ref<Material> p_material) {
 
 
 MaterialEditor::MaterialEditor() {
+	// Canvas item
+
 	vc_2d = memnew(SubViewportContainer);
 	vc_2d->set_stretch(true);
 	add_child(vc_2d);

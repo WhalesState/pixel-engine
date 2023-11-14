@@ -1493,9 +1493,9 @@ String String::num(double p_num, int p_decimals) {
 
 	if (p_decimals < 0) {
 		p_decimals = 14;
-		const double abs_num = ABS(p_num);
+		const double abs_num = Math::abs(p_num);
 		if (abs_num > 10) {
-			// We want to align the digits to the above sane default, so we only
+			// We want to align the digits to the above reasonable default, so we only
 			// need to subtract log10 for numbers with a positive power of ten.
 			p_decimals -= (int)floor(log10(abs_num));
 		}
@@ -2763,12 +2763,13 @@ double String::to_float() const {
 }
 
 uint32_t String::hash(const char *p_cstr) {
+	// static_cast: avoid negative values on platforms where char is signed.
 	uint32_t hashv = 5381;
-	uint32_t c = *p_cstr++;
+	uint32_t c = static_cast<uint8_t>(*p_cstr++);
 
 	while (c) {
 		hashv = ((hashv << 5) + hashv) + c; /* hash * 33 + c */
-		c = *p_cstr++;
+		c = static_cast<uint8_t>(*p_cstr++);
 	}
 
 	return hashv;
@@ -2777,28 +2778,35 @@ uint32_t String::hash(const char *p_cstr) {
 uint32_t String::hash(const char *p_cstr, int p_len) {
 	uint32_t hashv = 5381;
 	for (int i = 0; i < p_len; i++) {
-		hashv = ((hashv << 5) + hashv) + p_cstr[i]; /* hash * 33 + c */
+		// static_cast: avoid negative values on platforms where char is signed.
+		hashv = ((hashv << 5) + hashv) + static_cast<uint8_t>(p_cstr[i]); /* hash * 33 + c */
 	}
 
 	return hashv;
 }
 
 uint32_t String::hash(const wchar_t *p_cstr, int p_len) {
+	// Avoid negative values on platforms where wchar_t is signed. Account for different sizes.
+	using wide_unsigned = std::conditional<sizeof(wchar_t) == 2, uint16_t, uint32_t>::type;
+
 	uint32_t hashv = 5381;
 	for (int i = 0; i < p_len; i++) {
-		hashv = ((hashv << 5) + hashv) + p_cstr[i]; /* hash * 33 + c */
+		hashv = ((hashv << 5) + hashv) + static_cast<wide_unsigned>(p_cstr[i]); /* hash * 33 + c */
 	}
 
 	return hashv;
 }
 
 uint32_t String::hash(const wchar_t *p_cstr) {
+	// Avoid negative values on platforms where wchar_t is signed. Account for different sizes.
+	using wide_unsigned = std::conditional<sizeof(wchar_t) == 2, uint16_t, uint32_t>::type;
+
 	uint32_t hashv = 5381;
-	uint32_t c = *p_cstr++;
+	uint32_t c = static_cast<wide_unsigned>(*p_cstr++);
 
 	while (c) {
 		hashv = ((hashv << 5) + hashv) + c; /* hash * 33 + c */
-		c = *p_cstr++;
+		c = static_cast<wide_unsigned>(*p_cstr++);
 	}
 
 	return hashv;
@@ -3966,24 +3974,22 @@ bool String::is_absolute_path() const {
 	}
 }
 
-static _FORCE_INLINE_ bool _is_valid_identifier_bit(int p_index, char32_t p_char) {
-	if (p_index == 0 && is_digit(p_char)) {
-		return false; // No start with number plz.
-	}
-	return is_ascii_identifier_char(p_char);
-}
-
 String String::validate_identifier() const {
 	if (is_empty()) {
 		return "_"; // Empty string is not a valid identifier;
 	}
 
-	String result = *this;
+	String result;
+	if (is_digit(operator[](0))) {
+		result = "_" + *this;
+	} else {
+		result = *this;
+	}
+
 	int len = result.length();
 	char32_t *buffer = result.ptrw();
-
 	for (int i = 0; i < len; i++) {
-		if (!_is_valid_identifier_bit(i, buffer[i])) {
+		if (!is_ascii_identifier_char(buffer[i])) {
 			buffer[i] = '_';
 		}
 	}
@@ -3998,10 +4004,14 @@ bool String::is_valid_identifier() const {
 		return false;
 	}
 
+	if (is_digit(operator[](0))) {
+		return false;
+	}
+
 	const char32_t *str = &operator[](0);
 
 	for (int i = 0; i < len; i++) {
-		if (!_is_valid_identifier_bit(i, str[i])) {
+		if (!is_ascii_identifier_char(str[i])) {
 			return false;
 		}
 	}
@@ -4689,11 +4699,16 @@ String String::property_name_encode() const {
 
 static const char32_t invalid_node_name_characters[] = { '.', ':', '@', '/', '\"', UNIQUE_NODE_PREFIX[0], 0 };
 
-String String::get_invalid_node_name_characters() {
+String String::get_invalid_node_name_characters(bool p_allow_internal) {
 	// Do not use this function for critical validation.
 	String r;
 	const char32_t *c = invalid_node_name_characters;
 	while (*c) {
+		if (p_allow_internal && *c == '@') {
+			c++;
+			continue;
+		}
+
 		if (c != invalid_node_name_characters) {
 			r += " ";
 		}
@@ -4890,8 +4905,8 @@ String String::sprintf(const Array &values, bool *error) const {
 					}
 
 					double value = values[value_index];
-					bool is_negative = (value < 0);
-					String str = String::num(ABS(value), min_decimals);
+					bool is_negative = signbit(value);
+					String str = String::num(Math::abs(value), min_decimals);
 					const bool is_finite = Math::is_finite(value);
 
 					// Pad decimals out.
@@ -4953,7 +4968,7 @@ String String::sprintf(const Array &values, bool *error) const {
 					String str = "(";
 					for (int i = 0; i < count; i++) {
 						double val = vec[i];
-						String number_str = String::num(ABS(val), min_decimals);
+						String number_str = String::num(Math::abs(val), min_decimals);
 						const bool is_finite = Math::is_finite(val);
 
 						// Pad decimals out.

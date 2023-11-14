@@ -126,7 +126,7 @@ void RendererSceneCull::_instance_update_mesh_instance(Instance *p_instance) {
 
 void RendererSceneCull::instance_set_layer_mask(RID p_instance, uint32_t p_mask) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	if (instance->layer_mask == p_mask) {
 		return;
@@ -146,7 +146,7 @@ void RendererSceneCull::instance_set_layer_mask(RID p_instance, uint32_t p_mask)
 
 void RendererSceneCull::instance_set_pivot_data(RID p_instance, float p_sorting_offset, bool p_use_aabb_center) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	instance->sorting_offset = p_sorting_offset;
 	instance->use_aabb_center = p_use_aabb_center;
@@ -160,7 +160,7 @@ void RendererSceneCull::instance_set_pivot_data(RID p_instance, float p_sorting_
 
 void RendererSceneCull::instance_geometry_set_transparency(RID p_instance, float p_transparency) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	instance->transparency = p_transparency;
 
@@ -173,7 +173,7 @@ void RendererSceneCull::instance_geometry_set_transparency(RID p_instance, float
 
 void RendererSceneCull::instance_set_transform(RID p_instance, const Transform3D &p_transform) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	if (instance->transform == p_transform) {
 		return; //must be checked to avoid worst evil
@@ -193,14 +193,14 @@ void RendererSceneCull::instance_set_transform(RID p_instance, const Transform3D
 
 void RendererSceneCull::instance_attach_object_instance_id(RID p_instance, ObjectID p_id) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	instance->object_id = p_id;
 }
 
 void RendererSceneCull::instance_set_blend_shape_weight(RID p_instance, int p_shape, float p_weight) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	if (instance->update_item.in_list()) {
 		_update_dirty_instance(instance);
@@ -213,7 +213,7 @@ void RendererSceneCull::instance_set_blend_shape_weight(RID p_instance, int p_sh
 
 void RendererSceneCull::instance_set_surface_override_material(RID p_instance, int p_surface, RID p_material) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	if (instance->base_type == RS::INSTANCE_MESH) {
 		//may not have been updated yet, may also have not been set yet. When updated will be correcte, worst case
@@ -229,7 +229,7 @@ void RendererSceneCull::instance_set_surface_override_material(RID p_instance, i
 
 void RendererSceneCull::instance_set_visible(RID p_instance, bool p_visible) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	if (instance->visible == p_visible) {
 		return;
@@ -257,7 +257,7 @@ inline bool is_geometry_instance(RenderingServer::InstanceType p_type) {
 
 void RendererSceneCull::instance_attach_skeleton(RID p_instance, RID p_skeleton) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	if (instance->skeleton == p_skeleton) {
 		return;
@@ -283,7 +283,7 @@ void RendererSceneCull::instance_attach_skeleton(RID p_instance, RID p_skeleton)
 
 void RendererSceneCull::instance_set_extra_visibility_margin(RID p_instance, real_t p_margin) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	instance->extra_margin = p_margin;
 	_instance_queue_update(instance, true, false);
@@ -291,7 +291,7 @@ void RendererSceneCull::instance_set_extra_visibility_margin(RID p_instance, rea
 
 void RendererSceneCull::instance_set_ignore_culling(RID p_instance, bool p_enabled) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 	instance->ignore_all_culling = p_enabled;
 
 	if (instance->scenario && instance->array_index >= 0) {
@@ -306,7 +306,7 @@ void RendererSceneCull::instance_set_ignore_culling(RID p_instance, bool p_enabl
 
 void RendererSceneCull::instance_geometry_set_flag(RID p_instance, RS::InstanceFlags p_flags, bool p_enabled) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	//ERR_FAIL_COND(((1 << instance->base_type) & RS::INSTANCE_GEOMETRY_MASK));
 
@@ -383,7 +383,7 @@ void RendererSceneCull::instance_geometry_set_flag(RID p_instance, RS::InstanceF
 
 void RendererSceneCull::instance_geometry_set_cast_shadows_setting(RID p_instance, RS::ShadowCastingSetting p_shadow_casting_setting) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	instance->cast_shadows = p_shadow_casting_setting;
 
@@ -415,7 +415,7 @@ void RendererSceneCull::instance_geometry_set_cast_shadows_setting(RID p_instanc
 
 void RendererSceneCull::instance_geometry_set_material_override(RID p_instance, RID p_material) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	instance->material_override = p_material;
 	_instance_queue_update(instance, false, true);
@@ -429,7 +429,7 @@ void RendererSceneCull::instance_geometry_set_material_override(RID p_instance, 
 
 void RendererSceneCull::instance_geometry_set_material_overlay(RID p_instance, RID p_material) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	instance->material_overlay = p_material;
 	_instance_queue_update(instance, false, true);
@@ -443,7 +443,7 @@ void RendererSceneCull::instance_geometry_set_material_overlay(RID p_instance, R
 
 void RendererSceneCull::instance_geometry_set_visibility_range(RID p_instance, float p_min, float p_max, float p_min_margin, float p_max_margin, RS::VisibilityRangeFadeMode p_fade_mode) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	instance->visibility_range_begin = p_min;
 	instance->visibility_range_end = p_max;
@@ -465,7 +465,7 @@ void RendererSceneCull::instance_geometry_set_visibility_range(RID p_instance, f
 
 void RendererSceneCull::instance_set_visibility_parent(RID p_instance, RID p_parent_instance) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	Instance *old_parent = instance->visibility_parent;
 	if (old_parent) {
@@ -585,7 +585,7 @@ void RendererSceneCull::_update_instance_visibility_dependencies(Instance *p_ins
 
 void RendererSceneCull::instance_geometry_set_lod_bias(RID p_instance, float p_lod_bias) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	instance->lod_bias = p_lod_bias;
 
@@ -598,7 +598,7 @@ void RendererSceneCull::instance_geometry_set_lod_bias(RID p_instance, float p_l
 
 void RendererSceneCull::instance_geometry_set_shader_parameter(RID p_instance, const StringName &p_parameter, const Variant &p_value) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND(!instance);
+	ERR_FAIL_NULL(instance);
 
 	ERR_FAIL_COND(p_value.get_type() == Variant::OBJECT);
 
@@ -636,7 +636,7 @@ void RendererSceneCull::instance_geometry_set_shader_parameter(RID p_instance, c
 
 Variant RendererSceneCull::instance_geometry_get_shader_parameter(RID p_instance, const StringName &p_parameter) const {
 	const Instance *instance = const_cast<RendererSceneCull *>(this)->instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND_V(!instance, Variant());
+	ERR_FAIL_NULL_V(instance, Variant());
 
 	if (instance->instance_shader_uniforms.has(p_parameter)) {
 		return instance->instance_shader_uniforms[p_parameter].value;
@@ -646,7 +646,7 @@ Variant RendererSceneCull::instance_geometry_get_shader_parameter(RID p_instance
 
 Variant RendererSceneCull::instance_geometry_get_shader_parameter_default_value(RID p_instance, const StringName &p_parameter) const {
 	const Instance *instance = const_cast<RendererSceneCull *>(this)->instance_owner.get_or_null(p_instance);
-	ERR_FAIL_COND_V(!instance, Variant());
+	ERR_FAIL_NULL_V(instance, Variant());
 
 	if (instance->instance_shader_uniforms.has(p_parameter)) {
 		return instance->instance_shader_uniforms[p_parameter].default_value;
@@ -902,7 +902,6 @@ void RendererSceneCull::_update_instance_aabb(Instance *p_instance) {
 		}
 	}
 
-	// <Zylann> This is why I didn't re-use Instance::aabb to implement custom AABBs
 	if (p_instance->extra_margin) {
 		new_aabb.grow_by(p_instance->extra_margin);
 	}
@@ -1259,11 +1258,12 @@ void RendererSceneCull::_update_dirty_instance(Instance *p_instance) {
 }
 
 void RendererSceneCull::update_dirty_instances() {
-	RSG::utilities->update_dirty_resources();
-
 	while (_instance_update_list.first()) {
 		_update_dirty_instance(_instance_update_list.first()->self());
 	}
+
+	// Update dirty resources after dirty instances as instance updates may affect resources.
+	RSG::utilities->update_dirty_resources();
 }
 
 void RendererSceneCull::update() {
@@ -1328,17 +1328,6 @@ void RendererSceneCull::set_scene_render(RendererSceneRender *p_scene_render) {
 	// geometry_instance_pair_mask = scene_render->geometry_instance_get_pair_mask();
 }
 
-float get_halton_value(int index, int base) {
-	float f = 1;
-	float r = 0;
-	while (index > 0) {
-		f = f / static_cast<float>(base);
-		r = r + f * (index % base);
-		index = index / base;
-	}
-	return r * 2.0f - 1.0f;
-};
-
 RendererSceneCull::RendererSceneCull() {
 	render_pass = 1;
 	singleton = this;
@@ -1362,12 +1351,6 @@ RendererSceneCull::RendererSceneCull() {
 	indexer_update_iterations = GLOBAL_GET("rendering/limits/spatial_indexer/update_iterations_per_frame");
 	thread_cull_threshold = GLOBAL_GET("rendering/limits/spatial_indexer/threaded_cull_minimum_instances");
 	thread_cull_threshold = MAX(thread_cull_threshold, (uint32_t)WorkerThreadPool::get_singleton()->get_thread_count()); //make sure there is at least one thread per CPU
-
-	taa_jitter_array.resize(TAA_JITTER_COUNT);
-	for (int i = 0; i < TAA_JITTER_COUNT; i++) {
-		taa_jitter_array[i].x = get_halton_value(i, 2);
-		taa_jitter_array[i].y = get_halton_value(i, 3);
-	}
 
 	dummy_occlusion_culling = memnew(RendererSceneOcclusionCull);
 }

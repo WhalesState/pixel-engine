@@ -117,6 +117,7 @@ class SceneTreeEditor : public Control {
 	void _node_script_changed(Node *p_node);
 	void _node_visibility_changed(Node *p_node);
 	void _update_visibility_color(Node *p_node, TreeItem *p_item);
+	void _set_item_custom_color(TreeItem *p_item, Color p_color);
 
 	void _selection_changed();
 	Node *get_scene_node();
@@ -187,7 +188,6 @@ class SceneTreeDialog : public ConfirmationDialog {
 	void _selected_changed();
 	void _filter_changed(const String &p_filter);
 	void _show_all_nodes_changed(bool p_button_pressed);
-	void _update_theme();
 
 protected:
 	void _notification(int p_what);
