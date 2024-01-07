@@ -39,7 +39,7 @@ class Label : public Control {
 
 private:
 	HorizontalAlignment horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT;
-	VerticalAlignment vertical_alignment = VERTICAL_ALIGNMENT_TOP;
+	VerticalAlignment vertical_alignment = VERTICAL_ALIGNMENT_CENTER;
 	String text;
 	String xl_text;
 	TextServer::AutowrapMode autowrap_mode = TextServer::AUTOWRAP_OFF;

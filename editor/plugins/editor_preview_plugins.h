@@ -122,22 +122,6 @@ public:
 	~EditorFontPreviewPlugin();
 };
 
-class EditorTileMapPatternPreviewPlugin : public EditorResourcePreviewGenerator {
-	GDCLASS(EditorTileMapPatternPreviewPlugin, EditorResourcePreviewGenerator);
-
-	Semaphore preview_done;
-
-	void _generate_frame_started();
-	void _preview_done();
-
-public:
-	virtual bool handles(const String &p_type) const override;
-	virtual Ref<Texture2D> generate(const Ref<Resource> &p_from, const Size2 &p_size, Dictionary &p_metadata) const override;
-
-	EditorTileMapPatternPreviewPlugin();
-	~EditorTileMapPatternPreviewPlugin();
-};
-
 class EditorGradientPreviewPlugin : public EditorResourcePreviewGenerator {
 	GDCLASS(EditorGradientPreviewPlugin, EditorResourcePreviewGenerator);
 

@@ -167,7 +167,6 @@ private:
 		FILE_RUN_SCENE,
 		FILE_SHOW_IN_FILESYSTEM,
 		FILE_EXPORT_PROJECT,
-		// FILE_EXPORT_MESH_LIBRARY,
 		FILE_INSTALL_ANDROID_SOURCE,
 		FILE_EXPLORE_ANDROID_BUILD_TEMPLATES,
 		FILE_SAVE_OPTIMIZED,
@@ -318,6 +317,7 @@ private:
 	bool exiting = false;
 	bool dimmed = false;
 
+	DisplayServer::WindowMode prev_mode = DisplayServer::WINDOW_MODE_MAXIMIZED;
 	int old_split_ofs = 0;
 	VSplitContainer *top_split = nullptr;
 	HBoxContainer *bottom_hb = nullptr;
@@ -466,6 +466,7 @@ private:
 	String _tmp_import_path;
 	String external_file;
 	String open_navigate;
+	String saving_scene;
 
 	DynamicFontImportSettings *fontdata_import_settings = nullptr;
 	SceneImportSettings *scene_import_settings = nullptr;
@@ -691,6 +692,9 @@ public:
 
 	bool call_build();
 
+	// This is a very naive estimation, but we need something now. Will be reworked later.
+	bool is_editor_ready() const { return is_inside_tree() && !waiting_for_first_scan; }
+
 	static EditorNode *get_singleton() { return singleton; }
 
 	static EditorLog *get_log() { return singleton->log; }
@@ -854,6 +858,7 @@ public:
 	void _copy_warning(const String &p_str);
 
 	Error export_preset(const String &p_preset, const String &p_path, bool p_debug, bool p_pack_only);
+	bool is_project_exporting() const;
 
 	Control *get_gui_base() { return gui_base; }
 

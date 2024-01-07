@@ -179,14 +179,14 @@ TypedArray<Dictionary> Engine::get_copyright_info() const {
 
 Dictionary Engine::get_donor_info() const {
 	Dictionary donors;
-	donors["godot_platinum_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_PLATINUM);
-	donors["godot_gold_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_GOLD);
-	donors["godot_silver_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_SILVER);
-	donors["godot_bronze_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_BRONZE);
-	donors["godot_mini_sponsors"] = array_from_info(GODOT_DONORS_SPONSOR_MINI);
-	donors["godot_gold_donors"] = array_from_info(GODOT_DONORS_GOLD);
-	donors["godot_silver_donors"] = array_from_info(GODOT_DONORS_SILVER);
-	donors["godot_bronze_donors"] = array_from_info(GODOT_DONORS_BRONZE);
+	donors["godot_engine_patrons"] = array_from_info(GODOT_ENGINE_DONORS_PATRONS);
+	donors["godot_engine_platinum_sponsors"] = array_from_info(GODOT_ENGINE_DONORS_SPONSORS_PLATINUM);
+	donors["godot_engine_gold_sponsors"] = array_from_info(GODOT_ENGINE_DONORS_SPONSORS_GOLD);
+	donors["godot_engine_silver_sponsors"] = array_from_info(GODOT_ENGINE_DONORS_SPONSORS_SILVER);
+	donors["godot_engine_diamond_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_DIAMOND);
+	donors["godot_engine_titanium_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_TITANIUM);
+	donors["godot_engine_platinum_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_PLATINUM);
+	donors["godot_engine_gold_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_GOLD);
 	return donors;
 }
 

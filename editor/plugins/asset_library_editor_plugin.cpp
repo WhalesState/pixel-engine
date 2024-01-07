@@ -389,7 +389,6 @@ void EditorAssetLibraryItemDownload::_http_download_completed(int p_status, int 
 		download_error->popup_centered();
 		// Let the user retry the download.
 		retry_button->show();
-		install_button->set_h_size_flags(SIZE_FILL);
 		return;
 	}
 
@@ -502,7 +501,6 @@ void EditorAssetLibraryItemDownload::install() {
 void EditorAssetLibraryItemDownload::_make_request() {
 	// Hide the Retry button if we've just pressed it.
 	retry_button->hide();
-	install_button->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
 
 	download->cancel_request();
 	download->set_download_file(EditorPaths::get_singleton()->get_cache_dir().path_join("tmp_asset_" + itos(asset_id)) + ".zip");

@@ -39,29 +39,25 @@
 // The metadata key used to store and retrieve the version text to copy to the clipboard.
 const String EditorAbout::META_TEXT_TO_COPY = "text_to_copy";
 
-void EditorAbout::_theme_changed() {
-	const Ref<Font> font = get_theme_font(SNAME("source"), EditorStringName(EditorFonts));
-	const int font_size = get_theme_font_size(SNAME("source_size"), EditorStringName(EditorFonts));
-
-	_tpl_text->begin_bulk_theme_override();
-	_tpl_text->add_theme_font_override("normal_font", font);
-	_tpl_text->add_theme_font_size_override("normal_font_size", font_size);
-	_tpl_text->add_theme_constant_override("line_separation", 4 * EDSCALE);
-	_tpl_text->end_bulk_theme_override();
-
-	_license_text->begin_bulk_theme_override();
-	_license_text->add_theme_font_override("normal_font", font);
-	_license_text->add_theme_font_size_override("normal_font_size", font_size);
-	_license_text->add_theme_constant_override("line_separation", 4 * EDSCALE);
-	_license_text->end_bulk_theme_override();
-
-	_logo->set_texture(get_editor_theme_icon(SNAME("Logo")));
-}
-
 void EditorAbout::_notification(int p_what) {
 	switch (p_what) {
-		case NOTIFICATION_ENTER_TREE: {
-			_theme_changed();
+		case NOTIFICATION_THEME_CHANGED: {
+			const Ref<Font> font = get_theme_font(SNAME("source"), EditorStringName(EditorFonts));
+			const int font_size = get_theme_font_size(SNAME("source_size"), EditorStringName(EditorFonts));
+
+			_tpl_text->begin_bulk_theme_override();
+			_tpl_text->add_theme_font_override("normal_font", font);
+			_tpl_text->add_theme_font_size_override("normal_font_size", font_size);
+			_tpl_text->add_theme_constant_override("line_separation", 4 * EDSCALE);
+			_tpl_text->end_bulk_theme_override();
+
+			_license_text->begin_bulk_theme_override();
+			_license_text->add_theme_font_override("normal_font", font);
+			_license_text->add_theme_font_size_override("normal_font_size", font_size);
+			_license_text->add_theme_constant_override("line_separation", 4 * EDSCALE);
+			_license_text->end_bulk_theme_override();
+
+			_logo->set_texture(get_editor_theme_icon(SNAME("Logo")));
 		} break;
 	}
 }
@@ -128,12 +124,12 @@ EditorAbout::EditorAbout() {
 	set_hide_on_ok(true);
 
 	VBoxContainer *vbc = memnew(VBoxContainer);
-	vbc->connect("theme_changed", callable_mp(this, &EditorAbout::_theme_changed));
+	add_child(vbc);
+
 	HBoxContainer *hbc = memnew(HBoxContainer);
 	hbc->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	hbc->set_alignment(BoxContainer::ALIGNMENT_CENTER);
 	hbc->add_theme_constant_override("separation", 30 * EDSCALE);
-	add_child(vbc);
 	vbc->add_child(hbc);
 
 	_logo = memnew(TextureRect);
@@ -182,25 +178,38 @@ EditorAbout::EditorAbout() {
 	dev_sections.push_back(TTR("Pixel Engine Project Manager", "Job Title"));
 	dev_sections.push_back(TTR("Godot Developers"));
 	dev_sections.push_back(TTR("Pixel Engine Developers"));
-	const char *const *dev_src[] = { GODOT_AUTHORS_FOUNDERS, GODOT_AUTHORS_LEAD_DEVELOPERS,
-		PIXEL_ENGINE_AUTHORS_LEAD_DEVELOPERS, GODOT_AUTHORS_PROJECT_MANAGERS,
-		PIXEL_ENGINE_AUTHORS_PROJECT_MANAGERS, GODOT_AUTHORS_DEVELOPERS, PIXEL_ENGINE_AUTHORS_DEVELOPERS };
+	const char *const *dev_src[] = {
+		GODOT_AUTHORS_FOUNDERS,
+		GODOT_AUTHORS_LEAD_DEVELOPERS,
+		PIXEL_ENGINE_AUTHORS_LEAD_DEVELOPERS,
+		GODOT_AUTHORS_PROJECT_MANAGERS,
+		PIXEL_ENGINE_AUTHORS_PROJECT_MANAGERS,
+		GODOT_AUTHORS_DEVELOPERS,
+		PIXEL_ENGINE_AUTHORS_DEVELOPERS
+	};
 	tc->add_child(_populate_list(TTR("Authors"), dev_sections, dev_src, 1));
 
 	// Donors
 
 	List<String> donor_sections;
+	donor_sections.push_back(TTR("Godot Engine Patrons"));
 	donor_sections.push_back(TTR("Godot Engine Platinum Sponsors"));
 	donor_sections.push_back(TTR("Godot Engine Gold Sponsors"));
 	donor_sections.push_back(TTR("Godot Engine Silver Sponsors"));
-	donor_sections.push_back(TTR("Godot Engine Bronze Sponsors"));
-	donor_sections.push_back(TTR("Godot Engine Mini Sponsors"));
-	donor_sections.push_back(TTR("Godot Engine Gold Donors"));
-	donor_sections.push_back(TTR("Godot Engine Silver Donors"));
-	donor_sections.push_back(TTR("Godot Engine Bronze Donors"));
-	const char *const *donor_src[] = { GODOT_DONORS_SPONSOR_PLATINUM, GODOT_DONORS_SPONSOR_GOLD,
-		GODOT_DONORS_SPONSOR_SILVER, GODOT_DONORS_SPONSOR_BRONZE, GODOT_DONORS_SPONSOR_MINI,
-		GODOT_DONORS_GOLD, GODOT_DONORS_SILVER, GODOT_DONORS_BRONZE };
+	donor_sections.push_back(TTR("Godot Engine Diamond Members"));
+	donor_sections.push_back(TTR("Godot Engine Titanium Members"));
+	donor_sections.push_back(TTR("Godot Engine Platinum Members"));
+	donor_sections.push_back(TTR("Godot Engine Gold Members"));
+	const char *const *donor_src[] = {
+		GODOT_ENGINE_DONORS_PATRONS,
+		GODOT_ENGINE_DONORS_SPONSORS_PLATINUM,
+		GODOT_ENGINE_DONORS_SPONSORS_GOLD,
+		GODOT_ENGINE_DONORS_SPONSORS_SILVER,
+		GODOT_ENGINE_DONORS_MEMBERS_DIAMOND,
+		GODOT_ENGINE_DONORS_MEMBERS_TITANIUM,
+		GODOT_ENGINE_DONORS_MEMBERS_PLATINUM,
+		GODOT_ENGINE_DONORS_MEMBERS_GOLD,
+	};
 	tc->add_child(_populate_list(TTR("Donors"), donor_sections, donor_src, 3));
 
 	// License

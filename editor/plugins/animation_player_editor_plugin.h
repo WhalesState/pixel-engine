@@ -196,7 +196,7 @@ class AnimationPlayerEditor : public VBoxContainer {
 	Ref<Animation> _animation_clone(const Ref<Animation> p_anim);
 	void _animation_resource_edit();
 	void _scale_changed(const String &p_scale);
-	void _seek_value_changed(float p_value, bool p_set = false, bool p_timeline_only = false);
+	void _seek_value_changed(float p_value, bool p_timeline_only = false);
 	void _blend_editor_next_changed(const int p_idx);
 
 	void _edit_animation_blend();
@@ -213,7 +213,7 @@ class AnimationPlayerEditor : public VBoxContainer {
 	void _animation_player_changed(Object *p_pl);
 	void _animation_libraries_updated();
 
-	void _animation_key_editor_seek(float p_pos, bool p_drag, bool p_timeline_only = false);
+	void _animation_key_editor_seek(float p_pos, bool p_timeline_only = false);
 	void _animation_key_editor_anim_len_changed(float p_len);
 
 	virtual void shortcut_input(const Ref<InputEvent> &p_ev) override;
@@ -287,7 +287,6 @@ protected:
 	void _notification(int p_what);
 
 	void _property_keyed(const String &p_keyed, const Variant &p_value, bool p_advance);
-	// void _transform_key_request(Object *sp, const String &p_sub, const Transform3D &p_key);
 	void _update_keying();
 
 public:
@@ -301,7 +300,6 @@ public:
 	virtual void make_visible(bool p_visible) override;
 
 	virtual void forward_canvas_force_draw_over_viewport(Control *p_overlay) override { anim_editor->forward_force_draw_over_viewport(p_overlay); }
-	// virtual void forward_3d_force_draw_over_viewport(Control *p_overlay) override { anim_editor->forward_force_draw_over_viewport(p_overlay); }
 
 	AnimationPlayerEditorPlugin();
 	~AnimationPlayerEditorPlugin();

@@ -5,7 +5,7 @@ on:
 # Global Settings
 env:
   # Used for the cache key. Add version suffix to force clean build.
-  GODOT_BASE_BRANCH: '4.2'
+  GODOT_BASE_BRANCH: 4.2
   SCONSFLAGS: debug_symbols=no verbose=yes use_static_cpp=yes lto=auto
 concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-android

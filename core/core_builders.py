@@ -123,24 +123,24 @@ def make_authors_header(target, source, env):
 
 def make_donors_header(target, source, env):
     sections = [
+        "Godot Engine Patrons",
         "Godot Engine Platinum sponsors",
         "Godot Engine Gold sponsors",
         "Godot Engine Silver sponsors",
-        "Godot Engine Bronze sponsors",
-        "Godot Engine Mini sponsors",
-        "Godot Engine Gold donors",
-        "Godot Engine Silver donors",
-        "Godot Engine Bronze donors",
+        "Godot Engine Diamond members",
+        "Godot Engine Titanium members",
+        "Godot Engine Platinum members",
+        "Godot Engine Gold members",
     ]
     sections_id = [
-        "GODOT_DONORS_SPONSOR_PLATINUM",
-        "GODOT_DONORS_SPONSOR_GOLD",
-        "GODOT_DONORS_SPONSOR_SILVER",
-        "GODOT_DONORS_SPONSOR_BRONZE",
-        "GODOT_DONORS_SPONSOR_MINI",
-        "GODOT_DONORS_GOLD",
-        "GODOT_DONORS_SILVER",
-        "GODOT_DONORS_BRONZE",
+        "GODOT_ENGINE_DONORS_PATRONS",
+        "GODOT_ENGINE_DONORS_SPONSORS_PLATINUM",
+        "GODOT_ENGINE_DONORS_SPONSORS_GOLD",
+        "GODOT_ENGINE_DONORS_SPONSORS_SILVER",
+        "GODOT_ENGINE_DONORS_MEMBERS_DIAMOND",
+        "GODOT_ENGINE_DONORS_MEMBERS_TITANIUM",
+        "GODOT_ENGINE_DONORS_MEMBERS_PLATINUM",
+        "GODOT_ENGINE_DONORS_MEMBERS_GOLD",
     ]
 
     src = source[0]

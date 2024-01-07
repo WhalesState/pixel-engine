@@ -440,9 +440,11 @@ void TileMapLayer::_rendering_update() {
 			for (KeyValue<Vector2i, CellData> &kv : tile_map) {
 				CellData &cell_data = kv.value;
 				for (const RID &occluder : cell_data.occluders) {
-					Transform2D xform(0, tile_map_node->map_to_local(kv.key));
-					rs->canvas_light_occluder_attach_to_canvas(occluder, tile_map_node->get_canvas());
-					rs->canvas_light_occluder_set_transform(occluder, tile_map_node->get_global_transform() * xform);
+					if (occluder.is_valid()) {
+						Transform2D xform(0, tile_map_node->map_to_local(kv.key));
+						rs->canvas_light_occluder_attach_to_canvas(occluder, tile_map_node->get_canvas());
+						rs->canvas_light_occluder_set_transform(occluder, tile_map_node->get_global_transform() * xform);
+					}
 				}
 			}
 		}
@@ -558,6 +560,15 @@ void TileMapLayer::_rendering_occluders_update_cell(CellData &r_cell_data) {
 	const Ref<TileSet> &tile_set = tile_map_node->get_tileset();
 	RenderingServer *rs = RenderingServer::get_singleton();
 
+	// Free unused occluders then resize the occluders array.
+	for (uint32_t i = tile_set->get_occlusion_layers_count(); i < r_cell_data.occluders.size(); i++) {
+		RID occluder_id = r_cell_data.occluders[i];
+		if (occluder_id.is_valid()) {
+			rs->free(occluder_id);
+		}
+	}
+	r_cell_data.occluders.resize(tile_set->get_occlusion_layers_count());
+
 	TileSetSource *source;
 	if (tile_set->has_source(r_cell_data.cell.source_id)) {
 		source = *tile_set->get_source(r_cell_data.cell.source_id);
@@ -573,18 +584,30 @@ void TileMapLayer::_rendering_occluders_update_cell(CellData &r_cell_data) {
 					tile_data = atlas_source->get_tile_data(r_cell_data.cell.get_atlas_coords(), r_cell_data.cell.alternative_tile);
 				}
 
-				// Update/create occluders.
-				for (int i = 0; i < tile_set->get_occlusion_layers_count(); i++) {
-					Transform2D xform;
-					xform.set_origin(tile_map_node->map_to_local(r_cell_data.coords));
-					if (tile_data->get_occluder(i).is_valid()) {
-						RID occluder_id = rs->canvas_light_occluder_create();
-						rs->canvas_light_occluder_set_enabled(occluder_id, node_visible);
-						rs->canvas_light_occluder_set_transform(occluder_id, tile_map_node->get_global_transform() * xform);
-						rs->canvas_light_occluder_set_polygon(occluder_id, tile_map_node->get_transformed_polygon(Ref<Resource>(tile_data->get_occluder(i)), r_cell_data.cell.alternative_tile)->get_rid());
-						rs->canvas_light_occluder_attach_to_canvas(occluder_id, tile_map_node->get_canvas());
-						rs->canvas_light_occluder_set_light_mask(occluder_id, tile_set->get_occlusion_layer_light_mask(i));
-						r_cell_data.occluders.push_back(occluder_id);
+				// Create, update or clear occluders.
+				for (uint32_t occlusion_layer_index = 0; occlusion_layer_index < r_cell_data.occluders.size(); occlusion_layer_index++) {
+					Ref<OccluderPolygon2D> occluder_polygon = tile_data->get_occluder(occlusion_layer_index);
+
+					RID &occluder = r_cell_data.occluders[occlusion_layer_index];
+
+					if (occluder_polygon.is_valid()) {
+						// Create or update occluder.
+						Transform2D xform;
+						xform.set_origin(tile_map_node->map_to_local(r_cell_data.coords));
+						if (!occluder.is_valid()) {
+							occluder = rs->canvas_light_occluder_create();
+						}
+						rs->canvas_light_occluder_set_enabled(occluder, node_visible);
+						rs->canvas_light_occluder_set_transform(occluder, tile_map_node->get_global_transform() * xform);
+						rs->canvas_light_occluder_set_polygon(occluder, tile_map_node->get_transformed_polygon(Ref<Resource>(tile_data->get_occluder(occlusion_layer_index)), r_cell_data.cell.alternative_tile)->get_rid());
+						rs->canvas_light_occluder_attach_to_canvas(occluder, tile_map_node->get_canvas());
+						rs->canvas_light_occluder_set_light_mask(occluder, tile_set->get_occlusion_layer_light_mask(occlusion_layer_index));
+					} else {
+						// Clear occluder.
+						if (occluder.is_valid()) {
+							rs->free(occluder);
+							occluder = RID();
+						}
 					}
 				}
 
@@ -679,6 +702,8 @@ void TileMapLayer::_physics_update() {
 
 void TileMapLayer::_physics_notify_tilemap_change(TileMapLayer::DirtyFlags p_what) {
 	Transform2D gl_transform = tile_map_node->get_global_transform();
+	PhysicsServer2D *ps = PhysicsServer2D::get_singleton();
+
 	bool in_editor = false;
 #ifdef TOOLS_ENABLED
 	in_editor = Engine::get_singleton()->is_editor_hint();
@@ -686,6 +711,7 @@ void TileMapLayer::_physics_notify_tilemap_change(TileMapLayer::DirtyFlags p_wha
 
 	if (p_what == DIRTY_FLAGS_TILE_MAP_XFORM) {
 		if (tile_map_node->is_inside_tree() && (!tile_map_node->is_collision_animatable() || in_editor)) {
+			// Move the collisison shapes along with the TileMap.
 			for (KeyValue<Vector2i, CellData> &kv : tile_map) {
 				const CellData &cell_data = kv.value;
 
@@ -693,12 +719,13 @@ void TileMapLayer::_physics_notify_tilemap_change(TileMapLayer::DirtyFlags p_wha
 					if (body.is_valid()) {
 						Transform2D xform(0, tile_map_node->map_to_local(bodies_coords[body]));
 						xform = gl_transform * xform;
-						PhysicsServer2D::get_singleton()->body_set_state(body, PhysicsServer2D::BODY_STATE_TRANSFORM, xform);
+						ps->body_set_state(body, PhysicsServer2D::BODY_STATE_TRANSFORM, xform);
 					}
 				}
 			}
 		}
 	} else if (p_what == DIRTY_FLAGS_TILE_MAP_LOCAL_XFORM) {
+		// With collisions animatable, move the collisison shapes along with the TileMap only on local xform change (they are synchornized on physics tick instead).
 		if (tile_map_node->is_inside_tree() && tile_map_node->is_collision_animatable() && !in_editor) {
 			for (KeyValue<Vector2i, CellData> &kv : tile_map) {
 				const CellData &cell_data = kv.value;
@@ -707,7 +734,22 @@ void TileMapLayer::_physics_notify_tilemap_change(TileMapLayer::DirtyFlags p_wha
 					if (body.is_valid()) {
 						Transform2D xform(0, tile_map_node->map_to_local(bodies_coords[body]));
 						xform = gl_transform * xform;
-						PhysicsServer2D::get_singleton()->body_set_state(body, PhysicsServer2D::BODY_STATE_TRANSFORM, xform);
+						ps->body_set_state(body, PhysicsServer2D::BODY_STATE_TRANSFORM, xform);
+					}
+				}
+			}
+		}
+	} else if (p_what == DIRTY_FLAGS_TILE_MAP_IN_TREE) {
+		// Changes in the tree may cause the space to change (e.g. when reparenting to a SubViewport).
+		if (tile_map_node->is_inside_tree()) {
+			RID space = tile_map_node->get_world_2d()->get_space();
+
+			for (KeyValue<Vector2i, CellData> &kv : tile_map) {
+				const CellData &cell_data = kv.value;
+
+				for (RID body : cell_data.bodies) {
+					if (body.is_valid()) {
+						ps->body_set_space(body, space);
 					}
 				}
 			}
@@ -752,7 +794,7 @@ void TileMapLayer::_physics_update_cell(CellData &r_cell_data) {
 				}
 
 				// Free unused bodies then resize the bodies array.
-				for (unsigned int i = tile_set->get_physics_layers_count(); i < r_cell_data.bodies.size(); i++) {
+				for (uint32_t i = tile_set->get_physics_layers_count(); i < r_cell_data.bodies.size(); i++) {
 					RID body = r_cell_data.bodies[i];
 					if (body.is_valid()) {
 						bodies_coords.erase(body);
@@ -761,7 +803,7 @@ void TileMapLayer::_physics_update_cell(CellData &r_cell_data) {
 				}
 				r_cell_data.bodies.resize(tile_set->get_physics_layers_count());
 
-				for (int tile_set_physics_layer = 0; tile_set_physics_layer < tile_set->get_physics_layers_count(); tile_set_physics_layer++) {
+				for (uint32_t tile_set_physics_layer = 0; tile_set_physics_layer < (uint32_t)tile_set->get_physics_layers_count(); tile_set_physics_layer++) {
 					Ref<PhysicsMaterial> physics_material = tile_set->get_physics_layer_physics_material(tile_set_physics_layer);
 					uint32_t physics_layer = tile_set->get_physics_layer_collision_layer(tile_set_physics_layer);
 					uint32_t physics_mask = tile_set->get_physics_layer_collision_mask(tile_set_physics_layer);
@@ -899,7 +941,7 @@ void TileMapLayer::_scenes_update() {
 	const Ref<TileSet> &tile_set = tile_map_node->get_tileset();
 
 	// Check if we should cleanup everything.
-	bool forced_cleanup = in_destructor || !enabled || !tile_map_node->is_inside_tree() || !tile_set.is_valid() || !tile_map_node->is_visible_in_tree();
+	bool forced_cleanup = in_destructor || !enabled || !tile_map_node->is_inside_tree() || !tile_set.is_valid();
 
 	if (forced_cleanup) {
 		// Clean everything.
@@ -2930,7 +2972,7 @@ void TileMap::add_layer(int p_to_pos) {
 	new_layer.instantiate();
 	new_layer->set_tile_map(this);
 	layers.insert(p_to_pos, new_layer);
-	for (unsigned int i = 0; i < layers.size(); i++) {
+	for (uint32_t i = 0; i < layers.size(); i++) {
 		layers[i]->set_layer_index_in_tile_map_node(i);
 	}
 	queue_internal_update();
@@ -2949,7 +2991,7 @@ void TileMap::move_layer(int p_layer, int p_to_pos) {
 	Ref<TileMapLayer> layer = layers[p_layer];
 	layers.insert(p_to_pos, layer);
 	layers.remove_at(p_to_pos < p_layer ? p_layer + 1 : p_layer);
-	for (unsigned int i = 0; i < layers.size(); i++) {
+	for (uint32_t i = 0; i < layers.size(); i++) {
 		layers[i]->set_layer_index_in_tile_map_node(i);
 	}
 	queue_internal_update();
@@ -2969,7 +3011,7 @@ void TileMap::remove_layer(int p_layer) {
 
 	// Clear before removing the layer.
 	layers.remove_at(p_layer);
-	for (unsigned int i = 0; i < layers.size(); i++) {
+	for (uint32_t i = 0; i < layers.size(); i++) {
 		layers[i]->set_layer_index_in_tile_map_node(i);
 	}
 	queue_internal_update();
@@ -3175,7 +3217,7 @@ Vector2i TileMap::get_coords_for_body_rid(RID p_physics_body) {
 }
 
 int TileMap::get_layer_for_body_rid(RID p_physics_body) {
-	for (unsigned int i = 0; i < layers.size(); i++) {
+	for (uint32_t i = 0; i < layers.size(); i++) {
 		if (layers[i]->has_body_rid(p_physics_body)) {
 			return i;
 		}
@@ -3225,7 +3267,7 @@ Rect2 TileMap::_edit_get_rect() const {
 	bool changed = false;
 	Rect2 rect = layers[0]->get_rect(changed);
 	any_changed |= changed;
-	for (unsigned int i = 1; i < layers.size(); i++) {
+	for (uint32_t i = 1; i < layers.size(); i++) {
 		rect = rect.merge(layers[i]->get_rect(changed));
 		any_changed |= changed;
 	}
@@ -3272,8 +3314,9 @@ bool TileMap::_set(const StringName &p_name, const Variant &p_value) {
 			format = (TileMapLayer::DataFormat)(p_value.operator int64_t()); // Set format used for loading.
 			return true;
 		}
+	}
 #ifndef DISABLE_DEPRECATED
-	} else if (p_name == "tile_data") { // Kept for compatibility reasons.
+	else if (p_name == "tile_data") { // Kept for compatibility reasons.
 		if (p_value.is_array()) {
 			if (layers.size() == 0) {
 				Ref<TileMapLayer> new_layer;
@@ -3287,10 +3330,12 @@ bool TileMap::_set(const StringName &p_name, const Variant &p_value) {
 			return true;
 		}
 		return false;
-	} else if (p_name == "rendering_quadrant_size") {
+	} else if (p_name == "cell_quadrant_size") {
 		set_rendering_quadrant_size(p_value);
+		return true;
+	}
 #endif // DISABLE_DEPRECATED
-	} else if (components.size() == 2 && components[0].begins_with("layer_") && components[0].trim_prefix("layer_").is_valid_int()) {
+	else if (components.size() == 2 && components[0].begins_with("layer_") && components[0].trim_prefix("layer_").is_valid_int()) {
 		int index = components[0].trim_prefix("layer_").to_int();
 		if (index < 0) {
 			return false;
@@ -3344,7 +3389,14 @@ bool TileMap::_get(const StringName &p_name, Variant &r_ret) const {
 	if (p_name == "format") {
 		r_ret = TileMapLayer::FORMAT_MAX - 1; // When saving, always save highest format.
 		return true;
-	} else if (components.size() == 2 && components[0].begins_with("layer_") && components[0].trim_prefix("layer_").is_valid_int()) {
+	}
+#ifndef DISABLE_DEPRECATED
+	else if (p_name == "cell_quadrant_size") { // Kept for compatibility reasons.
+		r_ret = get_rendering_quadrant_size();
+		return true;
+	}
+#endif
+	else if (components.size() == 2 && components[0].begins_with("layer_") && components[0].trim_prefix("layer_").is_valid_int()) {
 		int index = components[0].trim_prefix("layer_").to_int();
 		if (index < 0 || index >= (int)layers.size()) {
 			return false;
@@ -3388,7 +3440,7 @@ void TileMap::_get_property_list(List<PropertyInfo> *p_list) const {
 		p_list->push_back(PropertyInfo(m_type, property_name, PROPERTY_HINT_NONE, m_hint, (get(property_name) == property_get_revert(property_name)) ? PROPERTY_USAGE_EDITOR : PROPERTY_USAGE_DEFAULT)); \
 	}
 
-	for (unsigned int i = 0; i < layers.size(); i++) {
+	for (uint32_t i = 0; i < layers.size(); i++) {
 		MAKE_LAYER_PROPERTY(Variant::STRING, "name", "");
 		MAKE_LAYER_PROPERTY(Variant::BOOL, "enabled", "");
 		MAKE_LAYER_PROPERTY(Variant::COLOR, "modulate", "");

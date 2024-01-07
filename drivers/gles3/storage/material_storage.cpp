@@ -2284,23 +2284,25 @@ LocalVector<ShaderGLES3::TextureUniformData> get_texture_uniform_data(const Vect
 /* Canvas Shader Data */
 
 void CanvasShaderData::set_code(const String &p_code) {
-	// compile the shader
+	// Initialize and compile the shader.
 
 	code = p_code;
 	valid = false;
 	ubo_size = 0;
 	uniforms.clear();
+
 	uses_screen_texture = false;
 	uses_screen_texture_mipmaps = false;
 	uses_sdf = false;
 	uses_time = false;
 
 	if (code.is_empty()) {
-		return; //just invalid, but no error
+		return; // Just invalid, but no error.
 	}
 
 	ShaderCompiler::GeneratedCode gen_code;
 
+	// Actual enum set further down after compilation.
 	int blend_modei = BLEND_MODE_MIX;
 
 	ShaderCompiler::IdentifierActions actions;
@@ -2327,8 +2329,8 @@ void CanvasShaderData::set_code(const String &p_code) {
 	}
 
 	blend_mode = BlendMode(blend_modei);
-	uses_screen_texture_mipmaps = gen_code.uses_screen_texture_mipmaps;
 	uses_screen_texture = gen_code.uses_screen_texture;
+	uses_screen_texture_mipmaps = gen_code.uses_screen_texture_mipmaps;
 
 #if 0
 	print_line("**compiling shader:");
@@ -2440,19 +2442,22 @@ GLES3::MaterialData *GLES3::_create_canvas_material_func(ShaderData *p_shader) {
 /* Particles SHADER */
 
 void ParticlesShaderData::set_code(const String &p_code) {
-	//compile
+	// Initialize and compile the shader.
 
 	code = p_code;
 	valid = false;
 	ubo_size = 0;
 	uniforms.clear();
+
 	uses_collision = false;
+	uses_time = false;
 
 	if (code.is_empty()) {
-		return; //just invalid, but no error
+		return; // Just invalid, but no error.
 	}
 
 	ShaderCompiler::GeneratedCode gen_code;
+
 	ShaderCompiler::IdentifierActions actions;
 	actions.entry_point_stages["start"] = ShaderCompiler::STAGE_VERTEX;
 	actions.entry_point_stages["process"] = ShaderCompiler::STAGE_VERTEX;

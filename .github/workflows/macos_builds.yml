@@ -5,7 +5,7 @@ on:
 # Global Settings
 env:
   # Used for the cache key. Add version suffix to force clean build.
-  PIXEL_BASE_BRANCH: '4.2'
+  PIXEL_BASE_BRANCH: 4.2
   SCONSFLAGS: verbose=yes optimize=speed_trace use_static_cpp=yes lto=auto
 
 concurrency:

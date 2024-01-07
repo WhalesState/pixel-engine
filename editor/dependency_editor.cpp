@@ -588,9 +588,6 @@ void DependencyRemoveDialog::ok_pressed() {
 		if (files_to_delete[i] == String(GLOBAL_GET("application/boot_splash/image"))) {
 			ProjectSettings::get_singleton()->set("application/boot_splash/image", "");
 		}
-		if (files_to_delete[i] == String(GLOBAL_GET("rendering/environment/defaults/default_environment"))) {
-			ProjectSettings::get_singleton()->set("rendering/environment/defaults/default_environment", "");
-		}
 		if (files_to_delete[i] == String(GLOBAL_GET("display/mouse_cursor/custom_image"))) {
 			ProjectSettings::get_singleton()->set("display/mouse_cursor/custom_image", "");
 		}

@@ -77,7 +77,7 @@ public:
 	Ref<RenderSceneBuffers> render_buffers_create() override { return Ref<RenderSceneBuffers>(); }
 
 	bool free(RID p_rid) override {
-		return true;
+		return false;
 	}
 	void update() override {}
 

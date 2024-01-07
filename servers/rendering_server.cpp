@@ -1016,7 +1016,7 @@ Error RenderingServer::mesh_create_surface_data_from_arrays(SurfaceData *r_surfa
 					array_len = v3.size();
 				} break;
 				default: {
-					ERR_FAIL_V(ERR_INVALID_DATA);
+					ERR_FAIL_V_MSG(ERR_INVALID_DATA, "Vertex array must be a PackedVector2Array or PackedVector3Array.");
 				} break;
 			}
 			ERR_FAIL_COND_V(array_len == 0, ERR_INVALID_DATA);
@@ -1037,7 +1037,7 @@ Error RenderingServer::mesh_create_surface_data_from_arrays(SurfaceData *r_surfa
 					}
 				} break;
 				default: {
-					ERR_FAIL_V(ERR_INVALID_DATA);
+					ERR_FAIL_V_MSG(ERR_INVALID_DATA, "Bones array must be a PackedInt32Array.");
 				} break;
 			}
 		} else if (i == RS::ARRAY_INDEX) {
@@ -2027,6 +2027,15 @@ void RenderingServer::_bind_methods() {
 	BIND_BITFIELD_FLAG(ARRAY_FLAG_USE_8_BONE_WEIGHTS);
 	BIND_BITFIELD_FLAG(ARRAY_FLAG_USES_EMPTY_VERTEX_ARRAY);
 
+	BIND_BITFIELD_FLAG(ARRAY_FLAG_COMPRESS_ATTRIBUTES);
+
+	BIND_BITFIELD_FLAG(ARRAY_FLAG_FORMAT_VERSION_BASE);
+	BIND_BITFIELD_FLAG(ARRAY_FLAG_FORMAT_VERSION_SHIFT);
+	BIND_BITFIELD_FLAG(ARRAY_FLAG_FORMAT_VERSION_1);
+	BIND_BITFIELD_FLAG(ARRAY_FLAG_FORMAT_VERSION_2);
+	BIND_BITFIELD_FLAG(ARRAY_FLAG_FORMAT_CURRENT_VERSION);
+	BIND_BITFIELD_FLAG(ARRAY_FLAG_FORMAT_VERSION_MASK);
+
 	BIND_ENUM_CONSTANT(PRIMITIVE_POINTS);
 	BIND_ENUM_CONSTANT(PRIMITIVE_LINES);
 	BIND_ENUM_CONSTANT(PRIMITIVE_LINE_STRIP);
@@ -2658,8 +2667,8 @@ void RenderingServer::init() {
 	GLOBAL_DEF("rendering/shading/overrides/force_lambert_over_burley", false);
 	GLOBAL_DEF("rendering/shading/overrides/force_lambert_over_burley.mobile", true);
 
-	GLOBAL_DEF("rendering/driver/depth_prepass/enable", true);
-	GLOBAL_DEF("rendering/driver/depth_prepass/disable_for_vendors", "PowerVR,Mali,Adreno,Apple");
+	GLOBAL_DEF_RST("rendering/driver/depth_prepass/enable", true);
+	GLOBAL_DEF_RST("rendering/driver/depth_prepass/disable_for_vendors", "PowerVR,Mali,Adreno,Apple");
 
 	GLOBAL_DEF_RST("rendering/textures/default_filters/use_nearest_mipmap_filter", false);
 	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "rendering/textures/default_filters/anisotropic_filtering_level", PROPERTY_HINT_ENUM, String::utf8("Disabled (Fastest),2× (Faster),4× (Fast),8× (Average),16× (Slow)")), 2);

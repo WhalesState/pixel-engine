@@ -57,7 +57,6 @@ enum RenderListType {
 enum PassMode {
 	PASS_MODE_COLOR,
 	PASS_MODE_COLOR_TRANSPARENT,
-	PASS_MODE_COLOR_ADDITIVE,
 	PASS_MODE_SHADOW,
 	PASS_MODE_DEPTH,
 };
@@ -227,14 +226,14 @@ private:
 		bool using_projectors = false;
 		bool using_softshadows = false;
 
-		uint32_t omni_light_count = 0;
-		LocalVector<RID> omni_lights;
-		uint32_t spot_light_count = 0;
-		LocalVector<RID> spot_lights;
+		uint32_t paired_omni_light_count = 0;
+		uint32_t paired_spot_light_count = 0;
+		LocalVector<RID> paired_omni_lights;
+		LocalVector<RID> paired_spot_lights;
 		LocalVector<uint32_t> omni_light_gl_cache;
 		LocalVector<uint32_t> spot_light_gl_cache;
 
-		//used during setup
+		// Used during setup.
 		GeometryInstanceSurface *surface_caches = nullptr;
 		SelfList<GeometryInstanceGLES3> dirty_list_element;
 

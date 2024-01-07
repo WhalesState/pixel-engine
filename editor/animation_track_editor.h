@@ -408,7 +408,7 @@ class AnimationTrackEditor : public VBoxContainer {
 	void _check_bezier_exist();
 
 	void _name_limit_changed();
-	void _timeline_changed(float p_new_pos, bool p_drag, bool p_timeline_only);
+	void _timeline_changed(float p_new_pos, bool p_timeline_only);
 	void _track_remove_request(int p_track);
 	void _animation_track_remove_request(int p_track, Ref<Animation> p_from_animation);
 	void _track_grab_focus(int p_track);
@@ -646,8 +646,6 @@ public:
 	void set_anim_pos(float p_pos);
 	void insert_node_value_key(Node *p_node, const String &p_property, const Variant &p_value, bool p_only_if_exists = false);
 	void insert_value_key(const String &p_property, const Variant &p_value, bool p_advance);
-	// void insert_transform_key(Node3D *p_node, const String &p_sub, const Animation::TrackType p_type, const Variant p_value);
-	// bool has_track(Node3D *p_node, const String &p_sub, const Animation::TrackType p_type);
 	void make_insert_queue();
 	void commit_insert_queue();
 

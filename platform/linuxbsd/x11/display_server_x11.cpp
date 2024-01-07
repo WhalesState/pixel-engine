@@ -3861,7 +3861,7 @@ void DisplayServerX11::_xim_preedit_draw_callback(::XIM xim, ::XPointer client_d
 			ds->im_selection = Point2i();
 		}
 
-		OS_Unix::get_singleton()->get_main_loop()->notification(MainLoop::NOTIFICATION_OS_IME_UPDATE);
+		OS_Unix::get_singleton()->get_main_loop()->call_deferred(SNAME("notification"), MainLoop::NOTIFICATION_OS_IME_UPDATE);
 	}
 }
 
