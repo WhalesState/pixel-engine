@@ -523,7 +523,6 @@ bool SceneTree::process(double p_time) {
 
 	_call_idle_callbacks();
 
-
 	return _quit;
 }
 
