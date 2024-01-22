@@ -151,6 +151,7 @@ Size2 PopupMenu::_get_item_icon_size(int p_idx) const {
 
 Size2 PopupMenu::_get_contents_minimum_size() const {
 	Size2 minsize = theme_cache.panel_style->get_minimum_size(); // Accounts for margin in the margin container
+	minsize += scroll_container->get_theme_stylebox("panel")->get_minimum_size(); // Accounts for margin in the Scroll container
 	minsize.x += scroll_container->get_v_scroll_bar()->get_size().width * 2; // Adds a buffer so that the scrollbar does not render over the top of content
 
 	float max_w = 0.0;
