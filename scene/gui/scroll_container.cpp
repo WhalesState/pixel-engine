@@ -67,14 +67,16 @@ Size2 ScrollContainer::get_minimum_size() const {
 		min_size.y = MAX(min_size.y, largest_child_min_size.y);
 	}
 
-	bool h_scroll_show = horizontal_scroll_mode == SCROLL_MODE_SHOW_ALWAYS || (horizontal_scroll_mode == SCROLL_MODE_AUTO && largest_child_min_size.x > min_size.x);
-	bool v_scroll_show = vertical_scroll_mode == SCROLL_MODE_SHOW_ALWAYS || (vertical_scroll_mode == SCROLL_MODE_AUTO && largest_child_min_size.y > min_size.y);
+	if (!ignore_scroll_bar_min_size) {
+		bool h_scroll_show = horizontal_scroll_mode == SCROLL_MODE_SHOW_ALWAYS || (horizontal_scroll_mode == SCROLL_MODE_AUTO && largest_child_min_size.x > min_size.x);
+		bool v_scroll_show = vertical_scroll_mode == SCROLL_MODE_SHOW_ALWAYS || (vertical_scroll_mode == SCROLL_MODE_AUTO && largest_child_min_size.y > min_size.y);
 
-	if (h_scroll_show && h_scroll->get_parent() == this) {
-		min_size.y += h_scroll->get_minimum_size().y;
-	}
-	if (v_scroll_show && v_scroll->get_parent() == this) {
-		min_size.x += v_scroll->get_minimum_size().x;
+		if (h_scroll_show && h_scroll->get_parent() == this) {
+			min_size.y += h_scroll->get_minimum_size().y;
+		}
+		if (v_scroll_show && v_scroll->get_parent() == this) {
+			min_size.x += v_scroll->get_minimum_size().x;
+		}
 	}
 
 	min_size += theme_cache.panel_style->get_minimum_size();
@@ -537,6 +539,15 @@ void ScrollContainer::set_follow_focus(bool p_follow) {
 	follow_focus = p_follow;
 }
 
+void ScrollContainer::set_ignore_scroll_bar_min_size(bool p_ignore) {
+	ignore_scroll_bar_min_size = p_ignore;
+	update_minimum_size();
+}
+
+bool ScrollContainer::is_ignoring_scroll_bar_min_size() const {
+	return ignore_scroll_bar_min_size;
+}
+
 PackedStringArray ScrollContainer::get_configuration_warnings() const {
 	PackedStringArray warnings = Container::get_configuration_warnings();
 
@@ -599,6 +610,9 @@ void ScrollContainer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_follow_focus", "enabled"), &ScrollContainer::set_follow_focus);
 	ClassDB::bind_method(D_METHOD("is_following_focus"), &ScrollContainer::is_following_focus);
 
+	ClassDB::bind_method(D_METHOD("set_ignore_scroll_bar_min_size", "ignore"), &ScrollContainer::set_ignore_scroll_bar_min_size);
+	ClassDB::bind_method(D_METHOD("is_ignoring_scroll_bar_min_size"), &ScrollContainer::is_ignoring_scroll_bar_min_size);
+
 	ClassDB::bind_method(D_METHOD("get_h_scroll_bar"), &ScrollContainer::get_h_scroll_bar);
 	ClassDB::bind_method(D_METHOD("get_v_scroll_bar"), &ScrollContainer::get_v_scroll_bar);
 	ClassDB::bind_method(D_METHOD("ensure_control_visible", "control"), &ScrollContainer::ensure_control_visible);
@@ -607,6 +621,7 @@ void ScrollContainer::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("scroll_ended"));
 
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "follow_focus"), "set_follow_focus", "is_following_focus");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ignore_scroll_bar_min_size"), "set_ignore_scroll_bar_min_size", "is_ignoring_scroll_bar_min_size");
 
 	ADD_GROUP("Scroll", "scroll_");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "scroll_horizontal", PROPERTY_HINT_NONE, "suffix:px"), "set_h_scroll", "get_h_scroll");
