@@ -78,8 +78,9 @@ Size2 ScrollContainer::get_minimum_size() const {
 			min_size.x += v_scroll->get_minimum_size().x;
 		}
 	}
-
-	min_size += theme_cache.panel_style->get_minimum_size();
+	if (!ignore_panel_min_size) {
+		min_size += theme_cache.panel_style->get_minimum_size();
+	}
 	return min_size;
 }
 
@@ -548,6 +549,15 @@ bool ScrollContainer::is_ignoring_scroll_bar_min_size() const {
 	return ignore_scroll_bar_min_size;
 }
 
+void ScrollContainer::set_ignore_panel_min_size(bool p_ignore) {
+	ignore_panel_min_size = p_ignore;
+	update_minimum_size();
+}
+
+bool ScrollContainer::is_ignoring_panel_min_size() const {
+	return ignore_panel_min_size;
+}
+
 PackedStringArray ScrollContainer::get_configuration_warnings() const {
 	PackedStringArray warnings = Container::get_configuration_warnings();
 
@@ -613,6 +623,9 @@ void ScrollContainer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_ignore_scroll_bar_min_size", "ignore"), &ScrollContainer::set_ignore_scroll_bar_min_size);
 	ClassDB::bind_method(D_METHOD("is_ignoring_scroll_bar_min_size"), &ScrollContainer::is_ignoring_scroll_bar_min_size);
 
+	ClassDB::bind_method(D_METHOD("set_ignore_panel_min_size", "ignore"), &ScrollContainer::set_ignore_panel_min_size);
+	ClassDB::bind_method(D_METHOD("is_ignoring_panel_min_size"), &ScrollContainer::is_ignoring_panel_min_size);
+
 	ClassDB::bind_method(D_METHOD("get_h_scroll_bar"), &ScrollContainer::get_h_scroll_bar);
 	ClassDB::bind_method(D_METHOD("get_v_scroll_bar"), &ScrollContainer::get_v_scroll_bar);
 	ClassDB::bind_method(D_METHOD("ensure_control_visible", "control"), &ScrollContainer::ensure_control_visible);
@@ -622,6 +635,7 @@ void ScrollContainer::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "follow_focus"), "set_follow_focus", "is_following_focus");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ignore_scroll_bar_min_size"), "set_ignore_scroll_bar_min_size", "is_ignoring_scroll_bar_min_size");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ignore_panel_min_size"), "set_ignore_panel_min_size", "is_ignoring_panel_min_size");
 
 	ADD_GROUP("Scroll", "scroll_");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "scroll_horizontal", PROPERTY_HINT_NONE, "suffix:px"), "set_h_scroll", "get_h_scroll");

@@ -67,8 +67,9 @@ private:
 	ScrollMode vertical_scroll_mode = SCROLL_MODE_AUTO;
 
 	int deadzone = 0;
-	bool follow_focus = false;
+	bool follow_focus = true;
 	bool ignore_scroll_bar_min_size = true;
+	bool ignore_panel_min_size = true;
 
 	struct ThemeCache {
 		Ref<StyleBox> panel_style;
@@ -118,6 +119,9 @@ public:
 
 	void set_ignore_scroll_bar_min_size(bool p_ignore);
 	bool is_ignoring_scroll_bar_min_size() const;
+
+	void set_ignore_panel_min_size(bool p_ignore);
+	bool is_ignoring_panel_min_size() const;
 
 	HScrollBar *get_h_scroll_bar();
 	VScrollBar *get_v_scroll_bar();
