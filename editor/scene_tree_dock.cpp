@@ -3319,8 +3319,7 @@ void SceneTreeDock::_filter_option_selected(int p_option) {
 
 	if (!filter_parameter.is_empty()) {
 		set_filter((get_filter() + " " + filter_parameter + ":").strip_edges());
-		filter->set_caret_column(filter->get_text().length());
-		filter->grab_focus();
+		filter->grab_focus_edit(true);
 	}
 }
 

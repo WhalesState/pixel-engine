@@ -1559,7 +1559,7 @@ void SceneTreeDialog::_notification(int p_what) {
 				tree->update_tree();
 
 				// Select the search bar by default.
-				filter->call_deferred(SNAME("grab_focus"));
+				filter->call_deferred(SNAME("grab_focus_edit"));
 			}
 		} break;
 

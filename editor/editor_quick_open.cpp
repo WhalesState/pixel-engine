@@ -57,7 +57,7 @@ void EditorQuickOpen::popup_dialog(const String &p_base, bool p_enable_multi, bo
 	} else {
 		search_box->clear(); // This will emit text_changed.
 	}
-	search_box->grab_focus();
+	search_box->grab_focus_edit();
 }
 
 void EditorQuickOpen::_build_search_cache(EditorFileSystemDirectory *p_efsd) {

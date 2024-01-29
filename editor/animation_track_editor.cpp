@@ -2805,7 +2805,7 @@ void AnimationTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 		path_popup->set_position(get_screen_position() + path_rect.position - theme_ofs);
 		path_popup->set_size(path_rect.size);
 		path_popup->popup();
-		path->grab_focus();
+		path->grab_focus_edit();
 		path->set_caret_column(path->get_text().length());
 		clicking_on_name = false;
 	}
@@ -4668,7 +4668,7 @@ void AnimationTrackEditor::_add_track(int p_type) {
 	adding_track_type = p_type;
 	pick_track->popup_scenetree_dialog();
 	pick_track->get_filter_line_edit()->clear();
-	pick_track->get_filter_line_edit()->grab_focus();
+	pick_track->get_filter_line_edit()->grab_focus_edit();
 }
 
 void AnimationTrackEditor::_new_track_property_selected(String p_name) {

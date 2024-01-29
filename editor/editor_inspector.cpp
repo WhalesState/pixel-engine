@@ -1646,8 +1646,7 @@ void EditorInspectorArray::_rmb_popup_id_pressed(int p_id) {
 			new_size_spin_box->set_value(count);
 			resize_dialog->get_ok_button()->set_disabled(true);
 			resize_dialog->popup_centered(Size2(250, 0) * EDSCALE);
-			new_size_spin_box->get_line_edit()->grab_focus();
-			new_size_spin_box->get_line_edit()->select_all();
+			new_size_spin_box->get_line_edit()->grab_focus_edit(true);
 			break;
 		default:
 			break;
@@ -4178,7 +4177,7 @@ void EditorInspector::_show_add_meta_dialog() {
 	}
 
 	add_meta_dialog->popup_centered();
-	add_meta_name->grab_focus();
+	add_meta_name->grab_focus_edit();
 	add_meta_name->set_text("");
 	validation_panel->update();
 }

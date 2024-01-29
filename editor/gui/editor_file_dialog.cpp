@@ -63,8 +63,8 @@ void EditorFileDialog::popup_file_dialog() {
 void EditorFileDialog::_focus_file_text() {
 	int lp = file->get_text().rfind(".");
 	if (lp != -1) {
+		file->grab_focus_edit();
 		file->select(0, lp);
-		file->grab_focus();
 	}
 }
 
@@ -218,7 +218,7 @@ void EditorFileDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 				handled = true;
 			}
 			if (ED_IS_SHORTCUT("file_dialog/focus_path", p_event)) {
-				dir->grab_focus();
+				dir->grab_focus_edit();
 				handled = true;
 			}
 			if (ED_IS_SHORTCUT("file_dialog/move_favorite_up", p_event)) {
@@ -312,7 +312,7 @@ void EditorFileDialog::_post_popup() {
 	set_current_dir(current);
 
 	if (mode == FILE_MODE_SAVE_FILE) {
-		file->grab_focus();
+		file->grab_focus_edit();
 	} else {
 		item_list->grab_focus();
 	}
@@ -1203,7 +1203,7 @@ void EditorFileDialog::_make_dir_confirm() {
 
 void EditorFileDialog::_make_dir() {
 	makedialog->popup_centered(Size2(250, 80) * EDSCALE);
-	makedirname->grab_focus();
+	makedirname->grab_focus_edit();
 }
 
 void EditorFileDialog::_delete_items() {

@@ -92,8 +92,7 @@ void EditorSettingsDialog::popup_edit_settings() {
 	inspector->edit(EditorSettings::get_singleton());
 	inspector->get_inspector()->update_tree();
 
-	search_box->select_all();
-	search_box->grab_focus();
+	search_box->grab_focus_edit(true);
 
 	_update_shortcuts();
 	set_process_shortcut_input(true);
@@ -674,8 +673,7 @@ void EditorSettingsDialog::_focus_current_search_box() {
 	}
 
 	if (current_search_box) {
-		current_search_box->grab_focus();
-		current_search_box->select_all();
+		current_search_box->grab_focus_edit(true);
 	}
 }
 

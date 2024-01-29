@@ -301,7 +301,7 @@ void ProjectDialog::_file_selected(const String &p_path) {
 	project_path->set_text(sp);
 	_path_text_changed(sp);
 	if (p.ends_with(".zip")) {
-		install_path->call_deferred(SNAME("grab_focus"));
+		install_path->call_deferred(SNAME("grab_focus_edit"));
 	} else {
 		get_ok_button()->call_deferred(SNAME("grab_focus"));
 	}
@@ -666,7 +666,7 @@ void ProjectDialog::show_dialog() {
 			_text_changed(cur_name);
 		}
 
-		project_name->call_deferred(SNAME("grab_focus"));
+		project_name->call_deferred(SNAME("grab_focus_edit"));
 
 		create_dir->hide();
 
@@ -703,7 +703,7 @@ void ProjectDialog::show_dialog() {
 			name_container->hide();
 			install_path_container->hide();
 			default_files_container->hide();
-			project_path->grab_focus();
+			project_path->grab_focus_edit();
 
 		} else if (mode == MODE_NEW) {
 			set_title(TTR("Create New Project"));
@@ -711,8 +711,7 @@ void ProjectDialog::show_dialog() {
 			name_container->show();
 			install_path_container->hide();
 			default_files_container->show();
-			project_name->call_deferred(SNAME("grab_focus"));
-			project_name->call_deferred(SNAME("select_all"));
+			project_name->call_deferred(SNAME("grab_focus_edit"), true);
 
 		} else if (mode == MODE_INSTALL) {
 			set_title(TTR("Install Project:") + " " + zip_title);
@@ -721,7 +720,7 @@ void ProjectDialog::show_dialog() {
 			name_container->show();
 			install_path_container->hide();
 			default_files_container->hide();
-			project_path->grab_focus();
+			project_path->grab_focus_edit();
 		}
 
 		_test_path();
@@ -1888,7 +1887,7 @@ void ProjectManager::_notification(int p_what) {
 			if (_project_list->get_project_count() >= 1) {
 				// Focus on the search box immediately to allow the user
 				// to search without having to reach for their mouse
-				search_box->grab_focus();
+				search_box->grab_focus_edit();
 			}
 #endif
 
@@ -2044,7 +2043,7 @@ void ProjectManager::shortcut_input(const Ref<InputEvent> &p_ev) {
 			} break;
 			case Key::F: {
 				if (k->is_command_or_control_pressed()) {
-					this->search_box->grab_focus();
+					this->search_box->grab_focus_edit();
 				} else {
 					keycode_handled = false;
 				}
@@ -2590,7 +2589,7 @@ void ProjectManager::_on_tab_changed(int p_tab) {
 	if (p_tab == 0) { // Projects
 		// Automatically grab focus when the user moves from the Templates tab
 		// back to the Projects tab.
-		search_box->grab_focus();
+		search_box->grab_focus_edit();
 	}
 
 	// The Templates tab's search field is focused on display in the asset

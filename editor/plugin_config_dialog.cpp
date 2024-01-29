@@ -134,7 +134,7 @@ void PluginConfigDialog::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			if (is_visible()) {
-				name_edit->grab_focus();
+				name_edit->grab_focus_edit();
 			}
 		} break;
 

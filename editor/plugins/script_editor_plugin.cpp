@@ -337,7 +337,7 @@ void ScriptEditorQuickOpen::popup_dialog(const Vector<String> &p_functions, bool
 	} else {
 		search_box->clear();
 	}
-	search_box->grab_focus();
+	search_box->grab_focus_edit();
 	functions = p_functions;
 	_update_search();
 }

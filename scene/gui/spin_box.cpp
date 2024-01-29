@@ -46,7 +46,7 @@ void SpinBox::_update_text(bool p_keep_line_edit) {
 		value = TS->format_number(value);
 	}
 
-	if (!line_edit->has_focus()) {
+	if (!line_edit->is_focus_edit()) {
 		if (!prefix.is_empty()) {
 			value = prefix + " " + value;
 		}
@@ -208,34 +208,21 @@ void SpinBox::gui_input(const Ref<InputEvent> &p_event) {
 	}
 }
 
-void SpinBox::_line_edit_focus_enter() {
-	int col = line_edit->get_caret_column();
-	_update_text();
-	line_edit->set_caret_column(col);
-
-	// LineEdit text might change and it clears any selection. Have to re-select here.
-	if (line_edit->is_select_all_on_focus() && !Input::get_singleton()->is_mouse_button_pressed(MouseButton::LEFT)) {
-		line_edit->select_all();
-	}
-}
-
-void SpinBox::_line_edit_focus_exit() {
-	// Discontinue because the focus_exit was caused by left-clicking the arrows.
-	const Viewport *viewport = get_viewport();
-	if (!viewport || viewport->gui_get_focus_owner() == get_line_edit()) {
-		return;
-	}
-	// Discontinue because the focus_exit was caused by right-click context menu.
-	if (line_edit->is_menu_visible()) {
-		return;
-	}
-	// Discontinue because the focus_exit was caused by canceling.
-	if (Input::get_singleton()->is_action_pressed("ui_cancel")) {
+void SpinBox::_line_edit_focus_edit_toggled(bool toggled_on) {
+	if (toggled_on) {
+		int col = line_edit->get_caret_column();
 		_update_text();
-		return;
-	}
+		line_edit->set_caret_column(col);
 
-	_text_submitted(line_edit->get_text());
+		// LineEdit text might change and it clears any selection. Have to re-select here.
+		if (line_edit->is_select_all_on_focus() && !Input::get_singleton()->is_mouse_button_pressed(MouseButton::LEFT)) {
+			line_edit->select_all();
+		}
+	} else {
+		line_edit->deselect();
+		_update_text();
+		_text_submitted(line_edit->get_text());
+	}
 }
 
 inline void SpinBox::_adjust_width_for_icon(const Ref<Texture2D> &icon) {
@@ -408,8 +395,7 @@ SpinBox::SpinBox() {
 	line_edit->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_LEFT);
 
 	line_edit->connect("text_submitted", callable_mp(this, &SpinBox::_text_submitted), CONNECT_DEFERRED);
-	line_edit->connect("focus_entered", callable_mp(this, &SpinBox::_line_edit_focus_enter), CONNECT_DEFERRED);
-	line_edit->connect("focus_exited", callable_mp(this, &SpinBox::_line_edit_focus_exit), CONNECT_DEFERRED);
+	line_edit->connect("focus_edit_toggled", callable_mp(this, &SpinBox::_line_edit_focus_edit_toggled), CONNECT_DEFERRED);
 	line_edit->connect("gui_input", callable_mp(this, &SpinBox::_line_edit_input));
 
 	range_click_timer = memnew(Timer);

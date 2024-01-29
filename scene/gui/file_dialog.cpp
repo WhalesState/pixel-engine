@@ -48,10 +48,10 @@ void FileDialog::popup_file_dialog() {
 void FileDialog::_focus_file_text() {
 	int lp = file->get_text().rfind(".");
 	if (lp != -1) {
-		file->select(0, lp);
 		if (file->is_inside_tree() && !get_tree()->is_node_being_edited(file)) {
-			file->grab_focus();
+			file->grab_focus_edit();
 		}
+		file->select(0, lp);
 	}
 }
 
@@ -281,7 +281,7 @@ void FileDialog::_save_confirm_pressed() {
 void FileDialog::_post_popup() {
 	ConfirmationDialog::_post_popup();
 	if (mode == FILE_MODE_SAVE_FILE) {
-		file->grab_focus();
+		file->grab_focus_edit();
 	} else {
 		tree->grab_focus();
 	}
@@ -955,7 +955,7 @@ void FileDialog::_make_dir_confirm() {
 
 void FileDialog::_make_dir() {
 	makedialog->popup_centered(Size2(250, 80));
-	makedirname->grab_focus();
+	makedirname->grab_focus_edit();
 }
 
 void FileDialog::_select_drive(int p_idx) {
