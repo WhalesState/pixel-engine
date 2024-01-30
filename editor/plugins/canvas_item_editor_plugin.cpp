@@ -5964,6 +5964,7 @@ CanvasItemEditorViewport::CanvasItemEditorViewport(CanvasItemEditor *p_canvas_it
 	target_node = nullptr;
 	canvas_item_editor = p_canvas_item_editor;
 	preview_node = memnew(Control);
+	preview_node->set_process_mode(Node::PROCESS_MODE_DISABLED);
 
 	accept = memnew(AcceptDialog);
 	EditorNode::get_singleton()->get_gui_base()->add_child(accept);

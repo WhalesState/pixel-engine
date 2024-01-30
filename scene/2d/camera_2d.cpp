@@ -34,11 +34,11 @@
 #include "scene/main/window.h"
 
 bool Camera2D::_is_editing_in_editor() const {
-#ifdef TOOLS_ENABLED
-	return is_part_of_edited_scene();
-#else
+	if (Engine::get_singleton()->is_editor_hint() && is_inside_tree() && get_tree()->get_edited_scene_root()) {
+		return get_tree()->get_edited_scene_root()->get_viewport() == get_viewport() ||
+				get_tree()->get_edited_scene_root()->is_ancestor_of(this);
+	}
 	return false;
-#endif // TOOLS_ENABLED
 }
 
 void Camera2D::_update_scroll() {
