@@ -140,7 +140,6 @@
 #include "scene/resources/audio_stream_polyphonic.h"
 #include "scene/resources/audio_stream_wav.h"
 #include "scene/resources/bit_map.h"
-#include "scene/resources/bone_map.h"
 #include "scene/resources/camera_texture.h"
 #include "scene/resources/capsule_shape_2d.h"
 #include "scene/resources/circle_shape_2d.h"
@@ -175,7 +174,6 @@
 #include "scene/resources/skeleton_modification_2d_stackholder.h"
 #include "scene/resources/skeleton_modification_2d_twoboneik.h"
 #include "scene/resources/skeleton_modification_stack_2d.h"
-#include "scene/resources/skeleton_profile.h"
 #include "scene/resources/style_box.h"
 #include "scene/resources/style_box_flat.h"
 #include "scene/resources/style_box_line.h"
@@ -688,10 +686,6 @@ void register_scene_types() {
 	GDREGISTER_CLASS(PolygonPathFinder);
 	GDREGISTER_CLASS(BitMap);
 	GDREGISTER_CLASS(Gradient);
-
-	GDREGISTER_CLASS(SkeletonProfile);
-	GDREGISTER_CLASS(SkeletonProfileHumanoid);
-	GDREGISTER_CLASS(BoneMap);
 
 	OS::get_singleton()->yield(); // may take time to init
 

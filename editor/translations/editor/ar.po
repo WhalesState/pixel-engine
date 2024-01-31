@@ -9755,9 +9755,6 @@ msgstr "لا يمكن إنشاء هيكل عظمي مادي لعقدة Skeleton3
 msgid "Create physical bones"
 msgstr "إنشاء عظام مادية"
 
-msgid "Cannot export a SkeletonProfile for a Skeleton3D node with no bones."
-msgstr "لا يمكن تصدير ملف تعريف للهيكل العظمي لعقدة Skeleton3D بدون عظام."
-
 msgid "Export Skeleton Profile As..."
 msgstr "تصدير ملف تعريف الهيكل العظمي ك..."
 
