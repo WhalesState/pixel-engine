@@ -1441,7 +1441,7 @@ void DisplayServerWindows::window_set_transient(WindowID p_window, WindowID p_pa
 	WindowData &wd_window = windows[p_window];
 
 	ERR_FAIL_COND(wd_window.transient_parent == p_parent);
-	ERR_FAIL_COND_MSG(wd_window.always_on_top, "Windows with the 'on top' can't become transient.");
+	// ERR_FAIL_COND_MSG(wd_window.always_on_top, "Windows with the 'on top' can't become transient.");
 
 	if (p_parent == INVALID_WINDOW_ID) {
 		// Remove transient.

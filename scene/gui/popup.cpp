@@ -200,6 +200,7 @@ void Popup::_bind_methods() {
 Popup::Popup() {
 	set_wrap_controls(true);
 	set_visible(false);
+	set_flag(FLAG_ALWAYS_ON_TOP, true);
 	set_transient(true);
 	set_flag(FLAG_BORDERLESS, true);
 	set_flag(FLAG_RESIZE_DISABLED, true);

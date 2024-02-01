@@ -1290,7 +1290,6 @@ void Viewport::_gui_show_tooltip() {
 
 	base_tooltip->set_anchors_and_offsets_preset(Control::PRESET_FULL_RECT);
 
-	panel->set_transient(true);
 	panel->set_flag(Window::FLAG_NO_FOCUS, true);
 	panel->set_flag(Window::FLAG_POPUP, false);
 	panel->set_flag(Window::FLAG_MOUSE_PASSTHROUGH, true);

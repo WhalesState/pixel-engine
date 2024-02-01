@@ -1474,7 +1474,6 @@ void ColorPicker::_pick_button_pressed_legacy() {
 	if (!picker_window) {
 		picker_window = memnew(Popup);
 		picker_window->hide();
-		picker_window->set_transient(true);
 		add_child(picker_window, false, INTERNAL_MODE_FRONT);
 
 		picker_texture_rect = memnew(TextureRect);
