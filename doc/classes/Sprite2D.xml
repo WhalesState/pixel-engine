@@ -10,6 +10,11 @@
 		<link title="Instancing Demo">https://godotengine.org/asset-library/asset/148</link>
 	</tutorials>
 	<methods>
+		<method name="get_max_frames" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
 		<method name="get_rect" qualifiers="const">
 			<return type="Rect2" />
 			<description>

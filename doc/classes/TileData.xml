@@ -67,13 +67,6 @@
 				Returns the custom data value for custom data layer with index [param layer_id].
 			</description>
 		</method>
-		<method name="get_navigation_polygon" qualifiers="const">
-			<return type="NavigationPolygon" />
-			<param index="0" name="layer_id" type="int" />
-			<description>
-				Returns the navigation polygon of the tile for the TileSet navigation layer with index [param layer_id].
-			</description>
-		</method>
 		<method name="get_occluder" qualifiers="const">
 			<return type="OccluderPolygon2D" />
 			<param index="0" name="layer_id" type="int" />
@@ -169,14 +162,6 @@
 			<param index="1" name="value" type="Variant" />
 			<description>
 				Sets the tile's custom data value for the TileSet custom data layer with index [param layer_id].
-			</description>
-		</method>
-		<method name="set_navigation_polygon">
-			<return type="void" />
-			<param index="0" name="layer_id" type="int" />
-			<param index="1" name="navigation_polygon" type="NavigationPolygon" />
-			<description>
-				Sets the navigation polygon for the TileSet navigation layer with index [param layer_id].
 			</description>
 		</method>
 		<method name="set_occluder">

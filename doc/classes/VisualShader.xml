@@ -199,13 +199,7 @@
 		<constant name="TYPE_PROCESS_CUSTOM" value="7" enum="Type">
 			A function for the "process" stage of particle shader, with customized output.
 		</constant>
-		<constant name="TYPE_SKY" value="8" enum="Type">
-			A shader for 3D environment's sky.
-		</constant>
-		<constant name="TYPE_FOG" value="9" enum="Type">
-			A compute shader that runs for each froxel of the volumetric fog map.
-		</constant>
-		<constant name="TYPE_MAX" value="10" enum="Type">
+		<constant name="TYPE_MAX" value="8" enum="Type">
 			Represents the size of the [enum Type] enum.
 		</constant>
 		<constant name="VARYING_MODE_VERTEX_TO_FRAG_LIGHT" value="0" enum="VaryingMode">

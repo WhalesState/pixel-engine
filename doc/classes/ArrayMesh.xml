@@ -101,14 +101,6 @@
 				Returns the name of the blend shape at this index.
 			</description>
 		</method>
-		<method name="lightmap_unwrap">
-			<return type="int" enum="Error" />
-			<param index="0" name="transform" type="Transform3D" />
-			<param index="1" name="texel_size" type="float" />
-			<description>
-				Performs a UV unwrap on the [ArrayMesh] to prepare the mesh for lightmapping.
-			</description>
-		</method>
 		<method name="regen_normal_maps">
 			<return type="void" />
 			<description>

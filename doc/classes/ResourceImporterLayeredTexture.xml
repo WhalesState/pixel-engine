@@ -16,13 +16,6 @@
 			[b]Optimized:[/b], allows the RG color format to be used if the texture does not use the blue channel. This reduces memory usage if the texture's blue channel can be discarded (all pixels must have a blue value of [code]0[/code]).
 			[b]Normal Map (RG Channels):[/b] This forces all layers from the texture to be imported with the RG color format to reduce memory usage, with only the red and green channels preserved. This only has an effect on textures with the VRAM Compressed or Basis Universal compression modes. This mode is only available in layered textures ([Cubemap], [CubemapArray], [Texture2DArray] and [Texture3D]).
 		</member>
-		<member name="compress/hdr_compression" type="int" setter="" getter="" default="1">
-			Controls how VRAM compression should be performed for HDR images.
-			[b]Disabled:[/b] Never use VRAM compression for HDR textures, regardless of whether they're opaque or transparent. Instead, the texture is converted to RGBE9995 (9-bits per channel + 5-bit exponent = 32 bits per pixel) to reduce memory usage compared to a half-float or single-precision float image format.
-			[b]Opaque Only:[/b] Only uses VRAM compression for opaque HDR textures. This is due to a limitation of HDR formats, as there is no VRAM-compressed HDR format that supports transparency at the same time.
-			[b]Always:[/b] Force VRAM compression even for HDR textures with an alpha channel. To perform this, the alpha channel is discarded on import.
-			[b]Note:[/b] Only effective on Radiance HDR ([code].hdr[/code]) and OpenEXR ([code].exr[/code]) images.
-		</member>
 		<member name="compress/high_quality" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], uses BPTC compression on desktop platforms and ASTC compression on mobile platforms. When using BPTC, BC7 is used for SDR textures and BC6H is used for HDR textures.
 			If [code]false[/code], uses the faster but lower-quality S3TC compression on desktop platforms and ETC2 on mobile/web platforms. When using S3TC, DXT1 (BC1) is used for opaque textures and DXT5 (BC3) is used for transparent or normal map (RGTC) textures.

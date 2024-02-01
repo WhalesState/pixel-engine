@@ -164,16 +164,6 @@
 				If [param layer] is negative, the layers are accessed from the last one.
 			</description>
 		</method>
-		<method name="get_layer_navigation_map" qualifiers="const">
-			<return type="RID" />
-			<param index="0" name="layer" type="int" />
-			<description>
-				Returns the [NavigationServer2D] navigation map [RID] currently assigned to the specified TileMap [param layer].
-				By default the TileMap uses the default [World2D] navigation map for the first TileMap layer. For each additional TileMap layer a new navigation map is created for the additional layer.
-				In order to make [NavigationAgent2D] switch between TileMap layer navigation maps use [method NavigationAgent2D.set_navigation_map] with the navigation map received from [method get_layer_navigation_map].
-				If [param layer] is negative, the layers are accessed from the last one.
-			</description>
-		</method>
 		<method name="get_layer_y_sort_origin" qualifiers="const">
 			<return type="int" />
 			<param index="0" name="layer" type="int" />
@@ -194,13 +184,6 @@
 			<return type="int" />
 			<description>
 				Returns the number of layers in the TileMap.
-			</description>
-		</method>
-		<method name="get_navigation_map" qualifiers="const" is_deprecated="true">
-			<return type="RID" />
-			<param index="0" name="layer" type="int" />
-			<description>
-				See [method get_layer_navigation_map].
 			</description>
 		</method>
 		<method name="get_neighbor_cell" qualifiers="const">
@@ -260,13 +243,6 @@
 			<description>
 				Returns if a layer is enabled.
 				If [param layer] is negative, the layers are accessed from the last one.
-			</description>
-		</method>
-		<method name="is_layer_navigation_enabled" qualifiers="const">
-			<return type="bool" />
-			<param index="0" name="layer" type="int" />
-			<description>
-				Returns if a layer's built-in navigation regions generation is enabled.
 			</description>
 		</method>
 		<method name="is_layer_y_sort_enabled" qualifiers="const">
@@ -397,25 +373,6 @@
 				If [param layer] is negative, the layers are accessed from the last one.
 			</description>
 		</method>
-		<method name="set_layer_navigation_enabled">
-			<return type="void" />
-			<param index="0" name="layer" type="int" />
-			<param index="1" name="enabled" type="bool" />
-			<description>
-				Enables or disables a layer's built-in navigation regions generation. Disable this if you need to bake navigation regions from a TileMap using a [NavigationRegion2D] node.
-			</description>
-		</method>
-		<method name="set_layer_navigation_map">
-			<return type="void" />
-			<param index="0" name="layer" type="int" />
-			<param index="1" name="map" type="RID" />
-			<description>
-				Assigns a [NavigationServer2D] navigation map [RID] to the specified TileMap [param layer].
-				By default the TileMap uses the default [World2D] navigation map for the first TileMap layer. For each additional TileMap layer a new navigation map is created for the additional layer.
-				In order to make [NavigationAgent2D] switch between TileMap layer navigation maps use [method NavigationAgent2D.set_navigation_map] with the navigation map received from [method get_layer_navigation_map].
-				If [param layer] is negative, the layers are accessed from the last one.
-			</description>
-		</method>
 		<method name="set_layer_y_sort_enabled">
 			<return type="void" />
 			<param index="0" name="layer" type="int" />
@@ -445,14 +402,6 @@
 				If [param layer] is negative, the layers are accessed from the last one.
 			</description>
 		</method>
-		<method name="set_navigation_map" is_deprecated="true">
-			<return type="void" />
-			<param index="0" name="layer" type="int" />
-			<param index="1" name="map" type="RID" />
-			<description>
-				See [method set_layer_navigation_map].
-			</description>
-		</method>
 		<method name="set_pattern">
 			<return type="void" />
 			<param index="0" name="layer" type="int" />
@@ -479,9 +428,6 @@
 		</member>
 		<member name="collision_visibility_mode" type="int" setter="set_collision_visibility_mode" getter="get_collision_visibility_mode" enum="TileMap.VisibilityMode" default="0">
 			Show or hide the TileMap's collision shapes. If set to [constant VISIBILITY_MODE_DEFAULT], this depends on the show collision debug settings.
-		</member>
-		<member name="navigation_visibility_mode" type="int" setter="set_navigation_visibility_mode" getter="get_navigation_visibility_mode" enum="TileMap.VisibilityMode" default="0">
-			Show or hide the TileMap's navigation meshes. If set to [constant VISIBILITY_MODE_DEFAULT], this depends on the show navigation debug settings.
 		</member>
 		<member name="rendering_quadrant_size" type="int" setter="set_rendering_quadrant_size" getter="get_rendering_quadrant_size" default="16">
 			The TileMap's quadrant size. A quadrant is a group of tiles to be drawn together on a single canvas item, for optimization purposes. [member rendering_quadrant_size] defines the length of a square's side, in the map's coordinate system, that forms the quadrant. Thus, the default quandrant size groups together [code]16 * 16 = 256[/code] tiles.

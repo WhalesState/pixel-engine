@@ -40,11 +40,15 @@
 	</methods>
 	<members>
 		<member name="clip_contents" type="bool" setter="set_clip_contents" getter="is_clipping_contents" overrides="Control" default="true" />
-		<member name="follow_focus" type="bool" setter="set_follow_focus" getter="is_following_focus" default="false">
+		<member name="follow_focus" type="bool" setter="set_follow_focus" getter="is_following_focus" default="true">
 			If [code]true[/code], the ScrollContainer will automatically scroll to focused children (including indirect children) to make sure they are fully visible.
 		</member>
 		<member name="horizontal_scroll_mode" type="int" setter="set_horizontal_scroll_mode" getter="get_horizontal_scroll_mode" enum="ScrollContainer.ScrollMode" default="1">
 			Controls whether horizontal scrollbar can be used and when it should be visible. See [enum ScrollMode] for options.
+		</member>
+		<member name="ignore_panel_min_size" type="bool" setter="set_ignore_panel_min_size" getter="is_ignoring_panel_min_size" default="true">
+		</member>
+		<member name="ignore_scroll_bar_min_size" type="bool" setter="set_ignore_scroll_bar_min_size" getter="is_ignoring_scroll_bar_min_size" default="true">
 		</member>
 		<member name="scroll_deadzone" type="int" setter="set_deadzone" getter="get_deadzone" default="0">
 			Deadzone for touch scrolling. Lower deadzone makes the scrolling more sensitive.

@@ -726,42 +726,6 @@ Geometry3D::MeshData Geometry3D::build_convex_mesh(const Vector<Plane> &p_planes
 	return mesh;
 }
 
-Vector<Plane> Geometry3D::build_box_planes(const Vector3 &p_extents) {
-	Vector<Plane> planes = {
-		Plane(Vector3(1, 0, 0), p_extents.x),
-		Plane(Vector3(-1, 0, 0), p_extents.x),
-		Plane(Vector3(0, 1, 0), p_extents.y),
-		Plane(Vector3(0, -1, 0), p_extents.y),
-		Plane(Vector3(0, 0, 1), p_extents.z),
-		Plane(Vector3(0, 0, -1), p_extents.z)
-	};
-
-	return planes;
-}
-
-Vector<Plane> Geometry3D::build_cylinder_planes(real_t p_radius, real_t p_height, int p_sides, Vector3::Axis p_axis) {
-	ERR_FAIL_INDEX_V(p_axis, 3, Vector<Plane>());
-
-	Vector<Plane> planes;
-
-	const double sides_step = Math_TAU / p_sides;
-	for (int i = 0; i < p_sides; i++) {
-		Vector3 normal;
-		normal[(p_axis + 1) % 3] = Math::cos(i * sides_step);
-		normal[(p_axis + 2) % 3] = Math::sin(i * sides_step);
-
-		planes.push_back(Plane(normal, p_radius));
-	}
-
-	Vector3 axis;
-	axis[p_axis] = 1.0;
-
-	planes.push_back(Plane(axis, p_height * 0.5f));
-	planes.push_back(Plane(-axis, p_height * 0.5f));
-
-	return planes;
-}
-
 Vector<Plane> Geometry3D::build_sphere_planes(real_t p_radius, int p_lats, int p_lons, Vector3::Axis p_axis) {
 	ERR_FAIL_INDEX_V(p_axis, 3, Vector<Plane>());
 

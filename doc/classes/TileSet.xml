@@ -29,14 +29,6 @@
 				Custom data layers allow assigning custom properties to atlas tiles.
 			</description>
 		</method>
-		<method name="add_navigation_layer">
-			<return type="void" />
-			<param index="0" name="to_position" type="int" default="-1" />
-			<description>
-				Adds a navigation layer to the TileSet at the given position [param to_position] in the array. If [param to_position] is -1, adds it at the end of the array.
-				Navigation layers allow assigning a navigable area to atlas tiles.
-			</description>
-		</method>
 		<method name="add_occlusion_layer">
 			<return type="void" />
 			<param index="0" name="to_position" type="int" default="-1" />
@@ -142,27 +134,6 @@
 			<return type="int" />
 			<description>
 				Returns the custom data layers count.
-			</description>
-		</method>
-		<method name="get_navigation_layer_layer_value" qualifiers="const">
-			<return type="bool" />
-			<param index="0" name="layer_index" type="int" />
-			<param index="1" name="layer_number" type="int" />
-			<description>
-				Returns whether or not the specified navigation layer of the TileSet navigation data layer identified by the given [param layer_index] is enabled, given a navigation_layers [param layer_number] between 1 and 32.
-			</description>
-		</method>
-		<method name="get_navigation_layer_layers" qualifiers="const">
-			<return type="int" />
-			<param index="0" name="layer_index" type="int" />
-			<description>
-				Returns the navigation layers (as in the Navigation server) of the given TileSet navigation layer.
-			</description>
-		</method>
-		<method name="get_navigation_layers_count" qualifiers="const">
-			<return type="int" />
-			<description>
-				Returns the navigation layers count.
 			</description>
 		</method>
 		<method name="get_next_source_id" qualifiers="const">
@@ -345,14 +316,6 @@
 				Moves the custom data layer at index [param layer_index] to the given position [param to_position] in the array. Also updates the atlas tiles accordingly.
 			</description>
 		</method>
-		<method name="move_navigation_layer">
-			<return type="void" />
-			<param index="0" name="layer_index" type="int" />
-			<param index="1" name="to_position" type="int" />
-			<description>
-				Moves the navigation layer at index [param layer_index] to the given position [param to_position] in the array. Also updates the atlas tiles accordingly.
-			</description>
-		</method>
 		<method name="move_occlusion_layer">
 			<return type="void" />
 			<param index="0" name="layer_index" type="int" />
@@ -408,13 +371,6 @@
 			<param index="0" name="layer_index" type="int" />
 			<description>
 				Removes the custom data layer at index [param layer_index]. Also updates the atlas tiles accordingly.
-			</description>
-		</method>
-		<method name="remove_navigation_layer">
-			<return type="void" />
-			<param index="0" name="layer_index" type="int" />
-			<description>
-				Removes the navigation layer at index [param layer_index]. Also updates the atlas tiles accordingly.
 			</description>
 		</method>
 		<method name="remove_occlusion_layer">
@@ -507,23 +463,6 @@
 			<param index="1" name="layer_type" type="int" enum="Variant.Type" />
 			<description>
 				Sets the type of the custom data layer identified by the given index.
-			</description>
-		</method>
-		<method name="set_navigation_layer_layer_value">
-			<return type="void" />
-			<param index="0" name="layer_index" type="int" />
-			<param index="1" name="layer_number" type="int" />
-			<param index="2" name="value" type="bool" />
-			<description>
-				Based on [param value], enables or disables the specified navigation layer of the TileSet navigation data layer identified by the given [param layer_index], given a navigation_layers [param layer_number] between 1 and 32.
-			</description>
-		</method>
-		<method name="set_navigation_layer_layers">
-			<return type="void" />
-			<param index="0" name="layer_index" type="int" />
-			<param index="1" name="layers" type="int" />
-			<description>
-				Sets the navigation layers (as in the navigation server) for navigation regions in the given TileSet navigation layer.
 			</description>
 		</method>
 		<method name="set_occlusion_layer_light_mask">

@@ -46,32 +46,9 @@ TEST_CASE("[Geometry3D] Closest Distance Between Segments") {
 	CHECK(Geometry3D::get_closest_distance_between_segments(Vector3(1, -2, 0), Vector3(1, 2, 0), Vector3(-1, 2, 0), Vector3(-1, -2, 0)) == 2.0f);
 }
 
-TEST_CASE("[Geometry3D] Build Box Planes") {
-	const Vector3 extents = Vector3(5, 5, 20);
-	Vector<Plane> box = Geometry3D::build_box_planes(extents);
-	CHECK(box.size() == 6);
-	CHECK(extents.x == box[0].d);
-	CHECK(box[0].normal == Vector3(1, 0, 0));
-	CHECK(extents.x == box[1].d);
-	CHECK(box[1].normal == Vector3(-1, 0, 0));
-	CHECK(extents.y == box[2].d);
-	CHECK(box[2].normal == Vector3(0, 1, 0));
-	CHECK(extents.y == box[3].d);
-	CHECK(box[3].normal == Vector3(0, -1, 0));
-	CHECK(extents.z == box[4].d);
-	CHECK(box[4].normal == Vector3(0, 0, 1));
-	CHECK(extents.z == box[5].d);
-	CHECK(box[5].normal == Vector3(0, 0, -1));
-}
-
 TEST_CASE("[Geometry3D] Build Capsule Planes") {
 	Vector<Plane> capsule = Geometry3D::build_capsule_planes(10, 20, 6, 10);
 	CHECK(capsule.size() == 126);
-}
-
-TEST_CASE("[Geometry3D] Build Cylinder Planes") {
-	Vector<Plane> planes = Geometry3D::build_cylinder_planes(3.0f, 10.0f, 10);
-	CHECK(planes.size() == 12);
 }
 
 TEST_CASE("[Geometry3D] Build Sphere Planes") {
@@ -92,9 +69,7 @@ TEST_CASE("[Geometry3D] Build Convex Mesh") {
 				object(p_object), want_faces(p_want_faces), want_edges(p_want_edges), want_vertices(p_want_vertices){};
 	};
 	Vector<Case> tt;
-	tt.push_back(Case(Geometry3D::build_box_planes(Vector3(5, 10, 5)), 6, 12, 8));
 	tt.push_back(Case(Geometry3D::build_capsule_planes(5, 5, 20, 20, Vector3::Axis()), 820, 7603, 6243));
-	tt.push_back(Case(Geometry3D::build_cylinder_planes(5, 5, 20, Vector3::Axis()), 22, 100, 80));
 	tt.push_back(Case(Geometry3D::build_sphere_planes(5, 5, 20), 220, 1011, 522));
 	for (int i = 0; i < tt.size(); ++i) {
 		Case current_case = tt[i];
@@ -106,15 +81,6 @@ TEST_CASE("[Geometry3D] Build Convex Mesh") {
 }
 #endif
 
-TEST_CASE("[Geometry3D] Clip Polygon") {
-	Vector<Plane> box_planes = Geometry3D::build_box_planes(Vector3(5, 10, 5));
-	Vector<Vector3> box = Geometry3D::compute_convex_mesh_points(&box_planes[0], box_planes.size());
-	Vector<Vector3> output = Geometry3D::clip_polygon(box, Plane());
-	CHECK(output == box);
-	output = Geometry3D::clip_polygon(box, Plane(Vector3(0, 1, 0), Vector3(0, 3, 0)));
-	CHECK(output != box);
-}
-
 TEST_CASE("[Geometry3D] Compute Convex Mesh Points") {
 	Vector<Vector3> cube;
 	cube.push_back(Vector3(-5, -5, -5));
@@ -125,8 +91,6 @@ TEST_CASE("[Geometry3D] Compute Convex Mesh Points") {
 	cube.push_back(Vector3(5, -5, 5));
 	cube.push_back(Vector3(-5, 5, 5));
 	cube.push_back(Vector3(5, 5, 5));
-	Vector<Plane> box_planes = Geometry3D::build_box_planes(Vector3(5, 5, 5));
-	CHECK(Geometry3D::compute_convex_mesh_points(&box_planes[0], box_planes.size()) == cube);
 }
 
 TEST_CASE("[Geometry3D] Get Closest Point To Segment") {
@@ -152,27 +116,6 @@ TEST_CASE("[Geometry3D] Does Ray Intersect Triangle") {
 	CHECK(Geometry3D::ray_intersects_triangle(Vector3(0, 1, 1), Vector3(0, 0, -10), Vector3(0, 3, 0), Vector3(-3, 0, 0), Vector3(3, 0, 0), &result) == true);
 	CHECK(Geometry3D::ray_intersects_triangle(Vector3(5, 10, 1), Vector3(0, 0, -10), Vector3(0, 3, 0), Vector3(-3, 0, 0), Vector3(3, 0, 0), &result) == false);
 	CHECK(Geometry3D::ray_intersects_triangle(Vector3(0, 1, 1), Vector3(0, 0, 10), Vector3(0, 3, 0), Vector3(-3, 0, 0), Vector3(3, 0, 0), &result) == false);
-}
-
-TEST_CASE("[Geometry3D] Does Segment Intersect Convex") {
-	Vector<Plane> box_planes = Geometry3D::build_box_planes(Vector3(5, 5, 5));
-	Vector3 result, normal;
-	CHECK(Geometry3D::segment_intersects_convex(Vector3(10, 10, 10), Vector3(0, 0, 0), &box_planes[0], box_planes.size(), &result, &normal) == true);
-	CHECK(Geometry3D::segment_intersects_convex(Vector3(10, 10, 10), Vector3(5, 5, 5), &box_planes[0], box_planes.size(), &result, &normal) == true);
-	CHECK(Geometry3D::segment_intersects_convex(Vector3(10, 10, 10), Vector3(6, 5, 5), &box_planes[0], box_planes.size(), &result, &normal) == false);
-}
-
-TEST_CASE("[Geometry3D] Segment Intersects Cylinder") {
-	Vector3 result, normal;
-	CHECK(Geometry3D::segment_intersects_cylinder(Vector3(10, 10, 10), Vector3(0, 0, 0), 5, 5, &result, &normal) == true);
-	CHECK(Geometry3D::segment_intersects_cylinder(Vector3(10, 10, 10), Vector3(6, 6, 6), 5, 5, &result, &normal) == false);
-}
-
-TEST_CASE("[Geometry3D] Segment Intersects Cylinder") {
-	Vector3 result, normal;
-	CHECK(Geometry3D::segment_intersects_sphere(Vector3(10, 10, 10), Vector3(0, 0, 0), Vector3(0, 0, 0), 5, &result, &normal) == true);
-	CHECK(Geometry3D::segment_intersects_sphere(Vector3(10, 10, 10), Vector3(0, 0, 2.5), Vector3(0, 0, 0), 5, &result, &normal) == true);
-	CHECK(Geometry3D::segment_intersects_sphere(Vector3(10, 10, 10), Vector3(5, 5, 5), Vector3(0, 0, 0), 5, &result, &normal) == false);
 }
 
 TEST_CASE("[Geometry3D] Segment Intersects Triangle") {

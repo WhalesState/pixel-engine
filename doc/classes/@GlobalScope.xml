@@ -1597,15 +1597,6 @@
 		<member name="Marshalls" type="Marshalls" setter="" getter="">
 			The [Marshalls] singleton.
 		</member>
-		<member name="NavigationMeshGenerator" type="NavigationMeshGenerator" setter="" getter="">
-			The [NavigationMeshGenerator] singleton.
-		</member>
-		<member name="NavigationServer2D" type="NavigationServer2D" setter="" getter="">
-			The [NavigationServer2D] singleton.
-		</member>
-		<member name="NavigationServer3D" type="NavigationServer3D" setter="" getter="">
-			The [NavigationServer3D] singleton.
-		</member>
 		<member name="OS" type="OS" setter="" getter="">
 			The [OS] singleton.
 		</member>
@@ -1617,12 +1608,6 @@
 		</member>
 		<member name="PhysicsServer2DManager" type="PhysicsServer2DManager" setter="" getter="">
 			The [PhysicsServer2DManager] singleton.
-		</member>
-		<member name="PhysicsServer3D" type="PhysicsServer3D" setter="" getter="">
-			The [PhysicsServer3D] singleton.
-		</member>
-		<member name="PhysicsServer3DManager" type="PhysicsServer3DManager" setter="" getter="">
-			The [PhysicsServer3DManager] singleton.
 		</member>
 		<member name="ProjectSettings" type="ProjectSettings" setter="" getter="">
 			The [ProjectSettings] singleton.
@@ -1653,9 +1638,6 @@
 		</member>
 		<member name="WorkerThreadPool" type="WorkerThreadPool" setter="" getter="">
 			The [WorkerThreadPool] singleton.
-		</member>
-		<member name="XRServer" type="XRServer" setter="" getter="">
-			The [XRServer] singleton.
 		</member>
 	</members>
 	<constants>
@@ -2779,21 +2761,6 @@
 		</constant>
 		<constant name="PROPERTY_HINT_LAYERS_2D_PHYSICS" value="8" enum="PropertyHint">
 			Hints that an [int] property is a bitmask using the optionally named 2D physics layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_2D_NAVIGATION" value="9" enum="PropertyHint">
-			Hints that an [int] property is a bitmask using the optionally named 2D navigation layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_3D_RENDER" value="10" enum="PropertyHint">
-			Hints that an [int] property is a bitmask using the optionally named 3D render layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_3D_PHYSICS" value="11" enum="PropertyHint">
-			Hints that an [int] property is a bitmask using the optionally named 3D physics layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_3D_NAVIGATION" value="12" enum="PropertyHint">
-			Hints that an [int] property is a bitmask using the optionally named 3D navigation layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_AVOIDANCE" value="37" enum="PropertyHint">
-			Hints that an integer property is a bitmask using the optionally named avoidance layers.
 		</constant>
 		<constant name="PROPERTY_HINT_FILE" value="13" enum="PropertyHint">
 			Hints that a [String] property is a path to a file. Editing it will show a file dialog for picking the path. The hint string can be a set of filters with wildcards like [code]"*.png,*.jpg"[/code].

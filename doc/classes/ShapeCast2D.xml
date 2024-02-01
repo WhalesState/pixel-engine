@@ -99,6 +99,16 @@
 				[b]Note:[/b] this point is in the [b]global[/b] coordinate system.
 			</description>
 		</method>
+		<method name="is_collide_with_areas_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="is_collide_with_bodies_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
 		<method name="is_colliding" qualifiers="const">
 			<return type="bool" />
 			<description>
@@ -119,6 +129,18 @@
 				Removes a collision exception so the shape does report collisions with the specified [RID].
 			</description>
 		</method>
+		<method name="set_collide_with_areas">
+			<return type="void" />
+			<param index="0" name="enable" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="set_collide_with_bodies">
+			<return type="void" />
+			<param index="0" name="enable" type="bool" />
+			<description>
+			</description>
+		</method>
 		<method name="set_collision_mask_value">
 			<return type="void" />
 			<param index="0" name="layer_number" type="int" />
@@ -129,12 +151,6 @@
 		</method>
 	</methods>
 	<members>
-		<member name="collide_with_areas" type="bool" setter="set_collide_with_areas" getter="is_collide_with_areas_enabled" default="false">
-			If [code]true[/code], collisions with [Area2D]s will be reported.
-		</member>
-		<member name="collide_with_bodies" type="bool" setter="set_collide_with_bodies" getter="is_collide_with_bodies_enabled" default="true">
-			If [code]true[/code], collisions with [PhysicsBody2D]s will be reported.
-		</member>
 		<member name="collision_mask" type="int" setter="set_collision_mask" getter="get_collision_mask" default="1">
 			The shape's collision mask. Only objects in at least one collision layer enabled in the mask will be detected.
 		</member>

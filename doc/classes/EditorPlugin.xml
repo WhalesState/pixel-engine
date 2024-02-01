@@ -51,92 +51,6 @@
 				Called by the engine when the user enables the [EditorPlugin] in the Plugin tab of the project settings window.
 			</description>
 		</method>
-		<method name="_forward_3d_draw_over_viewport" qualifiers="virtual">
-			<return type="void" />
-			<param index="0" name="viewport_control" type="Control" />
-			<description>
-				Called by the engine when the 3D editor's viewport is updated. Use the [code]overlay[/code] [Control] for drawing. You can update the viewport manually by calling [method update_overlays].
-				[codeblocks]
-				[gdscript]
-				func _forward_3d_draw_over_viewport(overlay):
-				    # Draw a circle at cursor position.
-				    overlay.draw_circle(overlay.get_local_mouse_position(), 64)
-
-				func _forward_3d_gui_input(camera, event):
-				    if event is InputEventMouseMotion:
-				        # Redraw viewport when cursor is moved.
-				        update_overlays()
-				        return EditorPlugin.AFTER_GUI_INPUT_STOP
-				    return EditorPlugin.AFTER_GUI_INPUT_PASS
-				[/gdscript]
-				[csharp]
-				public override void _Forward3DDrawOverViewport(Control viewportControl)
-				{
-				    // Draw a circle at cursor position.
-				    viewportControl.DrawCircle(viewportControl.GetLocalMousePosition(), 64, Colors.White);
-				}
-
-				public override EditorPlugin.AfterGuiInput _Forward3DGuiInput(Camera3D viewportCamera, InputEvent @event)
-				{
-				    if (@event is InputEventMouseMotion)
-				    {
-				        // Redraw viewport when cursor is moved.
-				        UpdateOverlays();
-				        return EditorPlugin.AfterGuiInput.Stop;
-				    }
-				    return EditorPlugin.AfterGuiInput.Pass;
-				}
-				[/csharp]
-				[/codeblocks]
-			</description>
-		</method>
-		<method name="_forward_3d_force_draw_over_viewport" qualifiers="virtual">
-			<return type="void" />
-			<param index="0" name="viewport_control" type="Control" />
-			<description>
-				This method is the same as [method _forward_3d_draw_over_viewport], except it draws on top of everything. Useful when you need an extra layer that shows over anything else.
-				You need to enable calling of this method by using [method set_force_draw_over_forwarding_enabled].
-			</description>
-		</method>
-		<method name="_forward_3d_gui_input" qualifiers="virtual">
-			<return type="int" />
-			<param index="0" name="viewport_camera" type="Camera3D" />
-			<param index="1" name="event" type="InputEvent" />
-			<description>
-				Called when there is a root node in the current edited scene, [method _handles] is implemented, and an [InputEvent] happens in the 3D viewport. The return value decides whether the [InputEvent] is consumed or forwarded to other [EditorPlugin]s. See [enum AfterGUIInput] for options.
-				[b]Example:[/b]
-				[codeblocks]
-				[gdscript]
-				# Prevents the InputEvent from reaching other Editor classes.
-				func _forward_3d_gui_input(camera, event):
-				    return EditorPlugin.AFTER_GUI_INPUT_STOP
-				[/gdscript]
-				[csharp]
-				// Prevents the InputEvent from reaching other Editor classes.
-				public override EditorPlugin.AfterGuiInput _Forward3DGuiInput(Camera3D camera, InputEvent @event)
-				{
-				    return EditorPlugin.AfterGuiInput.Stop;
-				}
-				[/csharp]
-				[/codeblocks]
-				Must [code]return EditorPlugin.AFTER_GUI_INPUT_PASS[/code] in order to forward the [InputEvent] to other Editor classes.
-				[b]Example:[/b]
-				[codeblocks]
-				[gdscript]
-				# Consumes InputEventMouseMotion and forwards other InputEvent types.
-				func _forward_3d_gui_input(camera, event):
-				    return EditorPlugin.AFTER_GUI_INPUT_STOP if event is InputEventMouseMotion else EditorPlugin.AFTER_GUI_INPUT_PASS
-				[/gdscript]
-				[csharp]
-				// Consumes InputEventMouseMotion and forwards other InputEvent types.
-				public override EditorPlugin.AfterGuiInput _Forward3DGuiInput(Camera3D camera, InputEvent @event)
-				{
-				    return @event is InputEventMouseMotion ? EditorPlugin.AfterGuiInput.Stop : EditorPlugin.AfterGuiInput.Pass;
-				}
-				[/csharp]
-				[/codeblocks]
-			</description>
-		</method>
 		<method name="_forward_canvas_draw_over_viewport" qualifiers="virtual">
 			<return type="void" />
 			<param index="0" name="viewport_control" type="Control" />
@@ -494,38 +408,12 @@
 				[/codeblocks]
 			</description>
 		</method>
-		<method name="add_node_3d_gizmo_plugin">
-			<return type="void" />
-			<param index="0" name="plugin" type="EditorNode3DGizmoPlugin" />
-			<description>
-				Registers a new [EditorNode3DGizmoPlugin]. Gizmo plugins are used to add custom gizmos to the 3D preview viewport for a [Node3D].
-				See [method add_inspector_plugin] for an example of how to register a plugin.
-			</description>
-		</method>
 		<method name="add_resource_conversion_plugin">
 			<return type="void" />
 			<param index="0" name="plugin" type="EditorResourceConversionPlugin" />
 			<description>
 				Registers a new [EditorResourceConversionPlugin]. Resource conversion plugins are used to add custom resource converters to the editor inspector.
 				See [EditorResourceConversionPlugin] for an example of how to create a resource conversion plugin.
-			</description>
-		</method>
-		<method name="add_scene_format_importer_plugin">
-			<return type="void" />
-			<param index="0" name="scene_format_importer" type="EditorSceneFormatImporter" />
-			<param index="1" name="first_priority" type="bool" default="false" />
-			<description>
-				Registers a new [EditorSceneFormatImporter]. Scene importers are used to import custom 3D asset formats as scenes.
-				If [param first_priority] is [code]true[/code], the new import plugin is inserted first in the list and takes precedence over pre-existing plugins.
-			</description>
-		</method>
-		<method name="add_scene_post_import_plugin">
-			<return type="void" />
-			<param index="0" name="scene_import_plugin" type="EditorScenePostImportPlugin" />
-			<param index="1" name="first_priority" type="bool" default="false" />
-			<description>
-				Add a [EditorScenePostImportPlugin]. These plugins allow customizing the import process of 3D assets by adding new options to the import dialogs.
-				If [param first_priority] is [code]true[/code], the new import plugin is inserted first in the list and takes precedence over pre-existing plugins.
 			</description>
 		</method>
 		<method name="add_tool_menu_item">
@@ -564,12 +452,6 @@
 			<description>
 				Returns the [EditorInterface] singleton instance.
 				[i]Deprecated.[/i] [EditorInterface] is a global singleton and can be accessed directly by its name.
-			</description>
-		</method>
-		<method name="get_export_as_menu">
-			<return type="PopupMenu" />
-			<description>
-				Returns the [PopupMenu] under [b]Scene &gt; Export As...[/b].
 			</description>
 		</method>
 		<method name="get_plugin_version" qualifiers="const">
@@ -675,32 +557,11 @@
 				Removes an inspector plugin registered by [method add_import_plugin]
 			</description>
 		</method>
-		<method name="remove_node_3d_gizmo_plugin">
-			<return type="void" />
-			<param index="0" name="plugin" type="EditorNode3DGizmoPlugin" />
-			<description>
-				Removes a gizmo plugin registered by [method add_node_3d_gizmo_plugin].
-			</description>
-		</method>
 		<method name="remove_resource_conversion_plugin">
 			<return type="void" />
 			<param index="0" name="plugin" type="EditorResourceConversionPlugin" />
 			<description>
 				Removes a resource conversion plugin registered by [method add_resource_conversion_plugin].
-			</description>
-		</method>
-		<method name="remove_scene_format_importer_plugin">
-			<return type="void" />
-			<param index="0" name="scene_format_importer" type="EditorSceneFormatImporter" />
-			<description>
-				Removes a scene format importer registered by [method add_scene_format_importer_plugin].
-			</description>
-		</method>
-		<method name="remove_scene_post_import_plugin">
-			<return type="void" />
-			<param index="0" name="scene_import_plugin" type="EditorScenePostImportPlugin" />
-			<description>
-				Remove the [EditorScenePostImportPlugin], added with [method add_scene_post_import_plugin].
 			</description>
 		</method>
 		<method name="remove_tool_menu_item">
@@ -779,37 +640,25 @@
 		<constant name="CONTAINER_TOOLBAR" value="0" enum="CustomControlContainer">
 			Main editor toolbar, next to play buttons.
 		</constant>
-		<constant name="CONTAINER_SPATIAL_EDITOR_MENU" value="1" enum="CustomControlContainer">
-			The toolbar that appears when 3D editor is active.
-		</constant>
-		<constant name="CONTAINER_SPATIAL_EDITOR_SIDE_LEFT" value="2" enum="CustomControlContainer">
-			Left sidebar of the 3D editor.
-		</constant>
-		<constant name="CONTAINER_SPATIAL_EDITOR_SIDE_RIGHT" value="3" enum="CustomControlContainer">
-			Right sidebar of the 3D editor.
-		</constant>
-		<constant name="CONTAINER_SPATIAL_EDITOR_BOTTOM" value="4" enum="CustomControlContainer">
-			Bottom panel of the 3D editor.
-		</constant>
-		<constant name="CONTAINER_CANVAS_EDITOR_MENU" value="5" enum="CustomControlContainer">
+		<constant name="CONTAINER_CANVAS_EDITOR_MENU" value="1" enum="CustomControlContainer">
 			The toolbar that appears when 2D editor is active.
 		</constant>
-		<constant name="CONTAINER_CANVAS_EDITOR_SIDE_LEFT" value="6" enum="CustomControlContainer">
+		<constant name="CONTAINER_CANVAS_EDITOR_SIDE_LEFT" value="2" enum="CustomControlContainer">
 			Left sidebar of the 2D editor.
 		</constant>
-		<constant name="CONTAINER_CANVAS_EDITOR_SIDE_RIGHT" value="7" enum="CustomControlContainer">
+		<constant name="CONTAINER_CANVAS_EDITOR_SIDE_RIGHT" value="3" enum="CustomControlContainer">
 			Right sidebar of the 2D editor.
 		</constant>
-		<constant name="CONTAINER_CANVAS_EDITOR_BOTTOM" value="8" enum="CustomControlContainer">
+		<constant name="CONTAINER_CANVAS_EDITOR_BOTTOM" value="4" enum="CustomControlContainer">
 			Bottom panel of the 2D editor.
 		</constant>
-		<constant name="CONTAINER_INSPECTOR_BOTTOM" value="9" enum="CustomControlContainer">
+		<constant name="CONTAINER_INSPECTOR_BOTTOM" value="5" enum="CustomControlContainer">
 			Bottom section of the inspector.
 		</constant>
-		<constant name="CONTAINER_PROJECT_SETTING_TAB_LEFT" value="10" enum="CustomControlContainer">
+		<constant name="CONTAINER_PROJECT_SETTING_TAB_LEFT" value="6" enum="CustomControlContainer">
 			Tab of Project Settings dialog, to the left of other tabs.
 		</constant>
-		<constant name="CONTAINER_PROJECT_SETTING_TAB_RIGHT" value="11" enum="CustomControlContainer">
+		<constant name="CONTAINER_PROJECT_SETTING_TAB_RIGHT" value="7" enum="CustomControlContainer">
 			Tab of Project Settings dialog, to the right of other tabs.
 		</constant>
 		<constant name="DOCK_SLOT_LEFT_UL" value="0" enum="DockSlot">
