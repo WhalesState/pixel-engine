@@ -730,8 +730,12 @@ _FORCE_INLINE_ bool TextServerFallback::_ensure_glyph(FontFallback *p_font_data,
 				fd->glyph_map[p_glyph] = FontGlyph();
 				ERR_FAIL_V_MSG(false, "FreeType: Failed to load glyph stroker.");
 			}
+			FT_Stroker_LineCap_ line_cap = (FT_Stroker_LineCap_)(GLOBAL_GET("gui/fonts/dynamic_fonts/line_cap").operator int());
+			FT_Stroker_LineJoin_ line_join = (FT_Stroker_LineJoin_)(GLOBAL_GET("gui/fonts/dynamic_fonts/line_join").operator int());
+			int radius = (int)(fd->size.y * fd->oversampling * 64.0);
+			FT_Fixed miter_limit = (FT_Fixed)((GLOBAL_GET("gui/fonts/dynamic_fonts/miter_limit").operator float() * 16.6) * radius);
 
-			FT_Stroker_Set(stroker, (int)(fd->size.y * fd->oversampling * 16.0), FT_STROKER_LINECAP_BUTT, FT_STROKER_LINEJOIN_ROUND, 0);
+			FT_Stroker_Set(stroker, radius, line_cap, line_join, miter_limit);
 			FT_Glyph glyph;
 			FT_BitmapGlyph glyph_bitmap;
 

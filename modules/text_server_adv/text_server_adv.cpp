@@ -1293,8 +1293,12 @@ _FORCE_INLINE_ bool TextServerAdvanced::_ensure_glyph(FontAdvanced *p_font_data,
 				fd->glyph_map[p_glyph] = FontGlyph();
 				ERR_FAIL_V_MSG(false, "FreeType: Failed to load glyph stroker.");
 			}
+			FT_Stroker_LineCap_ line_cap = (FT_Stroker_LineCap_)(GLOBAL_GET("gui/fonts/dynamic_fonts/line_cap").operator int());
+			FT_Stroker_LineJoin_ line_join = (FT_Stroker_LineJoin_)(GLOBAL_GET("gui/fonts/dynamic_fonts/line_join").operator int());
+			int radius = (int)(fd->size.y * fd->oversampling * 64.0);
+			FT_Fixed miter_limit = (FT_Fixed)((GLOBAL_GET("gui/fonts/dynamic_fonts/miter_limit").operator float() * 16.6) * radius);
 
-			FT_Stroker_Set(stroker, (int)(fd->size.y * fd->oversampling * 16.0), FT_STROKER_LINECAP_BUTT, FT_STROKER_LINEJOIN_ROUND, 0);
+			FT_Stroker_Set(stroker, radius, line_cap, line_join, miter_limit);
 			FT_Glyph glyph;
 			FT_BitmapGlyph glyph_bitmap;
 
@@ -3620,22 +3624,22 @@ void TextServerAdvanced::_font_draw_glyph_outline(const RID &p_font_rid, const R
 
 #ifdef MODULE_FREETYPE_ENABLED
 	if (!fd->msdf && fd->cache[size]->face) {
-		// LCD layout, bits 24, 25, 26
-		if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-			TextServer::FontLCDSubpixelLayout layout = (TextServer::FontLCDSubpixelLayout)(int)GLOBAL_GET("gui/theme/lcd_subpixel_layout");
-			if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
-				lcd_aa = true;
-				index = index | (layout << 24);
-			}
+	// LCD layout, bits 24, 25, 26
+	if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
+	TextServer::FontLCDSubpixelLayout layout = (TextServer::FontLCDSubpixelLayout)(int)GLOBAL_GET("gui/theme/lcd_subpixel_layout");
+	if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+	lcd_aa = true;
+	index = index | (layout << 24);
+	}
 		}
 		// Subpixel X-shift, bits 27, 28
-		if ((fd->subpixel_positioning == SUBPIXEL_POSITIONING_ONE_QUARTER) || (fd->subpixel_positioning == SUBPIXEL_POSITIONING_AUTO && size.x <= SUBPIXEL_POSITIONING_ONE_QUARTER_MAX_SIZE)) {
-			int xshift = (int)(Math::floor(4 * (p_pos.x + 0.125)) - 4 * Math::floor(p_pos.x + 0.125));
-			index = index | (xshift << 27);
-		} else if ((fd->subpixel_positioning == SUBPIXEL_POSITIONING_ONE_HALF) || (fd->subpixel_positioning == SUBPIXEL_POSITIONING_AUTO && size.x <= SUBPIXEL_POSITIONING_ONE_HALF_MAX_SIZE)) {
-			int xshift = (int)(Math::floor(2 * (p_pos.x + 0.25)) - 2 * Math::floor(p_pos.x + 0.25));
-			index = index | (xshift << 27);
-		}
+	if ((fd->subpixel_positioning == SUBPIXEL_POSITIONING_ONE_QUARTER) || (fd->subpixel_positioning == SUBPIXEL_POSITIONING_AUTO && size.x <= SUBPIXEL_POSITIONING_ONE_QUARTER_MAX_SIZE)) {
+	int xshift = (int)(Math::floor(4 * (p_pos.x + 0.125)) - 4 * Math::floor(p_pos.x + 0.125));
+	index = index | (xshift << 27);
+	} else if ((fd->subpixel_positioning == SUBPIXEL_POSITIONING_ONE_HALF) || (fd->subpixel_positioning == SUBPIXEL_POSITIONING_AUTO && size.x <= SUBPIXEL_POSITIONING_ONE_HALF_MAX_SIZE)) {
+	int xshift = (int)(Math::floor(2 * (p_pos.x + 0.25)) - 2 * Math::floor(p_pos.x + 0.25));
+	index = index | (xshift << 27);
+	}
 	}
 #endif
 
@@ -3651,7 +3655,7 @@ void TextServerAdvanced::_font_draw_glyph_outline(const RID &p_font_rid, const R
 			Color modulate = p_color;
 #ifdef MODULE_FREETYPE_ENABLED
 			if (fd->cache[size]->face && (fd->cache[size]->textures[gl.texture_idx].format == Image::FORMAT_RGBA8) && !lcd_aa && !fd->msdf) {
-				modulate.r = modulate.g = modulate.b = 1.0;
+			modulate.r = modulate.g = modulate.b = 1.0;
 			}
 #endif
 			if (RenderingServer::get_singleton() != nullptr) {

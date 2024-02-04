@@ -1385,12 +1385,14 @@ ProjectSettings::ProjectSettings() {
 
 	GLOBAL_DEF_BASIC("gui/common/snap_controls_to_pixels", true);
 	GLOBAL_DEF_BASIC("gui/fonts/dynamic_fonts/use_oversampling", true);
+	GLOBAL_DEF_RST_BASIC(PropertyInfo(Variant::INT, "gui/fonts/dynamic_fonts/line_join", PROPERTY_HINT_ENUM, "Round,Bevel,Miter Variable,Miter Fixed"), 0);
+	GLOBAL_DEF_RST_BASIC(PropertyInfo(Variant::INT, "gui/fonts/dynamic_fonts/line_cap", PROPERTY_HINT_ENUM, "Butt,Round,Square"), 0);
+	GLOBAL_DEF_RST_BASIC(PropertyInfo(Variant::FLOAT, "gui/fonts/dynamic_fonts/miter_limit"), 0.0);
 
 	GLOBAL_DEF("rendering/rendering_device/staging_buffer/block_size_kb", 256);
 	GLOBAL_DEF("rendering/rendering_device/staging_buffer/max_size_mb", 128);
 	GLOBAL_DEF("rendering/rendering_device/staging_buffer/texture_upload_region_size_px", 64);
 	GLOBAL_DEF("rendering/rendering_device/pipeline_cache/save_chunk_size_mb", 3.0);
-	GLOBAL_DEF("rendering/rendering_device/vulkan/max_descriptors_per_pool", 64);
 
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/textures/canvas_textures/default_texture_filter", PROPERTY_HINT_ENUM, "Nearest,Linear,Linear Mipmap,Nearest Mipmap"), 0);
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/textures/canvas_textures/default_texture_repeat", PROPERTY_HINT_ENUM, "Disable,Enable,Mirror"), 0);

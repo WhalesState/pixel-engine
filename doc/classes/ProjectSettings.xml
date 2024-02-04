@@ -1776,8 +1776,6 @@
 		</member>
 		<member name="rendering/rendering_device/staging_buffer/texture_upload_region_size_px" type="int" setter="" getter="" default="64">
 		</member>
-		<member name="rendering/rendering_device/vulkan/max_descriptors_per_pool" type="int" setter="" getter="" default="64">
-		</member>
 		<member name="rendering/shader_compiler/shader_cache/compress" type="bool" setter="" getter="" default="true">
 		</member>
 		<member name="rendering/shader_compiler/shader_cache/enabled" type="bool" setter="" getter="" default="true">

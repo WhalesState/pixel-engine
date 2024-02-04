@@ -165,16 +165,16 @@ void SpinBox::gui_input(const Ref<InputEvent> &p_event) {
 			} break;
 			case MouseButton::RIGHT: {
 				line_edit->grab_focus();
-				set_value((up ? get_max() : get_min()));
+				// set_value((up ? get_max() : get_min()));
 			} break;
 			case MouseButton::WHEEL_UP: {
-				if (line_edit->has_focus()) {
+				if (line_edit->is_focus_edit()) {
 					set_value(get_value() + step * mb->get_factor());
 					accept_event();
 				}
 			} break;
 			case MouseButton::WHEEL_DOWN: {
-				if (line_edit->has_focus()) {
+				if (line_edit->is_focus_edit()) {
 					set_value(get_value() - step * mb->get_factor());
 					accept_event();
 				}
