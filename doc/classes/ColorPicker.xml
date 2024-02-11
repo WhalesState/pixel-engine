@@ -88,6 +88,9 @@
 		<member name="sliders_visible" type="bool" setter="set_sliders_visible" getter="are_sliders_visible" default="true">
 			If [code]true[/code], the color sliders are visible.
 		</member>
+		<member name="wheel_visible" type="bool" setter="set_wheel_visible" getter="is_wheel_visible" default="true">
+			If [code]true[/code], the color wheel is visible.
+		</member>
 	</members>
 	<signals>
 		<signal name="color_changed">
@@ -135,9 +138,6 @@
 		</constant>
 		<constant name="SHAPE_OKHSL_CIRCLE" value="3" enum="PickerShapeType">
 			HSL OK Color Model circle color space.
-		</constant>
-		<constant name="SHAPE_NONE" value="4" enum="PickerShapeType">
-			The color space shape and the shape select button are hidden. Can't be selected from the shapes popup.
 		</constant>
 	</constants>
 	<theme_items>

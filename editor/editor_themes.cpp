@@ -1680,7 +1680,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_color("clear_button_color", "LineEdit", font_color);
 	theme->set_color("clear_button_color_pressed", "LineEdit", accent_color);
 
-	theme->set_constant("minimum_character_width", "LineEdit", 4);
+	theme->set_constant("minimum_character_width", "LineEdit", 3);
 	theme->set_constant("outline_size", "LineEdit", 0);
 	theme->set_constant("caret_width", "LineEdit", 1);
 
@@ -2132,13 +2132,16 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_color("files_disabled", "FileDialog", font_disabled_color);
 
 	// ColorPicker
-	theme->set_constant("margin", "ColorPicker", default_margin_size);
-	theme->set_constant("sv_width", "ColorPicker", 256 * EDSCALE);
-	theme->set_constant("sv_height", "ColorPicker", 256 * EDSCALE);
-	theme->set_constant("h_width", "ColorPicker", 30 * EDSCALE);
-	theme->set_constant("label_width", "ColorPicker", 10 * EDSCALE);
+	theme->set_constant("margin_left", "ColorPicker", 2 * EDSCALE);
+	theme->set_constant("margin_top", "ColorPicker", 2 * EDSCALE);
+	theme->set_constant("margin_right", "ColorPicker", 2 * EDSCALE);
+	theme->set_constant("margin_bottom", "ColorPicker", 2 * EDSCALE);
+	theme->set_constant("sv_width", "ColorPicker", 264 * EDSCALE);
+	theme->set_constant("sv_height", "ColorPicker", 264 * EDSCALE);
+	theme->set_constant("h_width", "ColorPicker", 24 * EDSCALE);
 	theme->set_constant("center_slider_grabbers", "ColorPicker", 1);
 	theme->set_icon("screen_picker", "ColorPicker", theme->get_icon(SNAME("ColorPick"), EditorStringName(EditorIcons)));
+	theme->set_icon("modes_icon", "ColorPicker", theme->get_icon(SNAME("GuiTabMenuHl"), EditorStringName(EditorIcons)));
 	theme->set_icon("shape_circle", "ColorPicker", theme->get_icon(SNAME("PickerShapeCircle"), EditorStringName(EditorIcons)));
 	theme->set_icon("shape_rect", "ColorPicker", theme->get_icon(SNAME("PickerShapeRectangle"), EditorStringName(EditorIcons)));
 	theme->set_icon("shape_rect_wheel", "ColorPicker", theme->get_icon(SNAME("PickerShapeRectangleWheel"), EditorStringName(EditorIcons)));
@@ -2156,12 +2159,6 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_stylebox("preset_fg", "ColorPresetButton", preset_sb);
 	theme->set_icon("preset_bg", "ColorPresetButton", theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
 	theme->set_icon("overbright_indicator", "ColorPresetButton", theme->get_icon(SNAME("OverbrightIndicator"), EditorStringName(EditorIcons)));
-
-	// Information on 3D viewport
-	Ref<StyleBoxFlat> style_info_3d_viewport = style_default->duplicate();
-	style_info_3d_viewport->set_bg_color(style_info_3d_viewport->get_bg_color() * Color(1, 1, 1, 0.5));
-	style_info_3d_viewport->set_border_width_all(0);
-	theme->set_stylebox("Information3dViewport", EditorStringName(EditorStyles), style_info_3d_viewport);
 
 	// Asset Library.
 	theme->set_stylebox("bg", "AssetLib", style_empty);

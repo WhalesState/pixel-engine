@@ -35,6 +35,8 @@
 #include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
 #include "scene/gui/control.h"
+#include "scene/gui/color_rect.h"
+#include "scene/gui/flow_container.h"
 #include "scene/gui/grid_container.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
@@ -75,12 +77,12 @@ public:
 	void set_preset_color(const Color &p_color);
 	Color get_preset_color() const;
 
-	ColorPresetButton(Color p_color, int p_size);
+	ColorPresetButton(Color p_color);
 	~ColorPresetButton();
 };
 
-class ColorPicker : public VBoxContainer {
-	GDCLASS(ColorPicker, VBoxContainer);
+class ColorPicker : public MarginContainer {
+	GDCLASS(ColorPicker, MarginContainer);
 
 	// These classes poke into theme items for their internal logic.
 	friend class ColorModeRGB;
@@ -103,7 +105,6 @@ public:
 		SHAPE_HSV_WHEEL,
 		SHAPE_VHS_CIRCLE,
 		SHAPE_OKHSL_CIRCLE,
-		SHAPE_NONE,
 
 		SHAPE_MAX
 	};
@@ -114,29 +115,23 @@ private:
 	static Ref<Shader> wheel_shader;
 	static Ref<Shader> circle_shader;
 	static Ref<Shader> circle_ok_color_shader;
-	static List<Color> preset_cache;
-	static List<Color> recent_preset_cache;
 
 #ifdef TOOLS_ENABLED
+	static List<Color> preset_cache;
+	static List<Color> recent_preset_cache;
 	Object *editor_settings = nullptr;
 #endif
 
 	int current_slider_count = SLIDER_COUNT;
-	static const int MODE_BUTTON_COUNT = 3;
 
 	bool slider_theme_modified = true;
 
 	Vector<ColorMode *> modes;
 
 	Popup *picker_window = nullptr;
-	// Legacy color picking.
-	TextureRect *picker_texture_rect = nullptr;
-	Panel *picker_preview = nullptr;
-	Label *picker_preview_label = nullptr;
-	Ref<StyleBoxFlat> picker_preview_style_box;
-	Color picker_color;
+	ColorRect *picker_preview = nullptr;
 
-	MarginContainer *internal_margin = nullptr;
+	HBoxContainer *wheel_hbc = nullptr;
 	Control *uv_edit = nullptr;
 	Control *w_edit = nullptr;
 	AspectRatioContainer *wheel_edit = nullptr;
@@ -146,8 +141,9 @@ private:
 	Control *wheel = nullptr;
 	Control *wheel_uv = nullptr;
 	TextureRect *sample = nullptr;
-	GridContainer *preset_container = nullptr;
-	HBoxContainer *recent_preset_hbc = nullptr;
+	ScrollContainer *preset_scroll = nullptr;
+	HFlowContainer *preset_container = nullptr;
+	HFlowContainer *recent_preset_hbc = nullptr;
 	Button *btn_add_preset = nullptr;
 	Button *btn_pick = nullptr;
 	Button *btn_preset = nullptr;
@@ -155,13 +151,10 @@ private:
 	PopupMenu *shape_popup = nullptr;
 	PopupMenu *mode_popup = nullptr;
 	MenuButton *btn_shape = nullptr;
-	HBoxContainer *mode_hbc = nullptr;
 	HBoxContainer *sample_hbc = nullptr;
 	GridContainer *slider_gc = nullptr;
 	HBoxContainer *hex_hbc = nullptr;
 	MenuButton *btn_mode = nullptr;
-	Button *mode_btns[MODE_BUTTON_COUNT];
-	Ref<ButtonGroup> mode_group = nullptr;
 	ColorPresetButton *selected_recent_preset = nullptr;
 	Ref<ButtonGroup> preset_group;
 	Ref<ButtonGroup> recent_preset_group;
@@ -185,7 +178,6 @@ private:
 	ColorModeType current_mode = MODE_RGB;
 	bool colorize_sliders = true;
 
-	const int PRESET_COLUMN_COUNT = 9;
 	int prev_preset_size = 0;
 	int prev_rencet_preset_size = 0;
 	List<Color> presets;
@@ -193,7 +185,9 @@ private:
 
 	Color color;
 	Color old_color;
+	Color old_pick_color;
 	bool is_picking_color = false;
+	bool is_embedding_subwindows = true;
 
 	bool display_old_color = false;
 	bool deferred_mode_enabled = false;
@@ -201,8 +195,8 @@ private:
 	bool changing_color = false;
 	bool spinning = false;
 	bool can_add_swatches = true;
+	bool wheel_visible = true;
 	bool presets_visible = true;
-	bool color_modes_visible = true;
 	bool sampler_visible = true;
 	bool sliders_visible = true;
 	bool hex_visible = true;
@@ -218,8 +212,10 @@ private:
 	struct ThemeCache {
 		float base_scale = 1.0;
 
-		int content_margin = 0;
-		int label_width = 0;
+		int margin_left = 0;
+		int margin_top = 0;
+		int margin_right = 0;
+		int margin_bottom = 0;
 
 		int sv_height = 0;
 		int sv_width = 0;
@@ -228,6 +224,7 @@ private:
 		bool center_slider_grabbers = true;
 
 		Ref<Texture2D> screen_picker;
+		Ref<Texture2D> modes_icon;
 		Ref<Texture2D> expanded_arrow;
 		Ref<Texture2D> folded_arrow;
 		Ref<Texture2D> add_preset;
@@ -242,11 +239,6 @@ private:
 		Ref<Texture2D> picker_cursor;
 		Ref<Texture2D> color_hue;
 		Ref<Texture2D> color_okhsl_hue;
-
-		/* Mode buttons */
-		Ref<StyleBox> mode_button_normal;
-		Ref<StyleBox> mode_button_pressed;
-		Ref<StyleBox> mode_button_hover;
 	} theme_cache;
 
 	void _copy_color_to_hsv();
@@ -279,13 +271,10 @@ private:
 	void _html_focus_exit();
 	void _pick_button_pressed();
 	void _pick_finished();
-	// Legacy color picking.
-	void _pick_button_pressed_legacy();
-	void _picker_texture_input(const Ref<InputEvent> &p_event);
 
 	inline int _get_preset_size();
-	void _add_preset_button(int p_size, const Color &p_color);
-	void _add_recent_preset_button(int p_size, const Color &p_color);
+	void _add_preset_button(const Color &p_color);
+	void _add_recent_preset_button(const Color &p_color);
 
 	void _show_hide_preset(const bool &p_is_btn_pressed, Button *p_btn_preset, Container *p_preset_container);
 	void _update_drop_down_arrow(const bool &p_is_btn_pressed, Button *p_btn_preset);
@@ -336,8 +325,10 @@ public:
 	void erase_recent_preset(const Color &p_color);
 	PackedColorArray get_presets() const;
 	PackedColorArray get_recent_presets() const;
+#ifdef TOOLS_ENABLED
 	void _update_presets();
 	void _update_recent_presets();
+#endif
 
 	void _select_from_preset_container(const Color &p_color);
 	bool _select_from_recent_preset_hbc(const Color &p_color);
@@ -354,11 +345,11 @@ public:
 	void set_can_add_swatches(bool p_enabled);
 	bool are_swatches_enabled() const;
 
+	void set_wheel_visible(bool p_visible);
+	bool is_wheel_visible() const;
+
 	void set_presets_visible(bool p_visible);
 	bool are_presets_visible() const;
-
-	void set_modes_visible(bool p_visible);
-	bool are_modes_visible() const;
 
 	void set_sampler_visible(bool p_visible);
 	bool is_sampler_visible() const;

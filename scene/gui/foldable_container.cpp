@@ -282,7 +282,7 @@ void FoldableContainer::_notification(int p_what) {
 				if (c->is_set_as_top_level()) {
 					continue;
 				}
-
+				c->set_visible(expanded);
 				fit_child_in_rect(c, Rect2(ofs, size));
 			}
 		} break;
@@ -300,6 +300,7 @@ void FoldableContainer::_notification(int p_what) {
 
 		case NOTIFICATION_THEME_CHANGED: {
 			_shape();
+			update_minimum_size();
 			queue_redraw();
 		} break;
 	}

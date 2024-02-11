@@ -435,7 +435,7 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_color("clear_button_color", "LineEdit", control_font_color);
 	theme->set_color("clear_button_color_pressed", "LineEdit", control_font_pressed_color);
 
-	theme->set_constant("minimum_character_width", "LineEdit", 4);
+	theme->set_constant("minimum_character_width", "LineEdit", 3);
 	theme->set_constant("outline_size", "LineEdit", 0);
 	theme->set_constant("caret_width", "LineEdit", 1);
 
@@ -939,16 +939,19 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 
 	// ColorPicker
 
-	theme->set_constant("margin", "ColorPicker", Math::round(4 * scale));
-	theme->set_constant("sv_width", "ColorPicker", Math::round(256 * scale));
-	theme->set_constant("sv_height", "ColorPicker", Math::round(256 * scale));
-	theme->set_constant("h_width", "ColorPicker", Math::round(30 * scale));
-	theme->set_constant("label_width", "ColorPicker", Math::round(10 * scale));
+	theme->set_constant("margin_left", "ColorPicker", Math::round(2 * scale));
+	theme->set_constant("margin_top", "ColorPicker", Math::round(2 * scale));
+	theme->set_constant("margin_right", "ColorPicker", Math::round(2 * scale));
+	theme->set_constant("margin_bottom", "ColorPicker", Math::round(2 * scale));
+	theme->set_constant("sv_width", "ColorPicker", Math::round(234 * scale));
+	theme->set_constant("sv_height", "ColorPicker", Math::round(234 * scale));
+	theme->set_constant("h_width", "ColorPicker", Math::round(24 * scale));
 	theme->set_constant("center_slider_grabbers", "ColorPicker", 1);
 
 	theme->set_icon("folded_arrow", "ColorPicker", icons["arrow_right"]);
 	theme->set_icon("expanded_arrow", "ColorPicker", icons["arrow_down"]);
 	theme->set_icon("screen_picker", "ColorPicker", icons["color_picker_pipette"]);
+	theme->set_icon("modes_icon", "ColorPicker", icons["tabs_menu_hl"]);
 	theme->set_icon("shape_circle", "ColorPicker", icons["picker_shape_circle"]);
 	theme->set_icon("shape_rect", "ColorPicker", icons["picker_shape_rectangle"]);
 	theme->set_icon("shape_rect_wheel", "ColorPicker", icons["picker_shape_rectangle_wheel"]);
