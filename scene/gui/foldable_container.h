@@ -40,7 +40,7 @@ class FoldableContainer : public Container {
 private:
 	bool expanded = true;
 	String title;
-	Ref<TextLine> text_buf = Ref<TextLine>();
+	Ref<TextLine> text_buf;
 	String language;
 	Control::TextDirection text_direction = Control::TEXT_DIRECTION_INHERITED;
 	HorizontalAlignment title_alignment = HORIZONTAL_ALIGNMENT_LEFT;
@@ -86,7 +86,7 @@ public:
 	void set_expanded(bool p_expanded);
 	bool is_expanded() const;
 
-	void set_title(String p_title);
+	void set_title(const String &p_title);
 	String get_title() const;
 
 	void set_title_alignment(HorizontalAlignment p_alignment);

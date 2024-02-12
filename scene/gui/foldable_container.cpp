@@ -48,9 +48,7 @@ Size2 FoldableContainer::get_minimum_size() const {
 		if (c->is_set_as_top_level()) {
 			continue;
 		}
-		Size2 minsize = c->get_combined_minimum_size();
-		ms.width = MAX(ms.width, minsize.width);
-		ms.height = MAX(ms.height, minsize.height);
+		ms = ms.max(c->get_combined_minimum_size());
 	}
 	if (theme_cache.panel_style.is_valid()) {
 		ms += theme_cache.panel_style->get_minimum_size();
@@ -77,7 +75,11 @@ Vector<int> FoldableContainer::get_allowed_size_flags_vertical() const {
 }
 
 void FoldableContainer::set_expanded(bool p_expanded) {
+	if (expanded == p_expanded) {
+		return;
+	}
 	expanded = p_expanded;
+
 	for (int i = 0; i < get_child_count(); i++) {
 		Control *c = Object::cast_to<Control>(get_child(i));
 		if (!c || c->is_set_as_top_level()) {
@@ -87,13 +89,14 @@ void FoldableContainer::set_expanded(bool p_expanded) {
 	}
 	update_minimum_size();
 	queue_redraw();
+	emit_signal("folding_changed", !expanded);
 }
 
 bool FoldableContainer::is_expanded() const {
 	return expanded;
 }
 
-void FoldableContainer::set_title(String p_title) {
+void FoldableContainer::set_title(const String &p_title) {
 	if (title == p_title) {
 		return;
 	}
@@ -207,7 +210,7 @@ void FoldableContainer::_notification(int p_what) {
 			title_panel_height = _get_title_panel_min_size().height;
 			Ref<Texture2D> icon = _get_title_icon();
 			Ref<StyleBox> title_style = _get_title_style();
-			Point2 title_pos = Point2();
+			Point2 title_pos;
 			int title_width = 0;
 
 			if (title_style.is_valid()) {
@@ -216,7 +219,7 @@ void FoldableContainer::_notification(int p_what) {
 				title_width += get_size().width - title_style->get_minimum_size().width;
 			}
 			if (icon.is_valid()) {
-				int h_separation = CLAMP(theme_cache.h_separation, 0, title_width - icon->get_width() - 1);
+				int h_separation = MAX(theme_cache.h_separation, 0);
 				if (!is_layout_rtl()) {
 					title_pos.x += icon->get_width() + h_separation;
 				}
@@ -307,7 +310,7 @@ void FoldableContainer::_notification(int p_what) {
 }
 
 Size2 FoldableContainer::_get_title_panel_min_size() const {
-	Size2 s = Size2();
+	Size2 s;
 	Ref<StyleBox> title_style = expanded ? theme_cache.title_style : theme_cache.title_collapsed_style;
 	Ref<Texture2D> icon = _get_title_icon();
 
@@ -368,13 +371,15 @@ void FoldableContainer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_text_direction", "text_direction"), &FoldableContainer::set_text_direction);
 	ClassDB::bind_method(D_METHOD("get_text_direction"), &FoldableContainer::get_text_direction);
 
+	ADD_SIGNAL(MethodInfo("folding_changed", PropertyInfo(Variant::BOOL, "is_folded")));
+
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "expanded"), "set_expanded", "is_expanded");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "title"), "set_title", "get_title");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "title_alignment", PROPERTY_HINT_ENUM, "Left,Center,Right"), "set_title_alignment", "get_title_alignment");
 
 	ADD_GROUP("BiDi", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "text_direction", PROPERTY_HINT_ENUM, "Auto,Left-to-Right,Right-to-Left,Inherited"), "set_text_direction", "get_text_direction");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "language", PROPERTY_HINT_LOCALE_ID, ""), "set_language", "get_language");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "language", PROPERTY_HINT_LOCALE_ID), "set_language", "get_language");
 
 	BIND_THEME_ITEM_CUSTOM(Theme::DATA_TYPE_STYLEBOX, FoldableContainer, title_style, "title_panel");
 	BIND_THEME_ITEM_CUSTOM(Theme::DATA_TYPE_STYLEBOX, FoldableContainer, title_hover_style, "title_hover_panel");
