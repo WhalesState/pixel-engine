@@ -338,9 +338,6 @@ void GDExtensionCompatHashes::initialize() {
 		{ "offset_polygon", 3837618924, 1275354010 },
 		{ "offset_polyline", 328033063, 2328231778 },
 	});
-	mappings.insert("Geometry3D", {
-		{ "build_capsule_planes", 410870045, 2113592876 },
-	});
 	mappings.insert("GraphNode", {
 		{ "set_slot", 902131739, 2873310869 },
 	});

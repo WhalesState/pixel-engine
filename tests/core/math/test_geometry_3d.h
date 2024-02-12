@@ -46,41 +46,6 @@ TEST_CASE("[Geometry3D] Closest Distance Between Segments") {
 	CHECK(Geometry3D::get_closest_distance_between_segments(Vector3(1, -2, 0), Vector3(1, 2, 0), Vector3(-1, 2, 0), Vector3(-1, -2, 0)) == 2.0f);
 }
 
-TEST_CASE("[Geometry3D] Build Capsule Planes") {
-	Vector<Plane> capsule = Geometry3D::build_capsule_planes(10, 20, 6, 10);
-	CHECK(capsule.size() == 126);
-}
-
-TEST_CASE("[Geometry3D] Build Sphere Planes") {
-	Vector<Plane> planes = Geometry3D::build_sphere_planes(10.0f, 10, 3);
-	CHECK(planes.size() == 63);
-}
-
-#if false
-// This test has been temporarily disabled because it's really fragile and
-// breaks if calculations change very slightly. For example, it breaks when
-// using doubles, and it breaks when making Plane calculations more accurate.
-TEST_CASE("[Geometry3D] Build Convex Mesh") {
-	struct Case {
-		Vector<Plane> object;
-		int want_faces, want_edges, want_vertices;
-		Case(){};
-		Case(Vector<Plane> p_object, int p_want_faces, int p_want_edges, int p_want_vertices) :
-				object(p_object), want_faces(p_want_faces), want_edges(p_want_edges), want_vertices(p_want_vertices){};
-	};
-	Vector<Case> tt;
-	tt.push_back(Case(Geometry3D::build_capsule_planes(5, 5, 20, 20, Vector3::Axis()), 820, 7603, 6243));
-	tt.push_back(Case(Geometry3D::build_sphere_planes(5, 5, 20), 220, 1011, 522));
-	for (int i = 0; i < tt.size(); ++i) {
-		Case current_case = tt[i];
-		Geometry3D::MeshData mesh = Geometry3D::build_convex_mesh(current_case.object);
-		CHECK(mesh.faces.size() == current_case.want_faces);
-		CHECK(mesh.edges.size() == current_case.want_edges);
-		CHECK(mesh.vertices.size() == current_case.want_vertices);
-	}
-}
-#endif
-
 TEST_CASE("[Geometry3D] Compute Convex Mesh Points") {
 	Vector<Vector3> cube;
 	cube.push_back(Vector3(-5, -5, -5));

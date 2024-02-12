@@ -928,11 +928,6 @@ Geometry3D *Geometry3D::get_singleton() {
 	return singleton;
 }
 
-TypedArray<Plane> Geometry3D::build_capsule_planes(float p_radius, float p_height, int p_sides, int p_lats, Vector3::Axis p_axis) {
-	Variant ret = ::Geometry3D::build_capsule_planes(p_radius, p_height, p_sides, p_lats, p_axis);
-	return ret;
-}
-
 Vector<Vector3> Geometry3D::get_closest_points_between_segments(const Vector3 &p1, const Vector3 &p2, const Vector3 &q1, const Vector3 &q2) {
 	Vector3 r1, r2;
 	::Geometry3D::get_closest_points_between_segments(p1, p2, q1, q2, r1, r2);
@@ -964,8 +959,6 @@ Variant Geometry3D::segment_intersects_triangle(const Vector3 &p_from, const Vec
 }
 
 void Geometry3D::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("build_capsule_planes", "radius", "height", "sides", "lats", "axis"), &Geometry3D::build_capsule_planes, DEFVAL(Vector3::AXIS_Z));
-
 	ClassDB::bind_method(D_METHOD("get_closest_points_between_segments", "p1", "p2", "q1", "q2"), &Geometry3D::get_closest_points_between_segments);
 
 	ClassDB::bind_method(D_METHOD("get_closest_point_to_segment", "point", "s1", "s2"), &Geometry3D::get_closest_point_to_segment);

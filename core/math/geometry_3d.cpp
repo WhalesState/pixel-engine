@@ -726,69 +726,6 @@ Geometry3D::MeshData Geometry3D::build_convex_mesh(const Vector<Plane> &p_planes
 	return mesh;
 }
 
-Vector<Plane> Geometry3D::build_sphere_planes(real_t p_radius, int p_lats, int p_lons, Vector3::Axis p_axis) {
-	ERR_FAIL_INDEX_V(p_axis, 3, Vector<Plane>());
-
-	Vector<Plane> planes;
-
-	Vector3 axis;
-	axis[p_axis] = 1.0;
-
-	Vector3 axis_neg;
-	axis_neg[(p_axis + 1) % 3] = 1.0;
-	axis_neg[(p_axis + 2) % 3] = 1.0;
-	axis_neg[p_axis] = -1.0;
-
-	const double lon_step = Math_TAU / p_lons;
-	for (int i = 0; i < p_lons; i++) {
-		Vector3 normal;
-		normal[(p_axis + 1) % 3] = Math::cos(i * lon_step);
-		normal[(p_axis + 2) % 3] = Math::sin(i * lon_step);
-
-		planes.push_back(Plane(normal, p_radius));
-
-		for (int j = 1; j <= p_lats; j++) {
-			Vector3 plane_normal = normal.lerp(axis, j / (real_t)p_lats).normalized();
-			planes.push_back(Plane(plane_normal, p_radius));
-			planes.push_back(Plane(plane_normal * axis_neg, p_radius));
-		}
-	}
-
-	return planes;
-}
-
-Vector<Plane> Geometry3D::build_capsule_planes(real_t p_radius, real_t p_height, int p_sides, int p_lats, Vector3::Axis p_axis) {
-	ERR_FAIL_INDEX_V(p_axis, 3, Vector<Plane>());
-
-	Vector<Plane> planes;
-
-	Vector3 axis;
-	axis[p_axis] = 1.0;
-
-	Vector3 axis_neg;
-	axis_neg[(p_axis + 1) % 3] = 1.0;
-	axis_neg[(p_axis + 2) % 3] = 1.0;
-	axis_neg[p_axis] = -1.0;
-
-	const double sides_step = Math_TAU / p_sides;
-	for (int i = 0; i < p_sides; i++) {
-		Vector3 normal;
-		normal[(p_axis + 1) % 3] = Math::cos(i * sides_step);
-		normal[(p_axis + 2) % 3] = Math::sin(i * sides_step);
-
-		planes.push_back(Plane(normal, p_radius));
-
-		for (int j = 1; j <= p_lats; j++) {
-			Vector3 plane_normal = normal.lerp(axis, j / (real_t)p_lats).normalized();
-			Vector3 position = axis * p_height * 0.5f + plane_normal * p_radius;
-			planes.push_back(Plane(plane_normal, position));
-			planes.push_back(Plane(plane_normal * axis_neg, position * axis_neg));
-		}
-	}
-
-	return planes;
-}
-
 Vector<Vector3> Geometry3D::compute_convex_mesh_points(const Plane *p_planes, int p_plane_count) {
 	Vector<Vector3> points;
 
