@@ -333,6 +333,8 @@ WindowWrapper::WindowWrapper() {
 	window_background = memnew(Panel);
 	window_background->set_anchors_and_offsets_preset(PRESET_FULL_RECT);
 	window->add_child(window_background);
+
+	ProgressDialog::get_singleton()->add_host_window(window);
 }
 
 // ScreenSelect

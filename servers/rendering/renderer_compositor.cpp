@@ -47,5 +47,3 @@ RendererCompositor *RendererCompositor::create() {
 RendererCompositor::RendererCompositor() {
 	singleton = this;
 }
-
-RendererCanvasRender *RendererCanvasRender::singleton = nullptr;

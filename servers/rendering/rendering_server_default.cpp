@@ -201,6 +201,7 @@ void RenderingServerDefault::_init() {
 }
 
 void RenderingServerDefault::_finish() {
+	RSG::canvas->finalize();
 	RSG::rasterizer->finalize();
 }
 

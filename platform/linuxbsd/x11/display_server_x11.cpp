@@ -2931,7 +2931,7 @@ void DisplayServerX11::window_set_ime_active(const bool p_active, WindowID p_win
 		XWindowAttributes xwa;
 		XSync(x11_display, False);
 		XGetWindowAttributes(x11_display, wd.x11_xim_window, &xwa);
-		if (xwa.map_state == IsViewable) {
+		if (xwa.map_state == IsViewable && _window_focus_check()) {
 			XSetInputFocus(x11_display, wd.x11_xim_window, RevertToParent, CurrentTime);
 		}
 		XSetICFocus(wd.xic);
@@ -4209,6 +4209,22 @@ bool DisplayServerX11::mouse_process_popups() {
 	return closed;
 }
 
+bool DisplayServerX11::_window_focus_check() {
+	Window focused_window;
+	int focus_ret_state;
+	XGetInputFocus(x11_display, &focused_window, &focus_ret_state);
+
+	bool has_focus = false;
+	for (const KeyValue<int, DisplayServerX11::WindowData> &wid : windows) {
+		if (wid.value.x11_window == focused_window) {
+			has_focus = true;
+			break;
+		}
+	}
+
+	return has_focus;
+}
+
 void DisplayServerX11::process_events() {
 	_THREAD_SAFE_METHOD_
 
@@ -4480,7 +4496,7 @@ void DisplayServerX11::process_events() {
 				// Set focus when menu window is started.
 				// RevertToPointerRoot is used to make sure we don't lose all focus in case
 				// a subwindow and its parent are both destroyed.
-				if ((xwa.map_state == IsViewable) && !wd.no_focus && !wd.is_popup) {
+				if ((xwa.map_state == IsViewable) && !wd.no_focus && !wd.is_popup && _window_focus_check()) {
 					XSetInputFocus(x11_display, wd.x11_window, RevertToPointerRoot, CurrentTime);
 				}
 
@@ -4656,7 +4672,7 @@ void DisplayServerX11::process_events() {
 				// Set focus when menu window is re-used.
 				// RevertToPointerRoot is used to make sure we don't lose all focus in case
 				// a subwindow and its parent are both destroyed.
-				if ((xwa.map_state == IsViewable) && !wd.no_focus && !wd.is_popup) {
+				if ((xwa.map_state == IsViewable) && !wd.no_focus && !wd.is_popup && _window_focus_check()) {
 					XSetInputFocus(x11_display, wd.x11_window, RevertToPointerRoot, CurrentTime);
 				}
 

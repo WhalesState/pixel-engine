@@ -232,7 +232,7 @@ bool Sprite2D::is_region_filter_clip_enabled() const {
 }
 
 void Sprite2D::set_frame(int p_frame) {
-	ERR_FAIL_INDEX(p_frame, vframes * hframes);
+	ERR_FAIL_INDEX(p_frame, get_max_frames());
 
 	if (frame != p_frame) {
 		item_rect_changed();
@@ -261,6 +261,9 @@ Vector2i Sprite2D::get_frame_coords() const {
 void Sprite2D::set_vframes(int p_amount) {
 	ERR_FAIL_COND_MSG(p_amount < 1, "Amount of vframes cannot be smaller than 1.");
 	vframes = p_amount;
+	if (frame >= get_max_frames()) {
+		frame = 0;
+	}
 	queue_redraw();
 	item_rect_changed();
 	notify_property_list_changed();
@@ -272,7 +275,21 @@ int Sprite2D::get_vframes() const {
 
 void Sprite2D::set_hframes(int p_amount) {
 	ERR_FAIL_COND_MSG(p_amount < 1, "Amount of hframes cannot be smaller than 1.");
+	if (vframes > 1) {
+		// Adjust the frame to fit new sheet dimensions.
+		int original_column = frame % hframes;
+		if (original_column >= p_amount) {
+			// Frame's column was dropped, reset.
+			frame = 0;
+		} else {
+			int original_row = frame / hframes;
+			frame = original_row * p_amount + original_column;
+		}
+	}
 	hframes = p_amount;
+	if (frame >= get_max_frames()) {
+		frame = 0;
+	}
 	queue_redraw();
 	item_rect_changed();
 	notify_property_list_changed();
@@ -283,7 +300,7 @@ int Sprite2D::get_hframes() const {
 }
 
 int Sprite2D::get_max_frames() const {
-	return hframes * vframes;
+	return vframes * hframes;
 }
 
 bool Sprite2D::is_pixel_opaque(const Point2 &p_point) const {
@@ -372,7 +389,7 @@ Rect2 Sprite2D::get_rect() const {
 void Sprite2D::_validate_property(PropertyInfo &p_property) const {
 	if (p_property.name == "frame") {
 		p_property.hint = PROPERTY_HINT_RANGE;
-		p_property.hint_string = "0," + itos(vframes * hframes - 1) + ",1";
+		p_property.hint_string = "0," + itos(get_max_frames() - 1) + ",1";
 		p_property.usage |= PROPERTY_USAGE_KEYING_INCREMENTS;
 	}
 

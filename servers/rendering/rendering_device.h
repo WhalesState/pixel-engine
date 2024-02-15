@@ -70,10 +70,6 @@ public:
 		DEVICE_TYPE_MAX,
 	};
 
-	enum DriverResource {
-		//next driver continue enum from 1000 to keep order
-	};
-
 	enum ShaderStage {
 		SHADER_STAGE_VERTEX,
 		SHADER_STAGE_FRAGMENT,
@@ -1314,8 +1310,6 @@ public:
 	virtual String get_device_api_version() const = 0;
 	virtual String get_device_pipeline_cache_uuid() const = 0;
 
-	virtual uint64_t get_driver_resource(DriverResource p_resource, RID p_rid = RID(), uint64_t p_index = 0) = 0;
-
 	static RenderingDevice *get_singleton();
 	RenderingDevice();
 
@@ -1397,7 +1391,6 @@ protected:
 };
 
 VARIANT_ENUM_CAST(RenderingDevice::DeviceType)
-VARIANT_ENUM_CAST(RenderingDevice::DriverResource)
 VARIANT_ENUM_CAST(RenderingDevice::ShaderStage)
 VARIANT_ENUM_CAST(RenderingDevice::ShaderLanguage)
 VARIANT_ENUM_CAST(RenderingDevice::CompareOperator)

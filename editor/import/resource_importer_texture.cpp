@@ -569,46 +569,33 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 		const bool can_s3tc_bptc = ResourceImporterTextureSettings::should_import_s3tc_bptc();
 		const bool can_etc2_astc = ResourceImporterTextureSettings::should_import_etc2_astc();
 
-		// Add list of formats imported
 		if (can_s3tc_bptc) {
 			formats_imported.push_back("s3tc_bptc");
+			Image::CompressMode image_compress_mode;
+			String image_compress_format;
+			if (high_quality || is_hdr) {
+				image_compress_mode = Image::COMPRESS_BPTC;
+				image_compress_format = "bptc";
+			} else {
+				image_compress_mode = Image::COMPRESS_S3TC;
+				image_compress_format = "s3tc";
+			}
+			_save_ctex(image, p_save_path + "." + image_compress_format + ".ctex", compress_mode, lossy, image_compress_mode, mipmaps, stream, detect_3d, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
+			r_platform_variants->push_back(image_compress_format);
 		}
 		if (can_etc2_astc) {
 			formats_imported.push_back("etc2_astc");
-		}
-
-		bool use_uncompressed = false;
-
-		if (use_uncompressed) {
-			_save_ctex(image, p_save_path + ".ctex", COMPRESS_VRAM_UNCOMPRESSED, lossy, Image::COMPRESS_S3TC /*this is ignored */, mipmaps, stream, detect_3d, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
-		} else {
-			if (can_s3tc_bptc) {
-				Image::CompressMode image_compress_mode;
-				String image_compress_format;
-				if (high_quality || is_hdr) {
-					image_compress_mode = Image::COMPRESS_BPTC;
-					image_compress_format = "bptc";
-				} else {
-					image_compress_mode = Image::COMPRESS_S3TC;
-					image_compress_format = "s3tc";
-				}
-				_save_ctex(image, p_save_path + "." + image_compress_format + ".ctex", compress_mode, lossy, image_compress_mode, mipmaps, stream, detect_3d, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
-				r_platform_variants->push_back(image_compress_format);
+			Image::CompressMode image_compress_mode;
+			String image_compress_format;
+			if (high_quality || is_hdr) {
+				image_compress_mode = Image::COMPRESS_ASTC;
+				image_compress_format = "astc";
+			} else {
+				image_compress_mode = Image::COMPRESS_ETC2;
+				image_compress_format = "etc2";
 			}
-
-			if (can_etc2_astc) {
-				Image::CompressMode image_compress_mode;
-				String image_compress_format;
-				if (high_quality || is_hdr) {
-					image_compress_mode = Image::COMPRESS_ASTC;
-					image_compress_format = "astc";
-				} else {
-					image_compress_mode = Image::COMPRESS_ETC2;
-					image_compress_format = "etc2";
-				}
-				_save_ctex(image, p_save_path + "." + image_compress_format + ".ctex", compress_mode, lossy, image_compress_mode, mipmaps, stream, detect_3d, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
-				r_platform_variants->push_back(image_compress_format);
-			}
+			_save_ctex(image, p_save_path + "." + image_compress_format + ".ctex", compress_mode, lossy, image_compress_mode, mipmaps, stream, detect_3d, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
+			r_platform_variants->push_back(image_compress_format);
 		}
 	} else {
 		// Import normally.

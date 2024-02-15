@@ -47,8 +47,10 @@
 			Controls whether horizontal scrollbar can be used and when it should be visible. See [enum ScrollMode] for options.
 		</member>
 		<member name="ignore_panel_min_size" type="bool" setter="set_ignore_panel_min_size" getter="is_ignoring_panel_min_size" default="true">
+			Ignores the panel style size.
 		</member>
 		<member name="ignore_scroll_bar_min_size" type="bool" setter="set_ignore_scroll_bar_min_size" getter="is_ignoring_scroll_bar_min_size" default="true">
+			Ignores the scroll bar size.
 		</member>
 		<member name="scroll_deadzone" type="int" setter="set_deadzone" getter="get_deadzone" default="0">
 			Deadzone for touch scrolling. Lower deadzone makes the scrolling more sensitive.

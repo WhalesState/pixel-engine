@@ -769,12 +769,20 @@
 				[b]Note:[/b] When using the OpenGL backend or when running in headless mode, this function always returns [code]null[/code].
 			</description>
 		</method>
+		<method name="debug_canvas_item_get_rect">
+			<return type="Rect2" />
+			<param index="0" name="item" type="RID" />
+			<description>
+				Returns the bounding rectangle for a canvas item in local space, as calculated by the renderer. This bound is used internally for culling.
+				[b]Warning:[/b] This function is intended for debugging in the editor, and will pass through and return a zero [Rect2] in exported projects.
+			</description>
+		</method>
 		<method name="force_draw">
 			<return type="void" />
 			<param index="0" name="swap_buffers" type="bool" default="true" />
 			<param index="1" name="frame_step" type="float" default="0.0" />
 			<description>
-				Forces redrawing of all viewports at once.
+				Forces redrawing of all viewports at once. Must be called from the main thread.
 			</description>
 		</method>
 		<method name="force_sync">

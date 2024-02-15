@@ -943,8 +943,9 @@ void PopupMenu::_notification(int p_what) {
 		case NOTIFICATION_THEME_CHANGED:
 		case Control::NOTIFICATION_LAYOUT_DIRECTION_CHANGED:
 		case NOTIFICATION_TRANSLATION_CHANGED: {
-			scroll_container->add_theme_style_override("panel", theme_cache.panel_style);
-
+			if (p_what == NOTIFICATION_THEME_CHANGED) {
+				scroll_container->add_theme_style_override("panel", theme_cache.panel_style);
+			}
 			DisplayServer *ds = DisplayServer::get_singleton();
 			bool is_global = !global_menu_name.is_empty();
 			for (int i = 0; i < items.size(); i++) {

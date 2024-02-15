@@ -748,7 +748,6 @@ ImportDock::ImportDock() {
 		advanced->set_text(TTR("Advanced..."));
 		hb->add_child(advanced);
 	}
-
 	hb->add_child(import);
 
 	if (DisplayServer::get_singleton()->get_swap_cancel_ok()) {

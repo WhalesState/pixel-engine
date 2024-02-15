@@ -526,8 +526,6 @@ void RenderingDevice::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_memory_usage", "type"), &RenderingDevice::get_memory_usage);
 
-	ClassDB::bind_method(D_METHOD("get_driver_resource", "resource", "rid", "index"), &RenderingDevice::get_driver_resource);
-
 	BIND_ENUM_CONSTANT(DEVICE_TYPE_OTHER);
 	BIND_ENUM_CONSTANT(DEVICE_TYPE_INTEGRATED_GPU);
 	BIND_ENUM_CONSTANT(DEVICE_TYPE_DISCRETE_GPU);

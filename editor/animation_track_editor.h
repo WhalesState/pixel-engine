@@ -67,6 +67,7 @@ public:
 	PropertyInfo hint;
 	NodePath base;
 	bool use_fps = false;
+	AnimationTrackEditor *editor = nullptr;
 
 	bool _hide_script_from_inspector() { return true; }
 	bool _hide_metadata_from_inspector() { return true; }
@@ -104,6 +105,7 @@ public:
 	Node *root_path = nullptr;
 
 	bool use_fps = false;
+	AnimationTrackEditor *editor = nullptr;
 
 	bool _hide_script_from_inspector() { return true; }
 	bool _hide_metadata_from_inspector() { return true; }

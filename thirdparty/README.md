@@ -87,7 +87,7 @@ Files extracted from upstream source:
 ## certs
 
 - Upstream: Mozilla, via https://github.com/bagder/ca-bundle
-- Version: git (3aaca635bad074a0ce5c15fa8aa0dff47f5c639a, 2023)
+- Version: git (bef37a977ccb45fb4c1b213b79dd6ba438077561, 2023)
 - License: MPL 2.0
 
 
@@ -571,7 +571,7 @@ that file when upgrading.
 ## minizip
 
 - Upstream: https://www.zlib.net
-- Version: 1.3 (zlib contrib, 2023)
+- Version: 1.3.1 (zlib contrib, 2024)
 - License: zlib
 
 Files extracted from the upstream source:
@@ -583,8 +583,6 @@ Files extracted from the upstream source:
 Important: Some files have Godot-made changes for use in core/io.
 They are marked with `/* GODOT start */` and `/* GODOT end */`
 comments and a patch is provided in the `patches` folder.
-
-Another patch is included to fix CVE-2023-45853.
 
 
 ## misc
@@ -827,7 +825,7 @@ instead of `miniz.h` as an external dependency.
 ## thorvg
 
 - Upstream: https://github.com/thorvg/thorvg
-- Version: 0.11.2 (b01fe9bf4461146304d3520d6dc699cf580a3744, 2023)
+- Version: 0.12.0 (25ea242d3867ed66807714f5a52d080984d3c8cc, 2024)
 - License: MIT
 
 Files extracted from upstream source:
@@ -928,7 +926,7 @@ Files extracted from upstream source:
 ## zlib
 
 - Upstream: https://www.zlib.net
-- Version: 1.3 (2023)
+- Version: 1.3.1 (2024)
 - License: zlib
 
 Files extracted from upstream source:

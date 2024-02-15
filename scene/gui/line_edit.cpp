@@ -31,6 +31,7 @@
 #include "line_edit.h"
 
 #include "core/input/input_map.h"
+#include "core/object/message_queue.h"
 #include "core/os/keyboard.h"
 #include "core/os/os.h"
 #include "core/string/print_string.h"
@@ -370,7 +371,7 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 				if (!text_changed_dirty) {
 					if (is_inside_tree()) {
-						callable_mp(this, &LineEdit::_text_changed).call_deferred();
+						MessageQueue::get_singleton()->push_call(this, "_text_changed");
 					}
 					text_changed_dirty = true;
 				}
@@ -725,12 +726,7 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 			int prev_len = text.length();
 			insert_text_at_caret(ucodestr);
 			if (text.length() != prev_len) {
-				if (!text_changed_dirty) {
-					if (is_inside_tree()) {
-						callable_mp(this, &LineEdit::_text_changed).call_deferred();
-					}
-					text_changed_dirty = true;
-				}
+				_text_changed();
 			}
 			accept_event();
 			return;
@@ -815,7 +811,7 @@ void LineEdit::drop_data(const Point2 &p_point, const Variant &p_data) {
 		select(caret_column_tmp, caret_column);
 		if (!text_changed_dirty) {
 			if (is_inside_tree()) {
-				callable_mp(this, &LineEdit::_text_changed).call_deferred();
+				MessageQueue::get_singleton()->push_call(this, "_text_changed");
 			}
 			text_changed_dirty = true;
 		}
@@ -1252,7 +1248,7 @@ void LineEdit::paste_text() {
 
 		if (!text_changed_dirty) {
 			if (is_inside_tree() && text.length() != prev_len) {
-				callable_mp(this, &LineEdit::_text_changed).call_deferred();
+				MessageQueue::get_singleton()->push_call(this, "_text_changed");
 			}
 			text_changed_dirty = true;
 		}
@@ -1290,10 +1286,9 @@ void LineEdit::undo() {
 	TextOperation op = undo_stack_pos->get();
 	text = op.text;
 	scroll_offset = op.scroll_offset;
-
-	_shape();
 	set_caret_column(op.caret_column);
 
+	_shape();
 	_emit_text_change();
 }
 
@@ -1315,10 +1310,9 @@ void LineEdit::redo() {
 	TextOperation op = undo_stack_pos->get();
 	text = op.text;
 	scroll_offset = op.scroll_offset;
-
-	_shape();
 	set_caret_column(op.caret_column);
 
+	_shape();
 	_emit_text_change();
 }
 
@@ -1568,7 +1562,7 @@ void LineEdit::delete_text(int p_from_column, int p_to_column) {
 
 	if (!text_changed_dirty) {
 		if (is_inside_tree()) {
-			callable_mp(this, &LineEdit::_text_changed).call_deferred();
+			MessageQueue::get_singleton()->push_call(this, "_text_changed");
 		}
 		text_changed_dirty = true;
 	}
@@ -1782,12 +1776,6 @@ void LineEdit::set_caret_column(int p_column) {
 	} else if (MAX(primary_caret_offset.x, primary_caret_offset.y) >= ofs_max) {
 		scroll_offset += ofs_max - MAX(primary_caret_offset.x, primary_caret_offset.y);
 	}
-
-	// Scroll to show as much text as possible
-	if (text_width + scroll_offset + x_ofs < ofs_max) {
-		scroll_offset = ofs_max - x_ofs - text_width;
-	}
-
 	scroll_offset = MIN(0, scroll_offset);
 
 	queue_redraw();
@@ -1993,15 +1981,12 @@ bool LineEdit::is_secret() const {
 }
 
 void LineEdit::set_secret_character(const String &p_string) {
-	String c = p_string;
-	if (c.length() > 1) {
-		WARN_PRINT("Secret character must be exactly one character long (" + itos(c.length()) + " characters given).");
-		c = c.left(1);
-	}
-	if (secret_character == c) {
+	if (secret_character == p_string) {
 		return;
 	}
-	secret_character = c;
+
+	secret_character = p_string;
+	update_configuration_warnings();
 	_shape();
 	queue_redraw();
 }
@@ -2368,8 +2353,14 @@ void LineEdit::_shape() {
 	if (text.length() == 0 && ime_text.length() == 0) {
 		t = placeholder_translated;
 	} else if (pass) {
-		String s = (secret_character.length() > 0) ? secret_character.left(1) : U"•";
-		t = s.repeat(text.length() + ime_text.length());
+		// TODO: Integrate with text server to add support for non-latin scripts.
+		// Allow secret_character as empty strings, act like if a space was used as a secret character.
+		String secret = " ";
+		// Allow values longer than 1 character in the property, but trim characters after the first one.
+		if (!secret_character.is_empty()) {
+			secret = secret_character.left(1);
+		}
+		t = secret.repeat(text.length() + ime_text.length());
 	} else {
 		if (ime_text.length() > 0) {
 			t = text.substr(0, caret_column) + ime_text + text.substr(caret_column, text.length());
@@ -2581,6 +2572,8 @@ void LineEdit::_validate_property(PropertyInfo &p_property) const {
 }
 
 void LineEdit::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("_text_changed"), &LineEdit::_text_changed);
+
 	ClassDB::bind_method(D_METHOD("set_horizontal_alignment", "alignment"), &LineEdit::set_horizontal_alignment);
 	ClassDB::bind_method(D_METHOD("get_horizontal_alignment"), &LineEdit::get_horizontal_alignment);
 

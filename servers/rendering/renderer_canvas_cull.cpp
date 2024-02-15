@@ -2041,6 +2041,12 @@ void RendererCanvasCull::update_visibility_notifiers() {
 	}
 }
 
+Rect2 RendererCanvasCull::_debug_canvas_item_get_rect(RID p_item) {
+	Item *canvas_item = canvas_item_owner.get_or_null(p_item);
+	ERR_FAIL_NULL_V(canvas_item, Rect2());
+	return canvas_item->get_rect();
+}
+
 bool RendererCanvasCull::free(RID p_rid) {
 	if (canvas_owner.owns(p_rid)) {
 		Canvas *canvas = canvas_owner.get_or_null(p_rid);
@@ -2159,6 +2165,30 @@ bool RendererCanvasCull::free(RID p_rid) {
 	}
 
 	return true;
+}
+
+template <class T>
+void RendererCanvasCull::_free_rids(T &p_owner, const char *p_type) {
+	List<RID> owned;
+	p_owner.get_owned_list(&owned);
+	if (owned.size()) {
+		if (owned.size() == 1) {
+			WARN_PRINT(vformat("1 RID of type \"%s\" was leaked.", p_type));
+		} else {
+			WARN_PRINT(vformat("%d RIDs of type \"%s\" were leaked.", owned.size(), p_type));
+		}
+		for (const RID &E : owned) {
+			free(E);
+		}
+	}
+}
+
+void RendererCanvasCull::finalize() {
+	_free_rids(canvas_owner, "Canvas");
+	_free_rids(canvas_item_owner, "CanvasItem");
+	_free_rids(canvas_light_owner, "CanvasLight");
+	_free_rids(canvas_light_occluder_owner, "CanvasLightOccluder");
+	_free_rids(canvas_light_occluder_polygon_owner, "CanvasLightOccluderPolygon");
 }
 
 RendererCanvasCull::RendererCanvasCull() {

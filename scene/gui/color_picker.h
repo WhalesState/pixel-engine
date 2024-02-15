@@ -34,8 +34,8 @@
 #include "scene/gui/aspect_ratio_container.h"
 #include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
-#include "scene/gui/control.h"
 #include "scene/gui/color_rect.h"
+#include "scene/gui/control.h"
 #include "scene/gui/flow_container.h"
 #include "scene/gui/grid_container.h"
 #include "scene/gui/label.h"
@@ -185,7 +185,6 @@ private:
 
 	Color color;
 	Color old_color;
-	Color old_pick_color;
 	bool is_picking_color = false;
 	bool is_embedding_subwindows = true;
 

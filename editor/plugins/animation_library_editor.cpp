@@ -759,7 +759,6 @@ AnimationLibraryEditor::AnimationLibraryEditor() {
 
 	VBoxContainer *vb = memnew(VBoxContainer);
 	HBoxContainer *hb = memnew(HBoxContainer);
-
 	Button *b = memnew(Button(TTR("Add Library")));
 	b->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 	b->connect("pressed", callable_mp(this, &AnimationLibraryEditor::_add_library));

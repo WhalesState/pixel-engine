@@ -107,7 +107,7 @@ void ColorPicker::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_WM_CLOSE_REQUEST: {
-			if (picker_window && picker_window->is_visible()) {
+			if (picker_window != nullptr && picker_window->is_visible()) {
 				picker_window->hide();
 			}
 		} break;
@@ -299,7 +299,7 @@ void ColorPicker::_set_pick_color(const Color &p_color, bool p_update_sliders) {
 }
 
 void ColorPicker::set_pick_color(const Color &p_color) {
-	if (picker_preview) {
+	if (picker_preview != nullptr) {
 		picker_preview->set_color(p_color);
 	}
 	_set_pick_color(p_color, true); //because setters can't have more arguments
@@ -538,16 +538,17 @@ void ColorPicker::_html_submitted(const String &p_html) {
 		return;
 	}
 
-	const Color previous_color = color;
-	color = Color::from_string(p_html.strip_edges(), previous_color);
+	Color new_color = Color::from_string(p_html.strip_edges(), color);
 
 	if (!is_editing_alpha()) {
-		color.a = previous_color.a;
+		new_color.a = color.a;
 	}
 
-	if (color == previous_color) {
+	if (new_color.to_argb32() == color.to_argb32()) {
 		return;
 	}
+	color = new_color;
+
 	if (!is_inside_tree()) {
 		return;
 	}
@@ -1017,7 +1018,7 @@ void ColorPicker::_sample_draw() {
 
 	if (color.r > 1 || color.g > 1 || color.b > 1) {
 		// Draw an indicator to denote that the new color is "overbright" and can't be displayed accurately in the preview.
-		sample->draw_texture(theme_cache.overbright_indicator, Point2(display_old_color ? sample->get_size().width * 0.5 : 0, 0));
+		sample->draw_texture(theme_cache.overbright_indicator, Point2(display_old_color ? sample->get_size().width / 2.0 : 0, 0));
 	}
 }
 
@@ -1376,7 +1377,6 @@ void ColorPicker::_add_preset_pressed() {
 
 void ColorPicker::_pick_button_pressed() {
 	is_picking_color = true;
-	old_pick_color = color;
 	set_process_internal(true);
 
 	if (!picker_window) {
@@ -1404,7 +1404,7 @@ void ColorPicker::_pick_finished() {
 	}
 
 	if (Input::get_singleton()->is_key_pressed(Key::ESCAPE)) {
-		set_pick_color(old_pick_color);
+		set_pick_color(old_color);
 	} else {
 		emit_signal(SNAME("color_changed"), color);
 	}

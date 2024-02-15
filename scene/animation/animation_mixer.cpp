@@ -638,6 +638,10 @@ bool AnimationMixer::_update_caches() {
 
 				switch (track_type) {
 					case Animation::TYPE_VALUE: {
+						// If a value track without a key is cached first, the initial value cannot be determined.
+						// It is a corner case, but which may cause problems with blending.
+						ERR_CONTINUE_MSG(anim->track_get_key_count(i) == 0, "AnimationMixer: '" + String(E) + "', Value Track:  '" + String(path) + "' must have at least one key to cache for blending.");
+
 						TrackCacheValue *track_value = memnew(TrackCacheValue);
 
 						if (resource.is_valid()) {
@@ -654,9 +658,6 @@ bool AnimationMixer::_update_caches() {
 
 						track = track_value;
 
-						// If a value track without a key is cached first, the initial value cannot be determined.
-						// It is a corner case, but which may cause problems with blending.
-						ERR_CONTINUE_MSG(anim->track_get_key_count(i) == 0, "AnimationMixer: '" + String(E) + "', Value Track:  '" + String(path) + "' must have at least one key to cache for blending.");
 						track_value->init_value = anim->track_get_key_value(i, 0);
 						track_value->init_value.zero();
 
@@ -848,10 +849,6 @@ Variant AnimationMixer::post_process_key_value(const Ref<Animation> &p_anim, int
 }
 
 Variant AnimationMixer::_post_process_key_value(const Ref<Animation> &p_anim, int p_track, Variant p_value, const Object *p_object, int p_object_idx) {
-	switch (p_anim->track_get_type(p_track)) {
-		default: {
-		} break;
-	}
 	return p_value;
 }
 
