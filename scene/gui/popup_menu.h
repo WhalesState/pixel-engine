@@ -99,10 +99,12 @@ class PopupMenu : public Popup {
 	Vector<Item> items;
 	BitField<MouseButtonMask> initial_button_mask;
 	bool during_grabbed_click = false;
+	bool is_scrolling = false;
 	int mouse_over = -1;
 	int submenu_over = -1;
 	String _get_accel_text(const Item &p_item) const;
 	int _get_mouse_over(const Point2 &p_over) const;
+	void _mouse_over_update(const Point2 &p_over);
 	virtual Size2 _get_contents_minimum_size() const override;
 
 	int _get_item_height(int p_idx) const;
