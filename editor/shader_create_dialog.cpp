@@ -112,7 +112,7 @@ void ShaderCreateDialog::_path_hbox_sorted() {
 		file_path->set_caret_column(file_path->get_text().length());
 		file_path->set_caret_column(filename_start_pos);
 
-		file_path->grab_focus_edit();
+		file_path->edit();
 	}
 }
 
@@ -324,7 +324,7 @@ void ShaderCreateDialog::_file_selected(const String &p_file) {
 	int select_start = p.rfind(filename);
 	file_path->select(select_start, select_start + filename.length());
 	file_path->set_caret_column(select_start + filename.length());
-	file_path->grab_focus_edit();
+	file_path->edit();
 }
 
 void ShaderCreateDialog::_path_changed(const String &p_path) {

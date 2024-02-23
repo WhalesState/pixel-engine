@@ -104,7 +104,7 @@ void EditorLayoutsDialog::_post_popup() {
 		layout_names->add_item(E);
 	}
 	if (name->is_visible()) {
-		name->grab_focus_edit();
+		name->edit();
 	} else {
 		layout_names->grab_focus();
 	}

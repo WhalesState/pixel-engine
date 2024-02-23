@@ -158,7 +158,7 @@ void EditorDirDialog::_make_dir() {
 	}
 
 	makedialog->popup_centered(Size2(250, 80));
-	makedirname->grab_focus_edit();
+	makedirname->edit();
 }
 
 void EditorDirDialog::_make_dir_confirm() {

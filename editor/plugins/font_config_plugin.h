@@ -35,7 +35,6 @@
 #include "editor/editor_plugin.h"
 #include "editor/editor_properties.h"
 #include "editor/editor_properties_array_dict.h"
-#include "scene/gui/margin_container.h"
 
 /*************************************************************************/
 

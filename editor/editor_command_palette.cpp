@@ -205,7 +205,7 @@ void EditorCommandPalette::open_popup() {
 	}
 
 	command_search_box->clear();
-	command_search_box->grab_focus_edit();
+	command_search_box->edit();
 
 	search_options->scroll_to_item(search_options->get_root());
 }

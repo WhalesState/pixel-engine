@@ -119,7 +119,7 @@ void DirectoryCreateDialog::ok_pressed() {
 
 void DirectoryCreateDialog::_post_popup() {
 	ConfirmationDialog::_post_popup();
-	dir_path->grab_focus_edit();
+	dir_path->edit();
 }
 
 void DirectoryCreateDialog::config(const String &p_base_dir) {

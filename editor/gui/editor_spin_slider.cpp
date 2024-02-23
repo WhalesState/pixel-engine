@@ -638,7 +638,7 @@ void EditorSpinSlider::_focus_entered() {
 	value_input->set_text(get_text_value());
 	value_input_popup->set_size(get_size());
 	value_input_popup->call_deferred(SNAME("show"));
-	value_input->call_deferred(SNAME("grab_focus_edit"), true);
+	value_input->call_deferred(SNAME("edit"), true);
 	value_input->set_focus_next(find_next_valid_focus()->get_path());
 	value_input->set_focus_previous(find_prev_valid_focus()->get_path());
 	emit_signal("value_focus_entered");

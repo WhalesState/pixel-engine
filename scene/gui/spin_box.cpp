@@ -46,7 +46,7 @@ void SpinBox::_update_text(bool p_keep_line_edit) {
 		value = TS->format_number(value);
 	}
 
-	if (!line_edit->is_focus_edit()) {
+	if (!line_edit->is_being_edited()) {
 		if (!prefix.is_empty()) {
 			value = prefix + " " + value;
 		}
@@ -168,13 +168,13 @@ void SpinBox::gui_input(const Ref<InputEvent> &p_event) {
 				// set_value((up ? get_max() : get_min()));
 			} break;
 			case MouseButton::WHEEL_UP: {
-				if (line_edit->is_focus_edit()) {
+				if (line_edit->is_being_edited()) {
 					set_value(get_value() + step * mb->get_factor());
 					accept_event();
 				}
 			} break;
 			case MouseButton::WHEEL_DOWN: {
-				if (line_edit->is_focus_edit()) {
+				if (line_edit->is_being_edited()) {
 					set_value(get_value() - step * mb->get_factor());
 					accept_event();
 				}
@@ -208,7 +208,7 @@ void SpinBox::gui_input(const Ref<InputEvent> &p_event) {
 	}
 }
 
-void SpinBox::_line_edit_focus_edit_toggled(bool toggled_on) {
+void SpinBox::_line_edit_editing_toggled(bool toggled_on) {
 	if (toggled_on) {
 		int col = line_edit->get_caret_column();
 		_update_text();
@@ -219,8 +219,13 @@ void SpinBox::_line_edit_focus_edit_toggled(bool toggled_on) {
 			line_edit->select_all();
 		}
 	} else {
+		// Discontinue because the focus_exit was caused by canceling.
+		if (Input::get_singleton()->is_action_pressed("ui_cancel")) {
+			_update_text();
+			return;
+		}
+
 		line_edit->deselect();
-		_update_text();
 		_text_submitted(line_edit->get_text());
 	}
 }
@@ -395,7 +400,7 @@ SpinBox::SpinBox() {
 	line_edit->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_LEFT);
 
 	line_edit->connect("text_submitted", callable_mp(this, &SpinBox::_text_submitted), CONNECT_DEFERRED);
-	line_edit->connect("focus_edit_toggled", callable_mp(this, &SpinBox::_line_edit_focus_edit_toggled), CONNECT_DEFERRED);
+	line_edit->connect("editing_toggled", callable_mp(this, &SpinBox::_line_edit_editing_toggled), CONNECT_DEFERRED);
 	line_edit->connect("gui_input", callable_mp(this, &SpinBox::_line_edit_input));
 
 	range_click_timer = memnew(Timer);

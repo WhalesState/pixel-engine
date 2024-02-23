@@ -219,7 +219,7 @@ void ColorPicker::finish_shaders() {
 }
 
 void ColorPicker::set_focus_on_line_edit() {
-	c_text->call_deferred(SNAME("grab_focus_edit"));
+	c_text->call_deferred(SNAME("edit"));
 }
 
 void ColorPicker::_update_controls() {

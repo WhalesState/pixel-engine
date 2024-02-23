@@ -56,6 +56,14 @@
 				Clears the current selection.
 			</description>
 		</method>
+		<method name="edit">
+			<return type="void" />
+			<param index="0" name="select_all" type="bool" default="false" />
+			<description>
+				Focus the [LineEdit] in edit mode.
+				If [param select_all] is [code]true[/code], it will select all [member text].
+			</description>
+		</method>
 		<method name="get_menu" qualifiers="const">
 			<return type="PopupMenu" />
 			<description>
@@ -126,14 +134,6 @@
 				Returns the selection end column.
 			</description>
 		</method>
-		<method name="grab_focus_edit">
-			<return type="void" />
-			<param index="0" name="select_all" type="bool" default="false" />
-			<description>
-				Focus the [LineEdit] in edit mode.
-				If [param select_all] is [code]true[/code], it will select all [member text] and move the caret to it's length.
-			</description>
-		</method>
 		<method name="has_selection" qualifiers="const">
 			<return type="bool" />
 			<description>
@@ -147,10 +147,10 @@
 				Inserts [param text] at the caret. If the resulting value is longer than [member max_length], nothing happens.
 			</description>
 		</method>
-		<method name="is_focus_edit" qualifiers="const">
+		<method name="is_being_edited" qualifiers="const">
 			<return type="bool" />
 			<description>
-				Returns [code]true[/code] if the [LineEdit] is in focus edit mode.
+				Returns [code]true[/code] if the [LineEdit] is in edit mode.
 			</description>
 		</method>
 		<method name="is_menu_visible" qualifiers="const">
@@ -194,11 +194,10 @@
 				Selects the whole [String].
 			</description>
 		</method>
-		<method name="set_focus_edit">
+		<method name="unedit">
 			<return type="void" />
-			<param index="0" name="focus_edit" type="bool" />
 			<description>
-				Toggles focus edit mode, if [member editable] is [code]false[/code] it will just focus the [LineEdit].
+				Exit edit mode and preserve focus.
 			</description>
 		</method>
 	</methods>
@@ -322,10 +321,10 @@
 		</member>
 	</members>
 	<signals>
-		<signal name="focus_edit_toggled">
+		<signal name="toggled">
 			<param index="0" name="toggled_on" type="bool" />
 			<description>
-				Emitted when is focused and switches between focus and focus edit.
+				Emitted when the [LineEdit] switches between edit and focus modes.
 			</description>
 		</signal>
 		<signal name="text_change_rejected">

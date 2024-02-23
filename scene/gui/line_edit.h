@@ -86,7 +86,7 @@ public:
 private:
 	HorizontalAlignment alignment = HORIZONTAL_ALIGNMENT_LEFT;
 
-	bool focus_edit = false;
+	bool is_editing = false;
 	bool editable = false;
 	bool pass = false;
 	bool text_changed_dirty = false;
@@ -258,9 +258,9 @@ protected:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
 public:
-	void grab_focus_edit(bool p_select_all = false);
-	void set_focus_edit(bool p_focus_edit);
-	bool is_focus_edit() const;
+	void edit(bool p_select_all = false);
+	void unedit();
+	bool is_being_edited() const;
 
 	void set_horizontal_alignment(HorizontalAlignment p_alignment);
 	HorizontalAlignment get_horizontal_alignment() const;

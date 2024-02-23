@@ -194,7 +194,7 @@ void AnimationNodeStateMachineEditor::_state_machine_gui_input(const Ref<InputEv
 					name_edit_popup->set_size(edit_rect.size);
 					name_edit->set_text(node_rects[i].node_name);
 					name_edit_popup->popup();
-					name_edit->grab_focus_edit(true);
+					name_edit->edit(true);
 
 					prev_name = node_rects[i].node_name;
 					return;

@@ -2397,8 +2397,8 @@ StringName Node::get_property_store_alias(const StringName &p_property) const {
 }
 
 bool Node::is_part_of_edited_scene() const {
-	return Engine::get_singleton()->is_editor_hint() && is_inside_tree() && get_tree()->get_edited_scene_root() &&
-			(get_tree()->get_edited_scene_root() == this || get_tree()->get_edited_scene_root()->is_ancestor_of(this));
+	return Engine::get_singleton()->is_editor_hint() && is_inside_tree() && get_tree()->get_edited_scene_root() && 
+			(get_tree()->get_edited_scene_root()->get_viewport() == get_viewport() || get_tree()->get_edited_scene_root()->is_ancestor_of(this));
 }
 #endif
 

@@ -124,7 +124,7 @@ bool FileSystemList::edit_selected() {
 
 	String name = get_item_text(s);
 	line_editor->set_text(name);
-	line_editor->grab_focus_edit();
+	line_editor->edit();
 	line_editor->select(0, name.rfind("."));
 
 	popup_editor->popup();
@@ -2256,13 +2256,13 @@ void FileSystemDock::_file_option(int p_option, const Vector<String> &p_selected
 					String name = to_duplicate.path.get_file();
 					duplicate_dialog->set_title(TTR("Duplicating file:") + " " + name);
 					duplicate_dialog_text->set_text(name);
-					duplicate_dialog_text->grab_focus_edit();
+					duplicate_dialog_text->edit();
 					duplicate_dialog_text->select(0, name.rfind("."));
 				} else {
 					String name = to_duplicate.path.substr(0, to_duplicate.path.length() - 1).get_file();
 					duplicate_dialog->set_title(TTR("Duplicating folder:") + " " + name);
 					duplicate_dialog_text->set_text(name);
-					duplicate_dialog_text->grab_focus_edit(true);
+					duplicate_dialog_text->edit(true);
 				}
 				duplicate_dialog->popup_centered(Size2(250, 80) * EDSCALE);
 			}
@@ -2429,7 +2429,7 @@ void FileSystemDock::focus_on_filter() {
 	}
 
 	if (current_search_box) {
-		current_search_box->grab_focus_edit(true);
+		current_search_box->edit(true);
 	}
 }
 

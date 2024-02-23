@@ -63,7 +63,7 @@ void SceneCreateDialog::config(const String &p_dir) {
 	directory = p_dir;
 	root_name_edit->set_text("");
 	scene_name_edit->set_text("");
-	scene_name_edit->call_deferred(SNAME("grab_focus_edit"));
+	scene_name_edit->call_deferred(SNAME("edit"));
 	validation_panel->update();
 }
 
