@@ -1191,7 +1191,7 @@ void LineEdit::_notification(int p_what) {
 
 		case NOTIFICATION_FOCUS_ENTER: {
 			if (editable && (Input::get_singleton()->is_action_pressed("ui_focus_next") || Input::get_singleton()->is_action_pressed("ui_focus_prev"))) {
-				edit();
+				edit(true);
 				emit_signal(SNAME("editing_toggled"), is_editing);
 			}
 		} break;
