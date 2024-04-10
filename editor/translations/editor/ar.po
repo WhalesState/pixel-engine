@@ -5266,6 +5266,9 @@ msgstr "شغِّلْ المشروع"
 msgid "Pause the running project's execution for debugging."
 msgstr "‌أوقِفْ قليلا \"تنفيذَ\" المشروع الحالي؛ للتنقيح."
 
+msgid "Resume the running project's execution."
+msgstr ""
+
 msgid "Pause Running Project"
 msgstr "أوقِفْ المشروع قليلا"
 
